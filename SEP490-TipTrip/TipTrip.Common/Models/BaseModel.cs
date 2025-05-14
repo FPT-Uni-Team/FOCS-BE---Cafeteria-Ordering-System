@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TipTrip.Common.Models
 {
-    public interface BaseModel
+    public class BaseModel
     {
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
