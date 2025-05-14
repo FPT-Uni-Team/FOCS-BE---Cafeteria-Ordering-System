@@ -1,4 +1,5 @@
 ﻿using Microsoft.OpenApi.Models;
+using TipTrip.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +54,9 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+//Regis middleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Enable Swagger middleware (env Development và Production)
 if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
