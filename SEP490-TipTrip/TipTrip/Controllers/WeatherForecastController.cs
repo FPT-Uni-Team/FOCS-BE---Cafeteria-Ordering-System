@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using TipTrip.Common.Utils;
 
 namespace TipTrip.Controllers
 {
@@ -28,6 +29,14 @@ namespace TipTrip.Controllers
                 Summary = Summaries[Random.Shared.Next(Summaries.Length)]
             })
             .ToArray();
+        }
+
+        [HttpPost]
+        public int TestMiddleware(int a, int b)
+        {
+            ConditionCheck.CheckCondition(a > b, "a must > b");
+
+            return a - b;
         }
     }
 }
