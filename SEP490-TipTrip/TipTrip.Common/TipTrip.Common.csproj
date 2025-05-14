@@ -10,7 +10,6 @@
     <Folder Include="Interfaces\" />
     <Folder Include="Constants\" />
     <Folder Include="Helpers\" />
-    <Folder Include="Attributes\" />
     <Folder Include="Models\" />
   </ItemGroup>
 

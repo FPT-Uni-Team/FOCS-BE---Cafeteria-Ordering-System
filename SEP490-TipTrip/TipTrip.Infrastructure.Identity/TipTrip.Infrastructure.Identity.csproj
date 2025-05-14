@@ -28,4 +28,8 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TipTrip.Common\TipTrip.Common.csproj" />
+  </ItemGroup>
+
 </Project>
