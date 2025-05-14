@@ -2,25 +2,17 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using TipTrip.Common.Attributes;
+using TipTrip.Common.Models;
 using TipTrip.Infrastructure.Identity.Identity.Model;
 
 namespace TipTrip.Infrastructure.Identity.Persistance
 {
-    internal class DBContext : IdentityDbContext<User>
+    public class ApplicationDBContext : IdentityDbContext<User>
     {
-        public DBContext() { }
-        public DBContext(DbContextOptions<DBContext> options)
+        public ApplicationDBContext() { }
+        public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options)
         : base(options)
         {
-        }
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            var builder = new ConfigurationBuilder()
-                                .SetBasePath(Directory.GetCurrentDirectory())
-                                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-            IConfigurationRoot configuration = builder.Build();
-            optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -37,7 +29,7 @@ namespace TipTrip.Infrastructure.Identity.Persistance
 
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
-                if (!typeof(BaseAttributes).IsAssignableFrom(entityType.ClrType))
+                if (!typeof(BaseModel).IsAssignableFrom(entityType.ClrType))
                 {
                     modelBuilder.Entity(entityType.Name).Property<DateTime>("CreatedAt").HasColumnType("datetime2");
                     modelBuilder.Entity(entityType.Name).Property<string>("CreatedBy").HasColumnType("nvarchar(max)");

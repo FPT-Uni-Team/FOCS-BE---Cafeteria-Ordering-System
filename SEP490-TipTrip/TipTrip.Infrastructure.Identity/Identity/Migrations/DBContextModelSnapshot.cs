@@ -10,7 +10,7 @@ using TipTrip.Infrastructure.Identity.Persistance;
 
 namespace TipTrip.Infrastructure.Identity.Migrations
 {
-    [DbContext(typeof(DBContext))]
+    [DbContext(typeof(ApplicationDBContext))]
     partial class DBContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

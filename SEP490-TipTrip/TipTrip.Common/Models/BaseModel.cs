@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TipTrip.Common.Attributes
+namespace TipTrip.Common.Models
 {
-    public interface BaseAttributes
+    public interface BaseModel
     {
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }

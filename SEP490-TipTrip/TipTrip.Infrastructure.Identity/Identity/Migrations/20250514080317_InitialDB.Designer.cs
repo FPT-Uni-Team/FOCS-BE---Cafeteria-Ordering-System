@@ -11,7 +11,7 @@ using TipTrip.Infrastructure.Identity.Persistance;
 
 namespace TipTrip.Infrastructure.Identity.Migrations
 {
-    [DbContext(typeof(DBContext))]
+    [DbContext(typeof(ApplicationDBContext))]
     [Migration("20250514080317_InitialDB")]
     partial class InitialDB
     {
