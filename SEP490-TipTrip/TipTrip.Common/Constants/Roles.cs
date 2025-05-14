@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace TipTrip.Common.Constants
 {
-    public enum RoleBase
+    public class Roles
     {
-        Admin,
-        Customer
+        public const string Admin = "Admin";
+        public const string Customer = "Customer";
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using TipTrip.Common.Models;
+using TipTrip.Infrastructure.Identity.Identity;
 using TipTrip.Infrastructure.Identity.Identity.Model;
 
 namespace TipTrip.Infrastructure.Identity.Persistance
@@ -37,6 +38,8 @@ namespace TipTrip.Infrastructure.Identity.Persistance
                     modelBuilder.Entity(entityType.Name).Property<string>("UpdatedBy").HasColumnType("nvarchar(max)");
                 }
             }
+
+            modelBuilder.Seed();
         }
     }
 }
