@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using TipTrip.Common.Models;
+using TipTrip.Infrastructure.Identity.Identity;
 using TipTrip.Infrastructure.Identity.Identity.Model;
 
 namespace TipTrip.Infrastructure.Identity.Persistance
@@ -30,7 +31,8 @@ namespace TipTrip.Infrastructure.Identity.Persistance
 
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
-                if (!typeof(BaseModel).IsAssignableFrom(entityType.ClrType))
+                if (entityType.ClrType != typeof(IdentityRole) &&
+                    !typeof(BaseModel).IsAssignableFrom(entityType.ClrType))
                 {
                     modelBuilder.Entity(entityType.Name).Property<DateTime>("CreatedAt").HasColumnType("datetime2");
                     modelBuilder.Entity(entityType.Name).Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
@@ -38,6 +40,8 @@ namespace TipTrip.Infrastructure.Identity.Persistance
                     modelBuilder.Entity(entityType.Name).Property<string>("UpdatedBy").HasColumnType("nvarchar(max)");
                 }
             }
+
+            modelBuilder.Seed();
         }
     }
 }
