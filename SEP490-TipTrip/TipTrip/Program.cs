@@ -24,6 +24,7 @@ builder.Services.AddIdentity<User, IdentityRole>()
 
 builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<ITokenService, TokenService>()
+                .AddScoped<IAuthService, AuthService>()
                 .AddScoped<IUnitOfWork, UnitOfWork<ApplicationDBContext>>()
                 .AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
