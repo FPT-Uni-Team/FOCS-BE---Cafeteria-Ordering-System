@@ -61,11 +61,31 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// CORS
+builder.Services.AddCors(options =>
+{
+    // Allow specific origins
+    options.AddPolicy("AllowSpecificOrigins", policy =>
+    {
+        policy.WithOrigins("")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+    // Allow all origins
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 //Regis middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
+// CORS
+app.UseCors("AllowAll");
 // Enable Swagger middleware (env Development và Production)
 if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
 {
