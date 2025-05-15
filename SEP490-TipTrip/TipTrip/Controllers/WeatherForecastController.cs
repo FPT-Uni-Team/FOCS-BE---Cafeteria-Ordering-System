@@ -1,4 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using TipTrip.Common.Interfaces;
 using TipTrip.Common.Utils;
 
 namespace TipTrip.Controllers
@@ -14,9 +15,12 @@ namespace TipTrip.Controllers
 
         private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        private readonly IEmailHelper _emailHelper;
+
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IEmailHelper emailHelper)
         {
             _logger = logger;
+            _emailHelper = emailHelper;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
@@ -38,5 +42,25 @@ namespace TipTrip.Controllers
 
             return a - b;
         }
+
+        [HttpPost("send-email")]
+        public async Task<IActionResult> SendTestEmail(string toEmail)
+        {
+            try
+            {
+                string subject = "Welcome to TipTrip!";
+                string body = "<h3>Hello from TipTrip 🚀</h3><p>This is a test email sent from the backend.</p>";
+
+                await _emailHelper.SendEmailAsync(toEmail, subject, body);
+
+                return Ok("Email sent successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send email.");
+                return StatusCode(500, "Failed to send email.");
+            }
+        }
+
     }
 }

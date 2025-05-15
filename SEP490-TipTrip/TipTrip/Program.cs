@@ -1,5 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using TipTrip.Common.Helpers;
+using TipTrip.Common.Interfaces;
+using TipTrip.Common.Models;
 using TipTrip.Infrastructure.Identity.Persistance;
 using TipTrip.Middlewares;
 
@@ -8,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.Configure<EmailModels>(builder.Configuration.GetSection("EmailSettings"));// Bind EmailSettings from appsettings.json to EmailModels class
+builder.Services.AddScoped<IEmailHelper, EmailHelper>();
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(
