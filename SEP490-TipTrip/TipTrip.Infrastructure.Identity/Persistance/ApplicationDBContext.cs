@@ -14,6 +14,7 @@ namespace TipTrip.Infrastructure.Identity.Persistance
         : base(options)
         {
         }
+        public DbSet<UserRefreshToken> UserRefreshTokens { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TipTrip.Infrastructure.Identity.Persistance;
 
@@ -11,9 +12,11 @@ using TipTrip.Infrastructure.Identity.Persistance;
 namespace TipTrip.Infrastructure.Identity.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class DBContextModelSnapshot : ModelSnapshot
+    [Migration("20250515074941_update_refreshdb")]
+    partial class update_refreshdb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

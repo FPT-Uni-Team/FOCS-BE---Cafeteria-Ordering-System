@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TipTrip.Application\TipTrip.Application.csproj" />
     <ProjectReference Include="..\TipTrip.Common\TipTrip.Common.csproj" />
     <ProjectReference Include="..\TipTrip.Infrastructure.Identity\TipTrip.Infrastructure.Identity.csproj" />
   </ItemGroup>

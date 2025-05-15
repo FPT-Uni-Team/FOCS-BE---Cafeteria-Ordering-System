@@ -1,8 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using TipTrip.Application.Services;
 using TipTrip.Common.Helpers;
 using TipTrip.Common.Interfaces;
 using TipTrip.Common.Models;
+using TipTrip.Infrastructure.Identity.Identity.Model;
 using TipTrip.Infrastructure.Identity.Persistance;
 using TipTrip.Middlewares;
 
@@ -11,8 +14,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.Configure<EmailModels>(builder.Configuration.GetSection("EmailSettings"));// Bind EmailSettings from appsettings.json to EmailModels class
-builder.Services.AddScoped<IEmailHelper, EmailHelper>();
+builder.Services.Configure<EmailModels>(builder.Configuration.GetSection("EmailSettings")); // Bind EmailSettings from appsettings.json to EmailModels class
+
+builder.Services.AddIdentity<User, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDBContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddScoped<IEmailHelper, EmailHelper>()
+                .AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(
@@ -91,7 +100,7 @@ var app = builder.Build();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 // CORS
 app.UseCors("AllowAll");
-// Enable Swagger middleware (env Development và Production)
+// Enable Swagger middleware (env Development and Production)
 if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
 {
     app.UseSwagger();
