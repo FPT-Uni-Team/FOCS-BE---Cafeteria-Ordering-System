@@ -19,14 +19,14 @@ namespace TipTrip.Common.Helpers
         {
             var email = new MimeMessage();
             email.From.Add(new MailboxAddress(_emailSettings.SenderName, _emailSettings.SenderEmail));
-            email.To.Add(new MailboxAddress("", toEmail));
+            email.To.Add(MailboxAddress.Parse(toEmail));
             email.Subject = subject;
 
-            var bodyBuilder = new BodyBuilder { HtmlBody = body };
-            email.Body = bodyBuilder.ToMessageBody();
+            var builder = new BodyBuilder { HtmlBody = body };
+            email.Body = builder.ToMessageBody();
 
             using var smtp = new SmtpClient();
-            await smtp.ConnectAsync(_emailSettings.Host, _emailSettings.Port, false);
+            await smtp.ConnectAsync(_emailSettings.Host, _emailSettings.Port, MailKit.Security.SecureSocketOptions.StartTls);
             await smtp.AuthenticateAsync(_emailSettings.Username, _emailSettings.Password);
             await smtp.SendAsync(email);
             await smtp.DisconnectAsync(true);
