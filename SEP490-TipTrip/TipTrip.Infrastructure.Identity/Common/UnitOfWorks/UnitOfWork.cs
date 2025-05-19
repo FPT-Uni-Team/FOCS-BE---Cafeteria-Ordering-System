@@ -7,10 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TipTrip.Infrastructure.Identity.Common.Repositories;
+using TipTrip.Infrastructure.Identity.Persistance;
 
 namespace TipTrip.Infrastructure.Identity.Common.UnitOfWorks
 {
-    public class UnitOfWork<TContext> : IUnitOfWork where TContext : DbContext
+    public class UnitOfWork<TContext> : IUnitOfWork where TContext : ApplicationDBContext
     {
         private readonly TContext _context;
         private IDbContextTransaction? _transaction;

@@ -5,15 +5,16 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using TipTrip.Infrastructure.Identity.Persistance;
 
 namespace TipTrip.Infrastructure.Identity.Common.Repositories
 {
     public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
     {
-        protected readonly DbContext _context;
+        protected readonly ApplicationDBContext _context;
         protected readonly DbSet<TEntity> _dbSet;
 
-        public Repository(DbContext context)
+        public Repository(ApplicationDBContext context)
         {
             _context = context;
             _dbSet = _context.Set<TEntity>();

@@ -8,7 +8,7 @@ using TipTrip.Infrastructure.Identity.Identity.Model;
 namespace TipTrip.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("[controller]")] 
     public class WeatherForecastController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
