@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using TipTrip.Application.Mappings;
 using TipTrip.Application.Services;
 using TipTrip.Common.Helpers;
 using TipTrip.Common.Interfaces;
@@ -25,6 +26,7 @@ builder.Services.AddIdentity<User, IdentityRole>()
 builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<ITokenService, TokenService>()
                 .AddScoped<IAuthService, AuthService>()
+                .AddScoped<IEmailService, EmailService>()
                 .AddScoped<IUnitOfWork, UnitOfWork<ApplicationDBContext>>()
                 .AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
@@ -33,6 +35,9 @@ builder.Services.AddDbContext<ApplicationDBContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection"),
         sql => sql.MigrationsAssembly("TipTrip.Infrastructure.Identity")
     ));
+
+//auto mapper
+builder.Services.AddAutoMapper(typeof(MappingProfiles).Assembly);
 
 builder.Services.AddSwaggerGen(options =>
 {
