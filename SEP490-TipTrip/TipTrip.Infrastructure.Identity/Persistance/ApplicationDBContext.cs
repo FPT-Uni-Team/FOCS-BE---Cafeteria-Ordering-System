@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using TipTrip.Common.Models;
+using TipTrip.Infrastructure.Identity.Identity;
 using TipTrip.Infrastructure.Identity.Identity.Model;
 
 namespace TipTrip.Infrastructure.Identity.Persistance
@@ -14,6 +15,7 @@ namespace TipTrip.Infrastructure.Identity.Persistance
         : base(options)
         {
         }
+        public DbSet<UserRefreshToken> UserRefreshTokens { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,13 +31,50 @@ namespace TipTrip.Infrastructure.Identity.Persistance
 
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
-                if (!typeof(BaseModel).IsAssignableFrom(entityType.ClrType))
+                if (entityType.ClrType != typeof(IdentityRole) &&
+                    !typeof(IAuditable).IsAssignableFrom(entityType.ClrType))
                 {
                     modelBuilder.Entity(entityType.Name).Property<DateTime>("CreatedAt").HasColumnType("datetime2");
                     modelBuilder.Entity(entityType.Name).Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
                     modelBuilder.Entity(entityType.Name).Property<DateTime>("UpdatedAt").HasColumnType("datetime2");
                     modelBuilder.Entity(entityType.Name).Property<string>("UpdatedBy").HasColumnType("nvarchar(max)");
                 }
+            }
+
+            modelBuilder.Seed();
+        }
+
+        public override int SaveChanges()
+        {
+            UpdateAuditFields();
+            return base.SaveChanges();
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            UpdateAuditFields();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void UpdateAuditFields()
+        {
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.Entity.GetType() != typeof(IdentityRole) &&
+                            (e.State == EntityState.Added || e.State == EntityState.Modified));
+
+            foreach (var entry in entries)
+            {
+                var now = DateTime.UtcNow;
+                var user = "System"; // Replace with actual user ID, e.g., from HttpContext
+
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Property("CreatedAt").CurrentValue = now;
+                    entry.Property("CreatedBy").CurrentValue = user;
+                }
+
+                entry.Property("UpdatedAt").CurrentValue = now;
+                entry.Property("UpdatedBy").CurrentValue = user;
             }
         }
     }

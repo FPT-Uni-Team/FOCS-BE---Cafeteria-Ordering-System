@@ -1,8 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using TipTrip.Application.Mappings;
+using TipTrip.Application.Services;
 using TipTrip.Common.Helpers;
 using TipTrip.Common.Interfaces;
 using TipTrip.Common.Models;
+using TipTrip.Infrastructure.Identity.Common.Repositories;
+using TipTrip.Infrastructure.Identity.Common.UnitOfWorks;
+using TipTrip.Infrastructure.Identity.Identity.Model;
 using TipTrip.Infrastructure.Identity.Persistance;
 using TipTrip.Middlewares;
 
@@ -11,14 +17,27 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.Configure<EmailModels>(builder.Configuration.GetSection("EmailSettings"));// Bind EmailSettings from appsettings.json to EmailModels class
-builder.Services.AddScoped<IEmailHelper, EmailHelper>();
+builder.Services.Configure<EmailModels>(builder.Configuration.GetSection("EmailSettings")); // Bind EmailSettings from appsettings.json to EmailModels class
+
+builder.Services.AddIdentity<User, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDBContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddScoped<IEmailHelper, EmailHelper>()
+                .AddScoped<ITokenService, TokenService>()
+                .AddScoped<IAuthService, AuthService>()
+                .AddScoped<IEmailService, EmailService>()
+                .AddScoped<IUnitOfWork, UnitOfWork<ApplicationDBContext>>()
+                .AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         sql => sql.MigrationsAssembly("TipTrip.Infrastructure.Identity")
     ));
+
+//auto mapper
+builder.Services.AddAutoMapper(typeof(MappingProfiles).Assembly);
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -66,12 +85,32 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// CORS
+builder.Services.AddCors(options =>
+{
+    // Allow specific origins
+    options.AddPolicy("AllowSpecificOrigins", policy =>
+    {
+        policy.WithOrigins("")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+    // Allow all origins
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 //Regis middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-// Enable Swagger middleware (env Development và Production)
+// CORS
+app.UseCors("AllowAll");
+// Enable Swagger middleware (env Development and Production)
 if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
 {
     app.UseSwagger();

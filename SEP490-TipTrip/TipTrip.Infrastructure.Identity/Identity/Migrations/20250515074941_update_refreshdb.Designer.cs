@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TipTrip.Infrastructure.Identity.Persistance;
 
@@ -11,9 +12,11 @@ using TipTrip.Infrastructure.Identity.Persistance;
 namespace TipTrip.Infrastructure.Identity.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class DBContextModelSnapshot : ModelSnapshot
+    [Migration("20250515074941_update_refreshdb")]
+    partial class update_refreshdb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -31,6 +34,12 @@ namespace TipTrip.Infrastructure.Identity.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -38,6 +47,12 @@ namespace TipTrip.Infrastructure.Identity.Migrations
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -47,22 +62,6 @@ namespace TipTrip.Infrastructure.Identity.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("Roles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "6a25d16f-9e41-431a-86e3-5e7e1620746b",
-                            ConcurrencyStamp = "6a25d16f-9e41-431a-86e3-5e7e1620746b",
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = "cf0a1168-7764-4a16-8e7e-f69c834ba3fe",
-                            ConcurrencyStamp = "cf0a1168-7764-4a16-8e7e-f69c834ba3fe",
-                            Name = "Customer",
-                            NormalizedName = "CUSTOMER"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

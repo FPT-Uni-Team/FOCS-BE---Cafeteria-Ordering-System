@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TipTrip.Common.Exceptions;
 using TipTrip.Common.Interfaces;
 using TipTrip.Common.Utils;
+using TipTrip.Infrastructure.Identity.Common.UnitOfWorks;
+using TipTrip.Infrastructure.Identity.Identity.Model;
 
 namespace TipTrip.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("[controller]")] 
     public class WeatherForecastController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
@@ -16,11 +19,13 @@ namespace TipTrip.Controllers
         private readonly ILogger<WeatherForecastController> _logger;
 
         private readonly IEmailHelper _emailHelper;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, IEmailHelper emailHelper)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IEmailHelper emailHelper, IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _emailHelper = emailHelper;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
@@ -41,6 +46,27 @@ namespace TipTrip.Controllers
             ConditionCheck.CheckCondition(a > b, "a must > b");
 
             return a - b;
+        }
+
+        [HttpPost("test-unit-of-work")]
+        public async Task<int> TestUnit()
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            try
+            {
+                var userRepo = _unitOfWork.Repository<User>();
+
+                var user = await userRepo.FindAsync(x => x.FirstName == "son");
+
+                ConditionCheck.CheckCondition(user.Count() > 0, Errors.SystemError.UnhandledExceptionOccurred);
+
+            } catch(Exception ex)
+            {
+                return -1;
+            }
+
+            return 0;
         }
 
         [HttpPost("send-email")]
