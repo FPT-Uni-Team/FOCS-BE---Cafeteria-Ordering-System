@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TipTrip.Common.Models
 {
-    public class BaseModel
+    public interface IAuditable
     {
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }

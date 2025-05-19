@@ -32,7 +32,7 @@ namespace TipTrip.Infrastructure.Identity.Persistance
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 if (entityType.ClrType != typeof(IdentityRole) &&
-                    !typeof(BaseModel).IsAssignableFrom(entityType.ClrType))
+                    !typeof(IAuditable).IsAssignableFrom(entityType.ClrType))
                 {
                     modelBuilder.Entity(entityType.Name).Property<DateTime>("CreatedAt").HasColumnType("datetime2");
                     modelBuilder.Entity(entityType.Name).Property<string>("CreatedBy").HasColumnType("nvarchar(max)");
