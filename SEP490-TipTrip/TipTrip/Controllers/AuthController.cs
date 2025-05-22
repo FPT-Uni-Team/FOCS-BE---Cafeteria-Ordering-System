@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Formats.Asn1;
-using TipTrip.Common.Interfaces;
-using TipTrip.Common.Models;
+using FOCS.Common.Interfaces;
+using FOCS.Common.Models;
 
-namespace TipTrip.Controllers
+namespace FOCS.Controllers
 {
     [Route("api/me")]
     [ApiController]

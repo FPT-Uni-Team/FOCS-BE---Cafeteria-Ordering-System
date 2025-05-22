@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace TipTrip.Common.Models
+namespace FOCS.Common.Models
 {
     public class ResetPasswordRequest
     {

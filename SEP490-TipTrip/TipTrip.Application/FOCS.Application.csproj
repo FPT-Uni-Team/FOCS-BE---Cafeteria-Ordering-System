@@ -15,8 +15,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\TipTrip.Common\TipTrip.Common.csproj" />
-	  <ProjectReference Include="..\TipTrip.Infrastructure.Identity\TipTrip.Infrastructure.Identity.csproj" />
+	  <ProjectReference Include="..\TipTrip.Common\FOCS.Common.csproj" />
+	  <ProjectReference Include="..\TipTrip.Infrastructure.Identity\FOCS.Infrastructure.Identity.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

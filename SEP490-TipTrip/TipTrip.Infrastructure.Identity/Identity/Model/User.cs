@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TipTrip.Common.Models;
+using FOCS.Common.Models;
 
-namespace TipTrip.Infrastructure.Identity.Identity.Model
+namespace FOCS.Infrastructure.Identity.Identity.Model
 {
     public class User : IdentityUser, IAuditable
     {

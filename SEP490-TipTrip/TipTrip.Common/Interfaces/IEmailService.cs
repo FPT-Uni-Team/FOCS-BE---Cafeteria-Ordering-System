@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TipTrip.Common.Models;
+using FOCS.Common.Models;
 
-namespace TipTrip.Common.Interfaces
+namespace FOCS.Common.Interfaces
 {
     public interface IEmailService
     {

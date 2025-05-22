@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TipTrip.Common.Constants
+namespace FOCS.Common.Constants
 {
     public class Roles
     {

@@ -1,4 +1,4 @@
-﻿namespace TipTrip.Common.Interfaces
+﻿namespace FOCS.Common.Interfaces
 {
     public interface IEmailHelper
     {

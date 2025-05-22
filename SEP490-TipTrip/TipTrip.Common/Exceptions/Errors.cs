@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TipTrip.Common.Exceptions
+namespace FOCS.Common.Exceptions
 {
     public static class Errors
     {

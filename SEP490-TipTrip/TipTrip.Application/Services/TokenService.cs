@@ -8,9 +8,9 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using TipTrip.Common.Interfaces;
+using FOCS.Common.Interfaces;
 
-namespace TipTrip.Application.Services
+namespace FOCS.Application.Services
 {
     public class TokenService : ITokenService
     {

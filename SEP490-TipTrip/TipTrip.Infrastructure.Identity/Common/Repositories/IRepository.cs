@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TipTrip.Infrastructure.Identity.Common.Repositories
+namespace FOCS.Infrastructure.Identity.Common.Repositories
 {
     public interface IRepository<TEntity> where TEntity : class
     {

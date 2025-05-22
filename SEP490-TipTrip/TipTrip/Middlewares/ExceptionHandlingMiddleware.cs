@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using TipTrip.Common.Exceptions;
+using FOCS.Common.Exceptions;
 
-namespace TipTrip.Middlewares
+namespace FOCS.Middlewares
 {
     public class ExceptionHandlingMiddleware
     {

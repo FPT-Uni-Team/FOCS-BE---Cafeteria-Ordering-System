@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TipTrip.Application.Mappings
+namespace FOCS.Application.Mappings
 {
     public class MappingProfiles : Profile
     {

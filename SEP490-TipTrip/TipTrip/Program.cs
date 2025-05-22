@@ -1,16 +1,16 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using TipTrip.Application.Mappings;
-using TipTrip.Application.Services;
-using TipTrip.Common.Helpers;
-using TipTrip.Common.Interfaces;
-using TipTrip.Common.Models;
-using TipTrip.Infrastructure.Identity.Common.Repositories;
-using TipTrip.Infrastructure.Identity.Common.UnitOfWorks;
-using TipTrip.Infrastructure.Identity.Identity.Model;
-using TipTrip.Infrastructure.Identity.Persistance;
-using TipTrip.Middlewares;
+using FOCS.Application.Mappings;
+using FOCS.Application.Services;
+using FOCS.Common.Helpers;
+using FOCS.Common.Interfaces;
+using FOCS.Common.Models;
+using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Infrastructure.Identity.Common.UnitOfWorks;
+using FOCS.Infrastructure.Identity.Identity.Model;
+using FOCS.Infrastructure.Identity.Persistance;
+using FOCS.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 

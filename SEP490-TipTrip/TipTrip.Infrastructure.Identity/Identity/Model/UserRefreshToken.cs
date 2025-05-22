@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TipTrip.Infrastructure.Identity.Identity.Model
+namespace FOCS.Infrastructure.Identity.Identity.Model
 {
     public class UserRefreshToken
     {

@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
-using TipTrip.Common.Interfaces;
-using TipTrip.Common.Models;
+using FOCS.Common.Interfaces;
+using FOCS.Common.Models;
 
-namespace TipTrip.Common.Helpers
+namespace FOCS.Common.Helpers
 {
     public class EmailHelper : IEmailHelper
     {

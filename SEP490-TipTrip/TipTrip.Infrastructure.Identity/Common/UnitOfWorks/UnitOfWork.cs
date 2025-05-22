@@ -6,10 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TipTrip.Infrastructure.Identity.Common.Repositories;
-using TipTrip.Infrastructure.Identity.Persistance;
+using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Infrastructure.Identity.Persistance;
 
-namespace TipTrip.Infrastructure.Identity.Common.UnitOfWorks
+namespace FOCS.Infrastructure.Identity.Common.UnitOfWorks
 {
     public class UnitOfWork<TContext> : IUnitOfWork where TContext : ApplicationDBContext
     {

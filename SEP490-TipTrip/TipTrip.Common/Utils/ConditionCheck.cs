@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TipTrip.Common.Exceptions;
+using FOCS.Common.Exceptions;
 
-namespace TipTrip.Common.Utils
+namespace FOCS.Common.Utils
 {
     public static class ConditionCheck
     {

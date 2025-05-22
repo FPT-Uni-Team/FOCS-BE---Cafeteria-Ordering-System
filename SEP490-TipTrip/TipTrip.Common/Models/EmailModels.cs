@@ -1,4 +1,4 @@
-﻿namespace TipTrip.Common.Models
+﻿namespace FOCS.Common.Models
 {
     public class EmailModels
     {

@@ -11,14 +11,14 @@ using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using TipTrip.Common.Constants;
-using TipTrip.Common.Exceptions;
-using TipTrip.Common.Interfaces;
-using TipTrip.Common.Models;
-using TipTrip.Infrastructure.Identity.Common.Repositories;
-using TipTrip.Infrastructure.Identity.Identity.Model;
+using FOCS.Common.Constants;
+using FOCS.Common.Exceptions;
+using FOCS.Common.Interfaces;
+using FOCS.Common.Models;
+using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Infrastructure.Identity.Identity.Model;
 
-namespace TipTrip.Application.Services
+namespace FOCS.Application.Services
 {
     public class AuthService : IAuthService
     {

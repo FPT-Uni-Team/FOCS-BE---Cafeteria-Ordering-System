@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using TipTrip.Infrastructure.Identity.Persistance;
+using FOCS.Infrastructure.Identity.Persistance;
 
 public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDBContext>
 {

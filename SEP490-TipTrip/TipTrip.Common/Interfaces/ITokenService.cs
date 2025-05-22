@@ -5,7 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TipTrip.Common.Interfaces
+namespace FOCS.Common.Interfaces
 {
     public interface ITokenService
     {

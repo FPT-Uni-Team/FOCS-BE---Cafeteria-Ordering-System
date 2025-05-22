@@ -2,11 +2,11 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using TipTrip.Common.Models;
-using TipTrip.Infrastructure.Identity.Identity;
-using TipTrip.Infrastructure.Identity.Identity.Model;
+using FOCS.Infrastructure.Identity.Identity;
+using FOCS.Infrastructure.Identity.Identity.Model;
+using FOCS.Common.Models;
 
-namespace TipTrip.Infrastructure.Identity.Persistance
+namespace FOCS.Infrastructure.Identity.Persistance
 {
     public class ApplicationDBContext : IdentityDbContext<User>
     {

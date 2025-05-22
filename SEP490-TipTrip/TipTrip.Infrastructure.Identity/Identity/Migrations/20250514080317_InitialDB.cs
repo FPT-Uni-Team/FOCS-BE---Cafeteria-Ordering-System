@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace TipTrip.Infrastructure.Identity.Migrations
+namespace FOCS.Infrastructure.Identity.Migrations
 {
     /// <inheritdoc />
     public partial class InitialDB : Migration

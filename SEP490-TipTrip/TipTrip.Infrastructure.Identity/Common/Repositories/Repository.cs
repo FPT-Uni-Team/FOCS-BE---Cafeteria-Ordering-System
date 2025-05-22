@@ -5,9 +5,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
-using TipTrip.Infrastructure.Identity.Persistance;
+using FOCS.Infrastructure.Identity.Persistance;
 
-namespace TipTrip.Infrastructure.Identity.Common.Repositories
+namespace FOCS.Infrastructure.Identity.Common.Repositories
 {
     public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
     {

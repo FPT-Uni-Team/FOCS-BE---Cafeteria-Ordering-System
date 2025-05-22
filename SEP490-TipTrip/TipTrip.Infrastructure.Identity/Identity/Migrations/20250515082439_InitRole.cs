@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace TipTrip.Infrastructure.Identity.Migrations
+namespace FOCS.Infrastructure.Identity.Migrations
 {
     /// <inheritdoc />
     public partial class InitRole : Migration

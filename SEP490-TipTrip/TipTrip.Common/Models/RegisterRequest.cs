@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TipTrip.Common.Models
+namespace FOCS.Common.Models
 {
     public class RegisterRequest
     {

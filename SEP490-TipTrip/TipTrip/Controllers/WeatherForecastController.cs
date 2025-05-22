@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TipTrip.Common.Exceptions;
-using TipTrip.Common.Interfaces;
-using TipTrip.Common.Utils;
-using TipTrip.Infrastructure.Identity.Common.UnitOfWorks;
-using TipTrip.Infrastructure.Identity.Identity.Model;
+using FOCS.Common.Exceptions;
+using FOCS.Common.Interfaces;
+using FOCS.Common.Utils;
+using FOCS.Infrastructure.Identity.Common.UnitOfWorks;
+using FOCS.Infrastructure.Identity.Identity.Model;
 
-namespace TipTrip.Controllers
+namespace FOCS.Controllers
 {
     [ApiController]
     [Route("[controller]")] 

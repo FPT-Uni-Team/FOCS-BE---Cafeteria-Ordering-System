@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
-using TipTrip.Common.Interfaces;
-using TipTrip.Common.Models;
+using FOCS.Common.Interfaces;
+using FOCS.Common.Models;
 
-namespace TipTrip.Application.Services
+namespace FOCS.Application.Services
 {
     public class EmailService : IEmailService
     {

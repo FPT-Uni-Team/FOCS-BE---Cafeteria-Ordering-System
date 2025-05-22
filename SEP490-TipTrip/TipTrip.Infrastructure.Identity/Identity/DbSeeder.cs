@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TipTrip.Common.Constants;
+using FOCS.Common.Constants;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace TipTrip.Infrastructure.Identity.Identity
+namespace FOCS.Infrastructure.Identity.Identity
 {
     public static class DbSeeder
     {

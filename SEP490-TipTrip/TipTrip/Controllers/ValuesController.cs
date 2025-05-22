@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace TipTrip.Controllers
+namespace FOCS.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
