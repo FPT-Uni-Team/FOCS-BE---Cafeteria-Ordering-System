@@ -4,12 +4,14 @@ using FOCS.Common.Interfaces;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.UnitOfWorks;
 using FOCS.Infrastructure.Identity.Identity.Model;
+using Microsoft.AspNetCore.Authorization;
+using FOCS.Common.Constants;
 
 namespace FOCS.Controllers
 {
     [ApiController]
     [Route("[controller]")] 
-    public class WeatherForecastController : ControllerBase
+    public class WeatherForecastController : FocsController
     {
         private static readonly string[] Summaries = new[]
         {
@@ -40,7 +42,8 @@ namespace FOCS.Controllers
             .ToArray();
         }
 
-        [HttpPost]
+        [HttpPost("test-middleware")]
+        [Authorize(Roles = Roles.User)]
         public int TestMiddleware(int a, int b)
         {
             ConditionCheck.CheckCondition(a > b, "a must > b");

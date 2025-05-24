@@ -89,6 +89,19 @@ namespace FOCS.Application.Services
                 };  
             }
 
+            if (!user.EmailConfirmed)
+            {
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                await _emailService.SendEmailConfirmationAsync(user.Email, token);
+
+                return new AuthResult
+                {
+                    IsSuccess = false,
+                    Errors = new List<string>() { Errors.AuthError.NotVerifyAccount }
+                };
+            }
+
             return await GenerateAuthResult(user);
 
         }
@@ -145,9 +158,10 @@ namespace FOCS.Application.Services
             var user = new User
             {
                 Email = request.Email,
-                FirstName = request.FullName.Split(" ")[0],
-                LastName = request.FullName.Split(" ")[1],
-                UserName = request.Email
+                FirstName = request.Firstname,
+                LastName = request.Lastname,
+                UserName = request.Email,
+                PhoneNumber = request.Phone
             };
 
             var result = await _userManager.CreateAsync(user, request.Password);
@@ -182,18 +196,25 @@ namespace FOCS.Application.Services
         private async Task<AuthResult> GenerateAuthResult(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"]);
+            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault() ?? "User";
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, role) 
+            };
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email)
-            }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
+
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var refreshToken = _tokenService.GenerateRefreshToken();
