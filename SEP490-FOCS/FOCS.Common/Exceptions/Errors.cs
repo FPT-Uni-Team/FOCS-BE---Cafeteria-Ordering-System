@@ -23,6 +23,7 @@ namespace FOCS.Common.Exceptions
             public const string WrongPassword = "Wrong password";
             public const string PasswordNotMatch = "Passwords do not match.";
             public const string InvalidRefreshToken = "Invalid refresh token";
+            public const string NotVerifyAccount = "Account is not verify";
         }
     }
 }

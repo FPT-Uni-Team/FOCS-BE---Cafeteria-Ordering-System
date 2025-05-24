@@ -8,7 +8,7 @@ namespace FOCS.Controllers
 {
     [Route("api/me")]
     [ApiController]
-    public class AuthController : ValuesController
+    public class AuthController : FocsController
     {
         private readonly IAuthService _authService;
 

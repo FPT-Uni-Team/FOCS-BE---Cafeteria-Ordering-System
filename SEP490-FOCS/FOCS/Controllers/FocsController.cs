@@ -4,9 +4,8 @@ using System.Security.Claims;
 
 namespace FOCS.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public abstract class ValuesController : ControllerBase
+    public class FocsController : ControllerBase
     {
         protected string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier);
         protected string Email => User.FindFirstValue(ClaimTypes.Email);

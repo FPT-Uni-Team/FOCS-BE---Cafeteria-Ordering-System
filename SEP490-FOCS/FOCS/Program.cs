@@ -11,6 +11,9 @@ using FOCS.Infrastructure.Identity.Common.UnitOfWorks;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Infrastructure.Identity.Persistance;
 using FOCS.Middlewares;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,7 +65,7 @@ builder.Services.AddSwaggerGen(options =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer",
         BearerFormat = "JWT",
-        In = ParameterLocation.Header,
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Description = "Enter JWT token format: **Bearer {token}**\n\nExample: `Bearer eyJhbGciOiJIUzI1...`"
     });
 
@@ -75,15 +78,32 @@ builder.Services.AddSwaggerGen(options =>
                 {
                     Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
-                },
-                Scheme = "oauth2",
-                Name = "Bearer",
-                In = ParameterLocation.Header
+                }
             },
-            new List<string>()
+            new string[] { }
         }
     });
 });
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
+
 
 // CORS
 builder.Services.AddCors(options =>
@@ -104,23 +124,31 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddAuthentication();
+
 var app = builder.Build();
 
 //Regis middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 // CORS
 app.UseCors("AllowAll");
-// Enable Swagger middleware (env Development and Production)
-if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
+    app.UseSwaggerUI();
+}
+else
+{
+    app.UseSwagger(); // Swagger on Production
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "My Own API v1");
-        c.DocumentTitle = "My API Documentation";
-        c.RoutePrefix = "swagger"; // route: /swagger
-        c.DefaultModelsExpandDepth(-1); // Hide Models default if dont need
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API v1");
+        c.RoutePrefix = "swagger";
     });
+
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
