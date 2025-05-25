@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Formats.Asn1;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
+using System.Security.Claims;
 
 namespace FOCS.Controllers
 {
@@ -36,5 +37,10 @@ namespace FOCS.Controllers
         }
 
 
+        [HttpPost("change-password")]
+        public async Task<ChangePasswordResponse> ChangePassword(ChangePasswordRequest request, ClaimsPrincipal User)
+        {
+            return await _authService.ChangePassword(request, User);
+        }
     }
 }

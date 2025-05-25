@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using FOCS.Common.Models;
@@ -16,5 +17,6 @@ namespace FOCS.Common.Interfaces
         Task<bool> ConfirmEmailAsync(string userId, string token);
         Task<bool> ForgotPasswordAsync(string email);
         Task<bool> ResetPasswordAsync(ResetPasswordRequest request);
+        Task<ChangePasswordResponse> ChangePassword(ChangePasswordRequest request, ClaimsPrincipal user);
     }
 }
