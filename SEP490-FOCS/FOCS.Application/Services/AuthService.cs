@@ -17,6 +17,8 @@ using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Infrastructure.Identity.Identity.Model;
+using Microsoft.Extensions.Logging;
+using FOCS.Common.Utils;
 
 namespace FOCS.Application.Services
 {
@@ -24,15 +26,16 @@ namespace FOCS.Application.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
-
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
-
         private readonly IEmailService _emailService;
         private readonly ITokenService _tokenService;
-
         private readonly IRepository<UserRefreshToken> _userRefreshTokenRepository;
-        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, IConfiguration config, IMapper mapper, IEmailService emailService, ITokenService tokenService, IRepository<UserRefreshToken> userRepo)
+        private readonly ILogger<AuthService> _logger;
+
+        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager,
+            IConfiguration config, IMapper mapper, IEmailService emailService, ITokenService tokenService,
+            IRepository<UserRefreshToken> userRepo, ILogger<AuthService> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -41,6 +44,7 @@ namespace FOCS.Application.Services
             _emailService = emailService;
             _tokenService = tokenService;
             _userRefreshTokenRepository = userRepo;
+            _logger = logger;
         }
 
         public async Task<bool> ConfirmEmailAsync(string userId, string token)
@@ -99,13 +103,13 @@ namespace FOCS.Application.Services
                 };
             }
 
-            if(!await _userManager.CheckPasswordAsync(user, request.Password))
+            if (!await _userManager.CheckPasswordAsync(user, request.Password))
             {
                 return new AuthResult
                 {
                     IsSuccess = false,
                     Errors = new List<string>() { Errors.AuthError.WrongPassword }
-                };  
+                };
             }
 
             if (!user.EmailConfirmed)
@@ -129,7 +133,7 @@ namespace FOCS.Application.Services
         {
             var tokens = await _userRefreshTokenRepository.FindAsync(t => t.UserId == userId && !t.IsRevoked);
 
-            foreach(var token in tokens)
+            foreach (var token in tokens)
             {
                 token.IsRevoked = true;
             }
@@ -141,7 +145,7 @@ namespace FOCS.Application.Services
         {
             var tokenEntity = (await _userRefreshTokenRepository.FindAsync(x => x.Token == refreshToken && !x.IsRevoked)).FirstOrDefault();
 
-            if(tokenEntity == null || tokenEntity.ExpirationDate < DateTime.Now)
+            if (tokenEntity == null || tokenEntity.ExpirationDate < DateTime.Now)
             {
                 return new AuthResult
                 {
@@ -152,7 +156,7 @@ namespace FOCS.Application.Services
 
             var user = await _userManager.FindByIdAsync(tokenEntity.UserId);
 
-            if(user == null)
+            if (user == null)
             {
                 return new AuthResult
                 {
@@ -211,6 +215,27 @@ namespace FOCS.Application.Services
             return result.Succeeded;
         }
 
+        public async Task<bool> ChangePassword(ChangePasswordRequest request, string email)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                ConditionCheck.CheckCondition(user != null, Errors.Common.NotFound);
+
+                var changePasswordResult = await _userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
+                ConditionCheck.CheckCondition(changePasswordResult.Succeeded, 
+                    string.Join("; ", changePasswordResult.Errors.Select(e => e.Description)));
+
+                await _signInManager.RefreshSignInAsync(user);
+                _logger.LogInformation($"User changed their password successfully.");
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
         #region private method
         private async Task<AuthResult> GenerateAuthResult(User user)
         {
@@ -224,7 +249,7 @@ namespace FOCS.Application.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, role) 
+                new Claim(ClaimTypes.Role, role)
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
