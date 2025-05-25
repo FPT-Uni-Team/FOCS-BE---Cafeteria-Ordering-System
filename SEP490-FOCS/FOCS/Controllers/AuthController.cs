@@ -38,9 +38,9 @@ namespace FOCS.Controllers
 
 
         [HttpPost("change-password")]
-        public async Task<ChangePasswordResponse> ChangePassword(ChangePasswordRequest request, ClaimsPrincipal User)
+        public async Task<bool> ChangePassword(ChangePasswordRequest request, string email)
         {
-            return await _authService.ChangePassword(request, User);
+            return await _authService.ChangePassword(request, Email);
         }
     }
 }

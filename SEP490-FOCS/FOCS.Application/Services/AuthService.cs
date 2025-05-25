@@ -18,6 +18,7 @@ using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using Microsoft.Extensions.Logging;
+using FOCS.Common.Utils;
 
 namespace FOCS.Application.Services
 {
@@ -195,41 +196,26 @@ namespace FOCS.Application.Services
             return result.Succeeded;
         }
 
-        public async Task<ChangePasswordResponse> ChangePassword(ChangePasswordRequest request, ClaimsPrincipal User)
+        public async Task<bool> ChangePassword(ChangePasswordRequest request, string email)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            try
             {
-                return new ChangePasswordResponse
-                {
-                    IsSuccess = false,
-                    Errors = new List<string>() { $"Unable to load user with ID '{_userManager.GetUserId(User)}'." }
-                };
+                var user = await _userManager.FindByEmailAsync(email);
+                ConditionCheck.CheckCondition(user != null, Errors.Common.NotFound);
+
+                var changePasswordResult = await _userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
+                ConditionCheck.CheckCondition(changePasswordResult.Succeeded, 
+                    string.Join("; ", changePasswordResult.Errors.Select(e => e.Description)));
+
+                await _signInManager.RefreshSignInAsync(user);
+                _logger.LogInformation($"User changed their password successfully.");
+
+                return true;
             }
-
-            var changePasswordResult = await _userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
-            if (!changePasswordResult.Succeeded)
+            catch (Exception ex)
             {
-                var errorList = new List<string>();
-                foreach (var error in changePasswordResult.Errors)
-                {
-                    errorList.Add(error.Description);
-                }
-                return new ChangePasswordResponse
-                {
-                    IsSuccess = false,
-                    Errors = errorList
-                };
+                return false;
             }
-
-            await _signInManager.RefreshSignInAsync(user);
-            _logger.LogInformation($"User changed their password successfully.");
-
-            return new ChangePasswordResponse
-            {
-                IsSuccess = true,
-                Errors = new List<string>() { "Your password has been changed." }
-            };
         }
         #region private method
         private async Task<AuthResult> GenerateAuthResult(User user)
