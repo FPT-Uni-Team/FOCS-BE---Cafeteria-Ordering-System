@@ -57,14 +57,33 @@ namespace FOCS.Application.Services
         public async Task<bool> ForgotPasswordAsync(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
+            if (user == null) return false;
 
-            if(user == null) return false;
+            // Generate a new password
+            var newPassword = "NewPwd@" + Guid.NewGuid().ToString("N")[..6] ; // ví dụ: NewPwdA1B2C3
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            // create a token for password reset
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            var callbackUrl = $"https://yourapp.com/reset-password?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
+            // reset the password using the token
+            var result = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+            if (!result.Succeeded) return false;
 
-            return await _emailService.SendPasswordResetLinkAsync(email, callbackUrl);
+            // send email with new password
+            var resetRequest = new ResetPasswordRequest
+            {
+                Email = email,
+                Token = resetToken,
+                NewPassword = newPassword
+            };
+            await _emailService.SendPasswordResetAsync(resetRequest);
+
+            // Lock the user account for a short period to prevent abuse
+            user.LockoutEnabled = true;
+            user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(1);
+            await _userManager.UpdateAsync(user);
+
+            return true;
         }
 
         public async Task<AuthResult> LoginAsync(LoginRequest request)

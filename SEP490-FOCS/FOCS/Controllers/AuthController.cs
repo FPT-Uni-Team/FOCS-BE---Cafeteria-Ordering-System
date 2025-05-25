@@ -35,6 +35,33 @@ namespace FOCS.Controllers
             await _authService.LogoutAsync(UserId);
         }
 
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.ForgotPasswordAsync(request.Email);
+
+            if (!result)
+                return NotFound(new { message = "User not found with the provided email." });
+
+            return Ok(new { message = "A new password has been sent to your email." });
+        }
+
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            var result = await _authService.ConfirmEmailAsync(userId, token);
+            if (result)
+            {
+                return Ok(new { message = "Email confirmed successfully!" });
+            }
+            else
+            {
+                return BadRequest(new { message = "Email confirmation failed." });
+            }
+        }
 
     }
 }

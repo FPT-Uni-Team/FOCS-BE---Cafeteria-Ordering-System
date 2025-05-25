@@ -36,7 +36,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sql => sql.MigrationsAssembly("TipTrip.Infrastructure.Identity")
+        sql => sql.MigrationsAssembly("FOCS.Infrastructure.Identity")
     ));
 
 //auto mapper
