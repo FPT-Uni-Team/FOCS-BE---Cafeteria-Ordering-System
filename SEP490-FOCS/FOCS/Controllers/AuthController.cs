@@ -47,7 +47,17 @@ namespace FOCS.Controllers
             if (!result)
                 return NotFound(new { message = "User not found with the provided email." });
 
-            return Ok(new { message = "A new password has been sent to your email." });
+            return Ok(new { message = "A new reset password link has been sent to your email." });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            var result = await _authService.ResetPasswordAsync(request);
+            if (!result)
+                return BadRequest("Reset password failed. The token might be invalid or expired.");
+
+            return Ok("Password has been reset successfully.");
         }
 
         [HttpPost("confirm-email")]
