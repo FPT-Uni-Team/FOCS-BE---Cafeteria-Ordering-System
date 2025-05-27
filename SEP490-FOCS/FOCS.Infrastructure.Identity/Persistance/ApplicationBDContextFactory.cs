@@ -8,7 +8,7 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
     public ApplicationDBContext CreateDbContext(string[] args)
     {
         var config = new ConfigurationBuilder()
-            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../TipTrip"))
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../FOCS"))
             .AddJsonFile("appsettings.json")
             .Build();
 

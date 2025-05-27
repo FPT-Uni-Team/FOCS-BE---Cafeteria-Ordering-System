@@ -61,12 +61,14 @@ namespace FOCS.Application.Services
         public async Task<bool> ForgotPasswordAsync(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
-
             if (user == null) return false;
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            // generate reset token
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            var callbackUrl = $"https://yourapp.com/reset-password?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
+            // create reset password link
+            var encodedToken = Uri.EscapeDataString(resetToken);
+            var callbackUrl = $"https://your-frontend-url.com/reset-password?email={Uri.EscapeDataString(email)}&token={encodedToken}";
 
             return await _emailService.SendPasswordResetLinkAsync(email, callbackUrl);
         }
