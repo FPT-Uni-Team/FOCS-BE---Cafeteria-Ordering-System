@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FOCS.Infrastructure.Identit
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FOCS.Application", "FOCS.Application\FOCS.Application.csproj", "{35C98D4E-03F4-448A-A632-E7D52E3B134F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FOCS.Order.Infrastucture", "FOCS.Order.Infrastucture\FOCS.Order.Infrastucture.csproj", "{51747E2C-8BD8-49DE-B919-3F43EAE10DBD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FOCS.Order.Infrastucture", "FOCS.Order.Infrastucture\FOCS.Order.Infrastucture.csproj", "{51747E2C-8BD8-49DE-B919-3F43EAE10DBD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FOCS.Realtime.Hubs", "FOCS.Realtime.Hub\FOCS.Realtime.Hubs.csproj", "{B3AF03F3-E827-4BC4-8ED2-73934FA534DC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{51747E2C-8BD8-49DE-B919-3F43EAE10DBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51747E2C-8BD8-49DE-B919-3F43EAE10DBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51747E2C-8BD8-49DE-B919-3F43EAE10DBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3AF03F3-E827-4BC4-8ED2-73934FA534DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3AF03F3-E827-4BC4-8ED2-73934FA534DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3AF03F3-E827-4BC4-8ED2-73934FA534DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3AF03F3-E827-4BC4-8ED2-73934FA534DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
