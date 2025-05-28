@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Serilog;
+using FOCS.Realtime.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +52,9 @@ builder.Services.AddDbContext<ApplicationDBContext>(options =>
 
 //auto mapper
 builder.Services.AddAutoMapper(typeof(MappingProfiles).Assembly);
+
+//SignalR
+builder.Services.AddSignalR();
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -144,6 +148,10 @@ app.UseSerilogRequestLogging();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 // CORS
 app.UseCors("AllowAll");
+
+//SignalR
+app.MapHub<OrderHub>("/orders");
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

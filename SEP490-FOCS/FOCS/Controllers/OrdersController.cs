@@ -1,7 +1,10 @@
-﻿using FOCS.Common.Constants;
+﻿using FOCS.Application.DTOs;
+using FOCS.Common.Constants;
+using FOCS.Realtime.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FOCS.Controllers
 {
@@ -9,13 +12,19 @@ namespace FOCS.Controllers
     [ApiController]
     public class OrdersController : FocsController
     {
-        public OrdersController() { }
+        //SignalR 
+        private readonly IHubContext<OrderHub> _orderHubContext;
 
-        [HttpPost("test")]
-        [Authorize(Roles = Roles.User)]
-        public IActionResult Test(int a, int b)
+        public OrdersController(IHubContext<OrderHub> hubContext)
         {
-            return a > b ? Ok() : BadRequest();
+            _orderHubContext = hubContext;  
+        }
+
+        [HttpPost("notify-kitchen")]
+        public async Task NotifyKitchenAsync(OrderWrapDTO orderWrapDTO)
+        {
+            var group = SignalRGroups.Kitchen(orderWrapDTO.StoreId);
+            await _orderHubContext.Clients.Group(group).SendAsync(Constants.Method.ReceiveOrderWrapUpdate, orderWrapDTO);
         }
 
     }
