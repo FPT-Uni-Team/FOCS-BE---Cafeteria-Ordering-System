@@ -18,8 +18,4 @@
 	  <ProjectReference Include="..\FOCS.Common\FOCS.Common.csproj" />
 	  <ProjectReference Include="..\FOCS.Infrastructure.Identity\FOCS.Infrastructure.Identity.csproj" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="DTOs\" />
-	</ItemGroup>
 </Project>

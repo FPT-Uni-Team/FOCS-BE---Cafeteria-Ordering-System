@@ -12,6 +12,8 @@ namespace FOCS.Controllers
         protected string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier);
         protected string Email => User.FindFirstValue(ClaimTypes.Email);
         protected string Role => User.FindFirstValue(ClaimTypes.Role);
+
+        protected string StoreId => User.FindFirstValue("StoreId");
         protected string AccessToken
         {
             get

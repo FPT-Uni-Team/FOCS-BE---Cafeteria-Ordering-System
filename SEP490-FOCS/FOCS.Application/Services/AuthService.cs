@@ -108,7 +108,7 @@ namespace FOCS.Application.Services
                 };
             }
 
-            return await GenerateAuthResult(user);
+            return await GenerateAuthResult(user, request.StoreId);
 
         }
 
@@ -151,7 +151,7 @@ namespace FOCS.Application.Services
             tokenEntity.IsRevoked = true;
             await _userRefreshTokenRepository.SaveChangesAsync();
 
-            return await GenerateAuthResult(user);
+            return await GenerateAuthResult(user, string.Empty);
         }
 
         public async Task<AuthResult> RegisterAsync(RegisterRequest request)
@@ -167,7 +167,8 @@ namespace FOCS.Application.Services
                 FirstName = request.Firstname,
                 LastName = request.Lastname,
                 UserName = request.Email,
-                PhoneNumber = request.Phone
+                PhoneNumber = request.Phone,
+                StoreId = Guid.Parse(request.StoreId)
             };
 
             var result = await _userManager.CreateAsync(user, request.Password);
@@ -184,7 +185,7 @@ namespace FOCS.Application.Services
             // Send confirmation email (external email service assumed)
             await _emailService.SendEmailConfirmationAsync(user.Email, token);
 
-            return await GenerateAuthResult(user);
+            return await GenerateAuthResult(user, request.StoreId);
         }
 
         public async Task<bool> ResetPasswordAsync(ResetPasswordRequest request)
@@ -220,7 +221,7 @@ namespace FOCS.Application.Services
             }
         }
         #region private method
-        private async Task<AuthResult> GenerateAuthResult(User user)
+        private async Task<AuthResult> GenerateAuthResult(User user, string storeId)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
@@ -232,7 +233,8 @@ namespace FOCS.Application.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, role)
+                new Claim(ClaimTypes.Role, role), 
+                new Claim("StoreId", storeId)
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
