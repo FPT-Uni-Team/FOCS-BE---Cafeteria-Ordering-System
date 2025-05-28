@@ -1,4 +1,5 @@
-﻿using FOCS.Infrastructure.Identity.Identity.Model;
+﻿using FOCS.Common.Models;
+using FOCS.Infrastructure.Identity.Identity.Model;
 using MimeKit.Tnef;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace FOCS.Order.Infrastucture.Entities
 {
-    public class Feedback
+    public class Feedback : IAuditable
     {
         public Guid Id { get; set; }
 
@@ -20,6 +21,10 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public Guid? UserId { get; set; }
 
+        public DateTime? CreatedAt { get; set; }
+        public string? CreatedBy { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public string? UpdatedBy { get; set; }
 
         public Guid OrderId { get; set; }
         public Order Order { get; set; }
