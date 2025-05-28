@@ -1,4 +1,5 @@
-﻿using FOCS.Common.Models;
+﻿using FOCS.Common.Enums;
+using FOCS.Common.Models;
 using MailKit.Search;
 using System;
 using System.Collections.Generic;
@@ -39,6 +40,10 @@ namespace FOCS.Order.Infrastucture.Entities
         //Coupon
         public Guid? CouponId {  get; set; }
         public Coupon Coupon {  get; set; }
+
+        //Order wrap 
+        public Guid? OrderWrapId { get; set; }
+        public OrderWrap OrderWrap { get; set; }
 
         //Order details
         public ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();

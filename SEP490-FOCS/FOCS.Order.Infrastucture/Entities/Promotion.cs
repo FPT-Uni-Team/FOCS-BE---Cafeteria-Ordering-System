@@ -34,6 +34,7 @@ namespace FOCS.Order.Infrastucture.Entities
         public string? UpdatedBy { get; set; }
 
         public ICollection<Coupon> Coupons { get; set; }
+        public ICollection<PromotionItemCondition> PromotionItemConditions { get; set; }
 
     }
 }

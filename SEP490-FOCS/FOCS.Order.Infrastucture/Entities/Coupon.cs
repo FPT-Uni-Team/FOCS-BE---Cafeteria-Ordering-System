@@ -35,7 +35,7 @@ namespace FOCS.Order.Infrastucture.Entities
         public DateTime? UpdatedAt { get; set; }
         public string? UpdatedBy { get; set; }
 
-        // Foreign key
+        // Foreign key store
         public Guid StoreId { get; set; }
         public Store Store { get; set; }
 

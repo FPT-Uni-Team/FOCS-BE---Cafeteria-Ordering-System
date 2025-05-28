@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FOCS.Common.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FOCS.Order.Infrastucture.Entities
 {
-    public class Store
+    public class Store : IAuditable
     {
         public Guid Id { get; set; }
 
@@ -20,7 +21,7 @@ namespace FOCS.Order.Infrastucture.Entities
         
         public bool IsActive { get; set; }
 
-        public bool IsDelete { get; set; }
+        public bool IsDeleted { get; set; }
 
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
@@ -30,6 +31,7 @@ namespace FOCS.Order.Infrastucture.Entities
         public Guid BrandId { get; set; }
         public Brand Brand { get; set; }
 
+        public ICollection<MenuItem> MenuItems { get; set; } = new List<MenuItem>();
         public double GetEffectiveTaxRate()
         {
             return CustomTaxRate ?? Brand?.DefaultTaxRate ?? 0.0;

@@ -18,9 +18,7 @@ namespace FOCS.Order.Infrastucture.Entities
         
         public string Comment { get; set; }
 
-
         public Guid? UserId { get; set; }
-        public User User { get; set; }
 
 
         public Guid OrderId { get; set; }

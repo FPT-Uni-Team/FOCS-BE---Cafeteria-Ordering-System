@@ -19,5 +19,8 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public Guid StoreId { get; set; }
         public Store Store { get; set; }
+
+        // Order
+        public ICollection<Order> Orders { get; set; } = new List<Order>();
     }
 }
