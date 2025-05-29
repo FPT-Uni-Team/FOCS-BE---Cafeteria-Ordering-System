@@ -32,6 +32,7 @@ builder.Host.UseSerilog();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.Configure<EmailModels>(builder.Configuration.GetSection("EmailSettings")); // Bind EmailSettings from appsettings.json to EmailModels class
+builder.Services.Configure<OrderBatchingOptions>(builder.Configuration.GetSection("OrderBatchingOptions"));
 
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDBContext>()
@@ -41,8 +42,11 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<ITokenService, TokenService>()
                 .AddScoped<IAuthService, AuthService>()
                 .AddScoped<IEmailService, EmailService>()
+                .AddScoped<IOrderService, OrderService>()
+                .AddScoped<IKitchenService, KitchenService>()
                 .AddScoped<IUnitOfWork, UnitOfWork<ApplicationDBContext>>()
                 .AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddHostedService<OrderBatchingService>();
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(
