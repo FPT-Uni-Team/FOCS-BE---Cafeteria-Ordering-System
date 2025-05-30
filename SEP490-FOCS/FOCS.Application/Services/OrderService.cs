@@ -1,5 +1,7 @@
 ﻿using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
+using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Order.Infrastucture.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +12,17 @@ namespace FOCS.Application.Services
 {
     public class OrderService : IOrderService
     {
-        public Task<List<OrderDTO>> GetPendingOrdersAsync()
+        private readonly IRepository<FOCS.Order.Infrastucture.Entities.Order> _orderRepository;
+
+        public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository)
         {
-            throw new NotImplementedException();
+            _orderRepository = orderRepository;
+        }
+
+        public async Task<List<OrderDTO>> GetPendingOrdersAsync()
+        {
+            //var ordersPending = await _orderRepository.FindAsync(x => x.OrderStatus == Common.Enums.OrderStatus.Pending)
+            return null;
         }
     }
 }

@@ -1,26 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
-namespace FOCS.Infrastructure.Identity.Common.Repositories
+public interface IRepository<TEntity> where TEntity : class
 {
-    public interface IRepository<TEntity> where TEntity : class
-    {
-        Task<TEntity?> GetByIdAsync(object id);
-
-        Task<IEnumerable<TEntity>> GetAllAsync();
-
-        Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
-
-        Task AddAsync(TEntity entity);
-
-        void Update(TEntity entity);
-
-        void Remove(TEntity entity);
-
-        Task<int> SaveChangesAsync();
-    }
+    Task<TEntity?> GetByIdAsync(object id);
+    Task<IEnumerable<TEntity>> GetAllAsync();
+    Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
+    Task AddAsync(TEntity entity);
+    void Update(TEntity entity);
+    void Remove(TEntity entity);
+    Task<int> SaveChangesAsync();
 }

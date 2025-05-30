@@ -3,18 +3,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
-using FOCS.Infrastructure.Identity.Persistance;
 
 namespace FOCS.Infrastructure.Identity.Common.Repositories
 {
-    public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
+    public class Repository<TEntity, TContext> : IRepository<TEntity>
+        where TEntity : class
+        where TContext : DbContext
     {
-        protected readonly ApplicationDBContext _context;
+        protected readonly TContext _context;
         protected readonly DbSet<TEntity> _dbSet;
 
-        public Repository(ApplicationDBContext context)
+        public Repository(TContext context)
         {
             _context = context;
             _dbSet = _context.Set<TEntity>();
@@ -55,4 +55,4 @@ namespace FOCS.Infrastructure.Identity.Common.Repositories
             return await _context.SaveChangesAsync();
         }
     }
-    }
+}
