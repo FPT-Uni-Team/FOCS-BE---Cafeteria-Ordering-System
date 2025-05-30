@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Identity.Model;
+using FOCS.Order.Infrastucture.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +19,12 @@ namespace FOCS.Application.Mappings
             CreateMap<UserRefreshTokenDTO, UserRefreshToken>()
                 .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src.RefreshToken))
                 .ForMember(dest => dest.User, opt => opt.Ignore()) 
-                .ForMember(dest => dest.Id, opt => opt.Ignore()); 
+                .ForMember(dest => dest.Id, opt => opt.Ignore());
+
+            CreateMap<MenuCategory, MenuCategoryDTO>().ReverseMap();
+            CreateMap<MenuItem, MenuItemDTO>().ReverseMap();
+            CreateMap<MenuItemVariant, MenuItemVariantDTO>().ReverseMap();
+            CreateMap<VariantGroup, VariantGroupDTO>().ReverseMap();
         }
     }
 }
