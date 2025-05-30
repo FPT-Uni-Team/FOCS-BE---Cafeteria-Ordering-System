@@ -18,6 +18,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\FOCS.Common\FOCS.Common.csproj" />
 	  <ProjectReference Include="..\FOCS.Infrastructure.Identity\FOCS.Infrastructure.Identity.csproj" />
+	  <ProjectReference Include="..\FOCS.Order.Infrastucture\FOCS.Order.Infrastucture.csproj" />
 	  <ProjectReference Include="..\FOCS.Realtime.Hub\FOCS.Realtime.Hubs.csproj" />
 	</ItemGroup>
 </Project>
