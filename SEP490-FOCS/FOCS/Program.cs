@@ -18,6 +18,7 @@ using Serilog;
 using FOCS.Realtime.Hubs;
 using FOCS.Order.Infrastucture.Context;
 using FOCS.Order.Infrastucture.Entities;
+using FOCS.Order.Infrastucture.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,17 +44,25 @@ builder.Services.AddIdentity<User, IdentityRole>()
 builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<ITokenService, TokenService>()
                 .AddScoped<IAuthService, AuthService>()
+                .AddScoped<IRepository<UserRefreshToken>, Repository<UserRefreshToken, ApplicationDBContext>>()
                 .AddScoped<IEmailService, EmailService>()
                 .AddScoped<IOrderService, OrderService>()
                 .AddScoped<IKitchenService, KitchenService>()
+                .AddScoped<IMenuService, MenuService>()
                 .AddScoped<IUnitOfWork, UnitOfWork<ApplicationDBContext>>()
-                .AddScoped<IRepository<Order>, Repository<Order, OrderDbContext>>();
+                .AddScoped<IRepository<Order>, Repository<Order, OrderDbContext>>()
+                .AddScoped<IRepository<MenuItem>, Repository<MenuItem, OrderDbContext>>();
 builder.Services.AddHostedService<OrderBatchingService>();
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         sql => sql.MigrationsAssembly("FOCS.Infrastructure.Identity")
+    ));
+builder.Services.AddDbContext<OrderDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sql => sql.MigrationsAssembly("FOCS.Order.Infrastucture")
     ));
 
 //auto mapper

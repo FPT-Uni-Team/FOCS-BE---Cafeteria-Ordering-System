@@ -54,5 +54,21 @@ namespace FOCS.Infrastructure.Identity.Common.Repositories
         {
             return await _context.SaveChangesAsync();
         }
+
+        public IQueryable<TEntity> AsQueryable()
+        {
+            return _dbSet.AsQueryable();
+        }
+
+        public async Task<IQueryable<TEntity>> IncludeAsync(Func<IQueryable<TEntity>, IQueryable<TEntity>> include, bool asNoTracking = false)
+        {
+            if (include == null)
+                throw new ArgumentNullException(nameof(include));
+
+            IQueryable<TEntity> query = _dbSet;
+            if (asNoTracking)
+                query = query.AsNoTracking();
+            return include(query);
+        }
     }
 }
