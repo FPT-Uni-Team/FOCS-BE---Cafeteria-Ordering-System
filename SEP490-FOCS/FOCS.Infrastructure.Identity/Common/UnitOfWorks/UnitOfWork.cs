@@ -29,7 +29,7 @@ namespace FOCS.Infrastructure.Identity.Common.UnitOfWorks
             if (_repositories.ContainsKey(type))
                 return (IRepository<TEntity>)_repositories[type]!;
 
-            var repositoryInstance = new Repository<TEntity>(_context);
+            var repositoryInstance = new Repository<TEntity, TContext>(_context);
             _repositories.TryAdd(type, repositoryInstance);
             return repositoryInstance;
         }

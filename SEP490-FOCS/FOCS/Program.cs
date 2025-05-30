@@ -16,6 +16,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Serilog;
 using FOCS.Realtime.Hubs;
+using FOCS.Order.Infrastucture.Context;
+using FOCS.Order.Infrastucture.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,7 +47,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IOrderService, OrderService>()
                 .AddScoped<IKitchenService, KitchenService>()
                 .AddScoped<IUnitOfWork, UnitOfWork<ApplicationDBContext>>()
-                .AddScoped(typeof(IRepository<>), typeof(Repository<>));
+                .AddScoped<IRepository<Order>, Repository<Order, OrderDbContext>>();
 builder.Services.AddHostedService<OrderBatchingService>();
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
