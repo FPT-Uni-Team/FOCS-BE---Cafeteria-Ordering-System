@@ -22,6 +22,9 @@ namespace FOCS.Common.Models
         [JsonPropertyName("is_available")]
         public bool IsAvailable { get; set; }
 
+        [JsonPropertyName("menu_category_id")]
+        public Guid MenuCategoryId { get; set; }
+
         [JsonPropertyName("menu_category")]
         public MenuCategoryDTO MenuCategory { get; set; }
 
