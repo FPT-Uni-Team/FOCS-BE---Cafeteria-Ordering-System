@@ -38,6 +38,7 @@ namespace FOCS.Application.Services
         public async Task<PagedResult<MenuItemAdminServiceDTO>> GetAllMenuItemAsync(UrlQueryParameters query, Guid storeId)
         {
             var menuQuery = _menuRepository.AsQueryable()
+                .Include(m => m.MenuCategory)
                 .Where(m => !m.IsDeleted && m.StoreId == storeId);
 
             // search
@@ -53,6 +54,22 @@ namespace FOCS.Application.Services
                 }
             }
 
+            // filters
+            if (query.Filters != null)
+            {
+                foreach (var filter in query.Filters)
+                {
+                    if (filter.Key.Equals("price", StringComparison.OrdinalIgnoreCase) && double.TryParse(filter.Value, out var price))
+                    {
+                        menuQuery = menuQuery.Where(m => m.BasePrice > price);
+                    }
+                    else if (filter.Key.Equals("category", StringComparison.OrdinalIgnoreCase))
+                    {
+                        menuQuery = menuQuery.Where(m => m.MenuCategory.Name == filter.Value);
+                    }
+                }
+            }
+
             // sort
             if (!string.IsNullOrEmpty(query.SortBy))
             {
@@ -61,6 +78,7 @@ namespace FOCS.Application.Services
                 {
                     "name" => descending ? menuQuery.OrderByDescending(m => m.Name) : menuQuery.OrderBy(m => m.Name),
                     "base_price" => descending ? menuQuery.OrderByDescending(m => m.BasePrice) : menuQuery.OrderBy(m => m.BasePrice),
+                    "category" => descending ? menuQuery.OrderByDescending(m => m.MenuCategory.Name) : menuQuery.OrderBy(m => m.MenuCategory.Name),
                     _ => menuQuery
                 };
             }

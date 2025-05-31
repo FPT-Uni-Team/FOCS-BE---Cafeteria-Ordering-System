@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
-    [Route("api")]
+    [Route("api/admin")]
     [ApiController]
     public class AdminController : FocsController
     {
@@ -16,7 +16,7 @@ namespace FOCS.Controllers
             _adminService = menuService;
         }
 
-        [HttpPost("menus")]
+        [HttpPost("menu")]
         public async Task<IActionResult> CreateMenu([FromBody] MenuItemAdminServiceDTO dto)
         {
             if (!ModelState.IsValid)
@@ -27,14 +27,14 @@ namespace FOCS.Controllers
             return Ok(created);
         }
 
-        [HttpGet("menus")]
-        public async Task<IActionResult> GetAllMenus([FromQuery] UrlQueryParameters urlQueryParameters, [FromQuery] Guid storeId)
+        [HttpPost("menus")]
+        public async Task<IActionResult> GetAllMenus([FromBody] UrlQueryParameters urlQueryParameters, [FromQuery] Guid storeId)
         {
             var pagedResult = await _adminService.GetAllMenuItemAsync(urlQueryParameters, storeId);
             return Ok(pagedResult);
         }
 
-        [HttpGet("menus/{id}")]
+        [HttpGet("menu/{id}")]
         public async Task<IActionResult> GetMenuDetail(Guid id)
         {
             var menu = await _adminService.GetMenuDetailAsync(id);
@@ -44,7 +44,7 @@ namespace FOCS.Controllers
             return Ok(menu);
         }
 
-        [HttpPut("menus/{id}")]
+        [HttpPut("menu/{id}")]
         public async Task<IActionResult> UpdateMenu(Guid id, [FromBody] MenuItemAdminServiceDTO dto)
         {
             if (!ModelState.IsValid)
@@ -57,7 +57,7 @@ namespace FOCS.Controllers
             return NoContent(); // 204
         }
 
-        [HttpDelete("menus/{id}")]
+        [HttpDelete("menu/{id}")]
         public async Task<IActionResult> DeleteMenu(Guid id)
         {
             var deleted = await _adminService.DeleteMenuAsync(id, UserId);
