@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
-using FOCS.Application.Mappings;
+﻿using FOCS.Application.Mappings;
 using FOCS.Application.Services;
+using FOCS.Application.Services.Interface;
 using FOCS.Common.Helpers;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
@@ -11,14 +9,17 @@ using FOCS.Infrastructure.Identity.Common.UnitOfWorks;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Infrastructure.Identity.Persistance;
 using FOCS.Middlewares;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Serilog;
-using FOCS.Realtime.Hubs;
 using FOCS.Order.Infrastucture.Context;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Order.Infrastucture.Interfaces;
+using FOCS.Realtime.Hubs;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Serilog;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +50,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IOrderService, OrderService>()
                 .AddScoped<IKitchenService, KitchenService>()
                 .AddScoped<IMenuService, MenuService>()
+                .AddScoped<IAdminService, AdminService>()
                 .AddScoped<IUnitOfWork, UnitOfWork<ApplicationDBContext>>()
                 .AddScoped<IRepository<Order>, Repository<Order, OrderDbContext>>()
                 .AddScoped<IRepository<MenuItem>, Repository<MenuItem, OrderDbContext>>();
@@ -188,7 +190,7 @@ else
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

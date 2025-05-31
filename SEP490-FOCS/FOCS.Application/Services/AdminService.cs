@@ -1,0 +1,131 @@
+﻿using AutoMapper;
+using FOCS.Application.DTOs.AdminServiceDTO;
+using FOCS.Application.Services.Interface;
+using FOCS.Common.Models;
+using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Order.Infrastucture.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace FOCS.Application.Services
+{
+    public class AdminService : IAdminService
+    {
+        private readonly IRepository<MenuItem> _menuRepository;
+        private readonly IMapper _mapper;
+
+        public AdminService(IRepository<MenuItem> menuRepository, IMapper mapper)
+        {
+            _menuRepository = menuRepository;
+            _mapper = mapper;
+        }
+
+        public async Task<MenuItemAdminServiceDTO> CreateMenuAsync(MenuItemAdminServiceDTO dto, string userId)
+        {
+            var newItem = new MenuItem
+            {
+                Id = Guid.NewGuid(),
+                Name = dto.Name,
+                Description = dto.Description,
+                Images = dto.Images,
+                BasePrice = dto.BasePrice,
+                IsAvailable = dto.IsAvailable,
+                IsDeleted = false,
+                MenuCategoryId = dto.MenuCategoryId,
+                StoreId = dto.StoreId,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = userId
+            };
+
+            await _menuRepository.AddAsync(newItem);
+            await _menuRepository.SaveChangesAsync();
+
+            return _mapper.Map<MenuItemAdminServiceDTO>(newItem);
+        }
+
+        public async Task<PagedResult<MenuItemAdminServiceDTO>> GetAllMenusAsync(UrlQueryParameters query, Guid storeId)
+        {
+            var menuQuery = _menuRepository.AsQueryable()
+                .Where(m => !m.IsDeleted && m.StoreId == storeId);
+
+            // search
+            if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))
+            {
+                if (query.SearchBy.Equals("name", StringComparison.OrdinalIgnoreCase))
+                {
+                    menuQuery = menuQuery.Where(m => m.Name.Contains(query.SearchValue));
+                }
+                else if (query.SearchBy.Equals("description", StringComparison.OrdinalIgnoreCase))
+                {
+                    menuQuery = menuQuery.Where(m => m.Description.Contains(query.SearchValue));
+                }
+            }
+
+            // sort
+            if (!string.IsNullOrEmpty(query.SortBy))
+            {
+                bool descending = query.SortOrder?.ToLower() == "desc";
+                menuQuery = query.SortBy.ToLower() switch
+                {
+                    "name" => descending ? menuQuery.OrderByDescending(m => m.Name) : menuQuery.OrderBy(m => m.Name),
+                    "base_price" => descending ? menuQuery.OrderByDescending(m => m.BasePrice) : menuQuery.OrderBy(m => m.BasePrice),
+                    _ => menuQuery
+                };
+            }
+
+            // total count
+            var totalCount = await menuQuery.CountAsync();
+
+            // pagination
+            var items = await menuQuery
+                .Skip((query.Page - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .ToListAsync();
+
+            var mappedItems = _mapper.Map<List<MenuItemAdminServiceDTO>>(items);
+
+            return new PagedResult<MenuItemAdminServiceDTO>(mappedItems, totalCount, query.Page, query.PageSize);
+        }
+
+
+        public async Task<MenuItemAdminServiceDTO?> GetMenuDetailAsync(Guid id)
+        {
+            var item = await _menuRepository.AsQueryable()
+                .Where(m => m.Id == id && !m.IsDeleted)
+                .FirstOrDefaultAsync();
+
+            return item != null ? _mapper.Map<MenuItemAdminServiceDTO>(item) : null;
+        }
+
+        public async Task<bool> UpdateMenuAsync(Guid id, MenuItemAdminServiceDTO dto, string userId)
+        {
+            var item = await _menuRepository.GetByIdAsync(id);
+            if (item == null || item.IsDeleted) return false;
+
+            item.Name = dto.Name;
+            item.Description = dto.Description;
+            item.Images = dto.Images;
+            item.BasePrice = dto.BasePrice;
+            item.IsAvailable = dto.IsAvailable;
+            item.MenuCategoryId = dto.MenuCategoryId;
+            item.StoreId = dto.StoreId;
+            item.UpdatedAt = DateTime.UtcNow;
+            item.UpdatedBy = userId;
+
+            await _menuRepository.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteMenuAsync(Guid id, string userId)
+        {
+            var item = await _menuRepository.GetByIdAsync(id);
+            if (item == null || item.IsDeleted) return false;
+
+            item.IsDeleted = true;
+            item.UpdatedAt = DateTime.UtcNow;
+            item.UpdatedBy = userId;
+
+            await _menuRepository.SaveChangesAsync();
+            return true;
+        }
+    }
+}
