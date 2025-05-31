@@ -8,12 +8,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FOCS.Application.Services
 {
-    public class AdminService : IAdminService
+    public class MenuManagementService : IMenuManagementService
     {
         private readonly IRepository<MenuItem> _menuRepository;
         private readonly IMapper _mapper;
 
-        public AdminService(IRepository<MenuItem> menuRepository, IMapper mapper)
+        public MenuManagementService(IRepository<MenuItem> menuRepository, IMapper mapper)
         {
             _menuRepository = menuRepository;
             _mapper = mapper;
@@ -21,20 +21,13 @@ namespace FOCS.Application.Services
 
         public async Task<MenuItemAdminServiceDTO> CreateMenuAsync(MenuItemAdminServiceDTO dto, string userId)
         {
-            var newItem = new MenuItem
-            {
-                Id = Guid.NewGuid(),
-                Name = dto.Name,
-                Description = dto.Description,
-                Images = dto.Images,
-                BasePrice = dto.BasePrice,
-                IsAvailable = dto.IsAvailable,
-                IsDeleted = false,
-                MenuCategoryId = dto.MenuCategoryId,
-                StoreId = dto.StoreId,
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = userId
-            };
+            var newItem = _mapper.Map<MenuItem>(dto);
+
+            // Ensure the new item has required properties set
+            newItem.Id = Guid.NewGuid();
+            newItem.IsDeleted = false;
+            newItem.CreatedAt = DateTime.UtcNow;
+            newItem.CreatedBy = userId;
 
             await _menuRepository.AddAsync(newItem);
             await _menuRepository.SaveChangesAsync();
@@ -42,7 +35,7 @@ namespace FOCS.Application.Services
             return _mapper.Map<MenuItemAdminServiceDTO>(newItem);
         }
 
-        public async Task<PagedResult<MenuItemAdminServiceDTO>> GetAllMenusAsync(UrlQueryParameters query, Guid storeId)
+        public async Task<PagedResult<MenuItemAdminServiceDTO>> GetAllMenuItemAsync(UrlQueryParameters query, Guid storeId)
         {
             var menuQuery = _menuRepository.AsQueryable()
                 .Where(m => !m.IsDeleted && m.StoreId == storeId);
@@ -89,9 +82,8 @@ namespace FOCS.Application.Services
 
         public async Task<MenuItemAdminServiceDTO?> GetMenuDetailAsync(Guid id)
         {
-            var item = await _menuRepository.AsQueryable()
-                .Where(m => m.Id == id && !m.IsDeleted)
-                .FirstOrDefaultAsync();
+            var items = await _menuRepository.FindAsync(m => m.Id == id && !m.IsDeleted);
+            var item = items.FirstOrDefault();
 
             return item != null ? _mapper.Map<MenuItemAdminServiceDTO>(item) : null;
         }
@@ -101,13 +93,8 @@ namespace FOCS.Application.Services
             var item = await _menuRepository.GetByIdAsync(id);
             if (item == null || item.IsDeleted) return false;
 
-            item.Name = dto.Name;
-            item.Description = dto.Description;
-            item.Images = dto.Images;
-            item.BasePrice = dto.BasePrice;
-            item.IsAvailable = dto.IsAvailable;
-            item.MenuCategoryId = dto.MenuCategoryId;
-            item.StoreId = dto.StoreId;
+            _mapper.Map(dto, item);
+
             item.UpdatedAt = DateTime.UtcNow;
             item.UpdatedBy = userId;
 

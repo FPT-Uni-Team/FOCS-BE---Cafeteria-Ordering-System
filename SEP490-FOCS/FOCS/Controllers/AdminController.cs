@@ -9,9 +9,9 @@ namespace FOCS.Controllers
     [ApiController]
     public class AdminController : FocsController
     {
-        private readonly IAdminService _adminService;
+        private readonly IMenuManagementService _adminService;
 
-        public AdminController(IAdminService menuService)
+        public AdminController(IMenuManagementService menuService)
         {
             _adminService = menuService;
         }
@@ -30,7 +30,7 @@ namespace FOCS.Controllers
         [HttpGet("menus")]
         public async Task<IActionResult> GetAllMenus([FromQuery] UrlQueryParameters urlQueryParameters, [FromQuery] Guid storeId)
         {
-            var pagedResult = await _adminService.GetAllMenusAsync(urlQueryParameters, storeId);
+            var pagedResult = await _adminService.GetAllMenuItemAsync(urlQueryParameters, storeId);
             return Ok(pagedResult);
         }
 

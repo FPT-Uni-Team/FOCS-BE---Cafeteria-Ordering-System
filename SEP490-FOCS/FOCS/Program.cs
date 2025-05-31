@@ -50,7 +50,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IOrderService, OrderService>()
                 .AddScoped<IKitchenService, KitchenService>()
                 .AddScoped<IMenuService, MenuService>()
-                .AddScoped<IAdminService, AdminService>()
+                .AddScoped<IMenuManagementService, MenuManagementService>()
                 .AddScoped<IUnitOfWork, UnitOfWork<ApplicationDBContext>>()
                 .AddScoped<IRepository<Order>, Repository<Order, OrderDbContext>>()
                 .AddScoped<IRepository<MenuItem>, Repository<MenuItem, OrderDbContext>>();
