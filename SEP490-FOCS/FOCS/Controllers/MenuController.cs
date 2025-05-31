@@ -28,5 +28,11 @@ namespace FOCS.Controllers
             return await _menuService.GetMenuItemByStore(urlQueryParameters, storeId);
         }
 
+        [HttpPost("get-menu-item-detail")]
+        public async Task<MenuItemDTO> GetItemVariant(Guid itemId)
+        {
+            return await _menuService.GetItemVariant(itemId);
+        }
+
     }
 }
