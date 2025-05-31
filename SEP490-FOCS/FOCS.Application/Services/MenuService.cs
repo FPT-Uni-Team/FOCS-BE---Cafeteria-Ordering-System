@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Common.Repositories;
-using FOCS.Order.Infrastucture.Context;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Order.Infrastucture.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -28,29 +27,30 @@ namespace FOCS.Application.Services
             try
             {
                 _logger.LogInformation("Fetching menu for store {StoreId}", storeId);
-                var menuItems = await _menuRepository.IncludeAsync(
-                                        source => source
-                                                    .Include(m => m.MenuCategory)
-                                                    .Include(m => m.VariantGroups).ThenInclude(v => v.Variants));
+                var menuItems = await _menuRepository.IncludeAsync(source => source
+                                                                .Where(m => m.StoreId == storeId)
+                                                                .Include(m => m.MenuCategory)
+                                                                .Include(m => m.VariantGroups)
+                                                                .ThenInclude(v => v.Variants));
 
-                var search = urlQueryParameters.SearchValue;
-                if (!string.IsNullOrEmpty(search))
+                if (!string.IsNullOrWhiteSpace(urlQueryParameters.SearchValue))
                 {
-                    menuItems = menuItems.Where(s => s.Name.Contains(search));
+                    var search = urlQueryParameters.SearchValue.Trim();
+                    menuItems = menuItems.Where(s => s.Name.ToLower().Contains(search.ToLower()));
                 }
 
-                if (urlQueryParameters.Filters != null)
+                if (urlQueryParameters.Filters?.Any() == true)
                 {
-                    foreach (var item in urlQueryParameters.Filters)
+                    foreach (var (key, value) in urlQueryParameters.Filters)
                     {
-                        if (item.Key.Equals("Price"))
+                        menuItems = key switch
                         {
-                            menuItems = menuItems.Where(m => m.BasePrice > Double.Parse(item.Value));
-                        }
-                        if (item.Key.Equals("Category"))
-                        {
-                            menuItems = menuItems.Where(m => m.MenuCategory.Name.Equals(item.Value));
-                        }
+                            "Price" when double.TryParse(value, out var price) =>
+                                menuItems.Where(m => m.BasePrice > price),
+                            "Category" =>
+                                menuItems.Where(m => m.MenuCategory.Name == value),
+                            _ => menuItems
+                        };
                     }
                 }
 
@@ -72,7 +72,6 @@ namespace FOCS.Application.Services
                 var totalItems = menuItems.Count();
 
                 List<MenuItemDTO> data;
-                int totalPages = 0;
                 var pageIndex = urlQueryParameters.Page;
                 var pageSize = urlQueryParameters.PageSize;
                 if (pageIndex == 0 && pageSize == 0)
@@ -82,7 +81,6 @@ namespace FOCS.Application.Services
                 else
                 {
                     var pageStart = pageIndex - 1;
-                    totalPages = (int)Math.Ceiling(totalItems / (float)pageSize);
                     data = _mapper.Map<List<MenuItemDTO>>(
                         menuItems
                         .Skip(pageStart * pageSize)
@@ -95,7 +93,7 @@ namespace FOCS.Application.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching menu for store {StoreId}", storeId);
-                return null;
+                return new PagedResult<MenuItemDTO>([], 0, 0, 0);
             }
         }
     }
