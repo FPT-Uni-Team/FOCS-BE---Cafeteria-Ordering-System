@@ -96,5 +96,24 @@ namespace FOCS.Application.Services
                 return new PagedResult<MenuItemDTO>([], 0, 0, 0);
             }
         }
+
+        public async Task<MenuItemDTO> GetItemVariant(Guid itemId)
+        {
+            try
+            {
+                _logger.LogInformation("Fetching detail info for item {ItemId}", itemId);
+                var menuItems = await _menuItemRepository.IncludeAsync(source => source
+                                                                .Where(m => m.Id == itemId)
+                                                                .Include(m => m.VariantGroups)
+                                                                .ThenInclude(v => v.Variants));
+                var data = _mapper.Map<MenuItemDTO>(menuItems.FirstOrDefault());
+                return data;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fetching detail info for item {ItemId}", itemId);
+                return null;
+            }
+        }
     }
 }
