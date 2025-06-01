@@ -20,6 +20,8 @@ namespace FOCS.Application.Mappings
             // Menu Mappings
             CreateMap<MenuCategory, MenuCategoryDTO>().ReverseMap();
             CreateMap<MenuItem, MenuItemDTO>().ReverseMap();
+
+            CreateMap<MenuItem, MenuItemDetailAdminServiceDTO>().ReverseMap();
             CreateMap<MenuItemVariant, MenuItemVariantDTO>().ReverseMap();
             CreateMap<VariantGroup, VariantGroupDTO>().ReverseMap();
             // Admin Mappings

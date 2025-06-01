@@ -132,5 +132,17 @@ namespace FOCS.Application.Services
             await _menuRepository.SaveChangesAsync();
             return true;
         }
+
+        public async Task<MenuItemDetailAdminServiceDTO> GetMenuItemDetail(Guid menuItemId, string storeId)
+        {
+            var menuItems = await _menuRepository.IncludeAsync(source => source
+                                                               .Where(m => m.StoreId == Guid.Parse(storeId) && m.Id == menuItemId)
+                                                               .Include(m => m.MenuCategory)
+                                                               .Include(m => m.VariantGroups)
+                                                               .ThenInclude(v => v.Variants));
+
+
+            return _mapper.Map<MenuItemDetailAdminServiceDTO>(menuItems.FirstOrDefault());
+        }
     }
 }
