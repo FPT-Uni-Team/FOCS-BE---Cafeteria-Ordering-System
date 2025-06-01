@@ -70,8 +70,6 @@ builder.Services.AddDbContext<OrderDbContext>(options =>
 //auto mapper
 builder.Services.AddAutoMapper(typeof(MappingProfiles).Assembly);
 
-//SignalR
-builder.Services.AddSignalR();
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -139,21 +137,16 @@ builder.Services.AddAuthentication(options =>
 // CORS
 builder.Services.AddCors(options =>
 {
-    // Allow specific origins
-    options.AddPolicy("AllowSpecificOrigins", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("")
+        policy.WithOrigins("http://127.0.0.1:5500") 
               .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-    // Allow all origins
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials(); 
     });
 });
+
+builder.Services.AddSignalR();
 
 builder.Services.AddAuthentication();
 
@@ -164,10 +157,10 @@ app.UseSerilogRequestLogging();
 //Regis middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 // CORS
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 
 //SignalR
-app.MapHub<OrderHub>("/orders");
+app.MapHub<OrderHub>("/orderHubs");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
