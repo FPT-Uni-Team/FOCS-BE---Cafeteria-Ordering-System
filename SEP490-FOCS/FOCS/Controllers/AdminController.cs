@@ -16,8 +16,8 @@ namespace FOCS.Controllers
             _adminService = menuService;
         }
 
-        [HttpPost("menu")]
-        public async Task<IActionResult> CreateMenu([FromBody] MenuItemAdminServiceDTO dto)
+        [HttpPost("menu-item")]
+        public async Task<IActionResult> CreateMenuItem([FromBody] MenuItemAdminServiceDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -27,25 +27,25 @@ namespace FOCS.Controllers
             return Ok(created);
         }
 
-        [HttpPost("menus")]
-        public async Task<IActionResult> GetAllMenus([FromBody] UrlQueryParameters urlQueryParameters, [FromQuery] Guid storeId)
+        [HttpPost("menu-items")]
+        public async Task<IActionResult> GetAllMenuItems([FromBody] UrlQueryParameters urlQueryParameters, [FromQuery] Guid storeId)
         {
             var pagedResult = await _adminService.GetAllMenuItemAsync(urlQueryParameters, storeId);
             return Ok(pagedResult);
         }
 
-        [HttpGet("menu/{id}")]
-        public async Task<IActionResult> GetMenuDetail(Guid id)
+        [HttpGet("menu-item/{menuItemId}")]
+        public async Task<IActionResult> GetMenuItemDetail(Guid menuItemId)
         {
-            var menu = await _adminService.GetMenuDetailAsync(id);
-            if (menu == null)
+            var menuItems = await _adminService.GetMenuItemDetail(menuItemId, StoreId);
+            if (menuItems == null)
                 return NotFound();
 
-            return Ok(menu);
+            return Ok(menuItems);
         }
 
-        [HttpPut("menu/{id}")]
-        public async Task<IActionResult> UpdateMenu(Guid id, [FromBody] MenuItemAdminServiceDTO dto)
+        [HttpPut("menu-item/{id}")]
+        public async Task<IActionResult> UpdateMenuItem(Guid id, [FromBody] MenuItemAdminServiceDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -57,8 +57,8 @@ namespace FOCS.Controllers
             return NoContent(); // 204
         }
 
-        [HttpDelete("menu/{id}")]
-        public async Task<IActionResult> DeleteMenu(Guid id)
+        [HttpDelete("menu-item/{id}")]
+        public async Task<IActionResult> DeleteMenuItem(Guid id)
         {
             var deleted = await _adminService.DeleteMenuAsync(id, UserId);
             if (!deleted)

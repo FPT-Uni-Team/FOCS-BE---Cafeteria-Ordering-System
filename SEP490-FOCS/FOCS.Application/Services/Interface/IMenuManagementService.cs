@@ -10,5 +10,6 @@ namespace FOCS.Application.Services.Interface
         Task<MenuItemAdminServiceDTO?> GetMenuDetailAsync(Guid id);
         Task<bool> UpdateMenuAsync(Guid id, MenuItemAdminServiceDTO dto, string userId);
         Task<bool> DeleteMenuAsync(Guid id, string userId);
+        Task<MenuItemDetailAdminServiceDTO> GetMenuItemDetail(Guid menuItemId, string StoreId);
     }
 }
