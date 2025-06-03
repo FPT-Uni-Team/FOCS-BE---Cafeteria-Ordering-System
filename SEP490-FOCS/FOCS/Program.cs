@@ -53,7 +53,11 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IMenuManagementService, MenuManagementService>()
                 .AddScoped<IUnitOfWork, UnitOfWork<ApplicationDBContext>>()
                 .AddScoped<IRepository<Order>, Repository<Order, OrderDbContext>>()
-                .AddScoped<IRepository<MenuItem>, Repository<MenuItem, OrderDbContext>>();
+                .AddScoped<IRepository<MenuItem>, Repository<MenuItem, OrderDbContext>>()
+                .AddScoped<IRepository<Store>, Repository<Store, OrderDbContext>>()
+                .AddScoped<IRepository<MenuItemVariant>, Repository<MenuItemVariant, OrderDbContext>>()
+                .AddSingleton<IRedisCacheService>(sp => new RedisCacheService("localhost:6379"));
+;
 builder.Services.AddHostedService<OrderBatchingService>();
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>

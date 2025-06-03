@@ -6,6 +6,7 @@ using FOCS.Infrastructure.Identity.Common.UnitOfWorks;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using Microsoft.AspNetCore.Authorization;
 using FOCS.Common.Constants;
+using StackExchange.Redis;
 
 namespace FOCS.Controllers
 {
@@ -107,5 +108,15 @@ namespace FOCS.Controllers
             }
         }
 
+        [HttpPost("test-redis")]
+        public string TestRedis()
+        {
+            var redis = ConnectionMultiplexer.Connect("localhost:6379");
+            IDatabase db  = redis.GetDatabase();
+
+            db.StringSet("hello", "world");
+
+            return db.StringGet("hello");
+        }
     }
 }
