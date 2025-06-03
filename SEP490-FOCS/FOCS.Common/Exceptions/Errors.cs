@@ -25,5 +25,12 @@ namespace FOCS.Common.Exceptions
             public const string InvalidRefreshToken = "Invalid refresh token";
             public const string NotVerifyAccount = "Account is not verify";
         }
+
+        public static class OrderError
+        {
+            public const string NotFoundStore = "Store not found";
+            public const string MenuItemNotFound = "Item Not Found";
+            public const string CouponIsNotValid = "Coupon is not valid";
+        }
     }
 }
