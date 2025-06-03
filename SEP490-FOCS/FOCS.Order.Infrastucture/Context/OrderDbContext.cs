@@ -28,6 +28,7 @@ namespace FOCS.Order.Infrastucture.Context
         public DbSet<VariantGroup> VariantGroups { get; set; }
 
         public DbSet<Table> Tables { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
         public DbSet<FOCS.Order.Infrastucture.Entities.Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<OrderWrap> OrderWraps { get; set; }
@@ -68,7 +69,26 @@ namespace FOCS.Order.Infrastucture.Context
                 .HasOne(pic => pic.Promotion)
                 .WithMany(p => p.PromotionItemConditions)
                 .HasForeignKey(pic => pic.PromotionId)
-                .OnDelete(DeleteBehavior.Cascade); 
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CartItem>()
+                  .HasOne(c => c.MenuItem)
+                  .WithMany()
+                  .HasForeignKey(c => c.MenuItemId)
+                  .OnDelete(DeleteBehavior.Restrict); 
+
+            modelBuilder.Entity<CartItem>()
+                .HasOne(c => c.Variant)
+                .WithMany()
+                .HasForeignKey(c => c.MenuItemVariantId)
+                .OnDelete(DeleteBehavior.Restrict); 
+
+            modelBuilder.Entity<CartItem>()
+                .HasOne(c => c.Table)
+                .WithMany()
+                .HasForeignKey(c => c.TableId)
+                .OnDelete(DeleteBehavior.Restrict);
+
 
         }
     }
