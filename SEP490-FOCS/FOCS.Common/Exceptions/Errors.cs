@@ -16,12 +16,15 @@ namespace FOCS.Common.Exceptions
         public static class Common
         {
             public const string NotFound = "Not found";
+            public const string StoreNotFound = "Store Not found";
+            public const string UserNotFound = "User Not found";
         }
 
         public static class AuthError
         {
             public const string WrongPassword = "Wrong password";
             public const string PasswordNotMatch = "Passwords do not match.";
+            public const string PasswordReuse = "New password cannot be the same as old password.";
             public const string InvalidRefreshToken = "Invalid refresh token";
             public const string NotVerifyAccount = "Account is not verify";
         }
