@@ -32,9 +32,12 @@ jobs:
             pwd
 
             echo "List files:"
-            ls -la /FOCS-BE---Cafeteria-Ordering-System
+            ls -la
 
-            cd /FOCS-BE---Cafeteria-Ordering-System || exit 1
+            cd /FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS || exit 1
+
+            echo "List files in deployment directory:"
+            ls -la
 
             echo "Stop containers if any"
             docker compose down || docker-compose down || echo "No containers to stop"
