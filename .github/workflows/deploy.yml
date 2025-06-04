@@ -17,7 +17,5 @@ jobs:
         username: ${{ secrets.VPS_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          cd ~/myapi || git clone https://github.com/tenuser/repo-name.git myapi && cd myapi
-          git pull origin main
           docker-compose down
           docker-compose up -d --build
