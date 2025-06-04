@@ -25,7 +25,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<AuthResult> RegisterAsync(RegisterRequest registerRequest)
+        public async Task<bool> RegisterAsync(RegisterRequest registerRequest)
         {
             return await _authService.RegisterAsync(registerRequest);
         }
