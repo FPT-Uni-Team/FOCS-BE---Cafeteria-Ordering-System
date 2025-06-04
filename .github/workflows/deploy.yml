@@ -1,21 +1,82 @@
-name: Deploy to Server
+name: Deploy to VPS
+
 on:
   push:
-    branches:
-      - main
+    branches: main
+  pull_request:
+    branches: main
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
-    - name: Execute remote SSH commands
-      uses: appleboy/ssh-action@master
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
       with:
-        host: ${{ secrets.SSH_HOST }}
-        username: root
+        dotnet-version: '8.0.0'  
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+      
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+      
+    - name: Publish
+      run: dotnet publish -c Release -o ./publish
+      
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
         script: |
-          whoami
-          echo "Deployed successfully!"
+          # Navigate to project directory
+          cd /var/www/myapi
+          
+          # Pull latest changes
+          git pull origin main
+          
+          # Build the application
+          dotnet build --configuration Release
+          
+          # Publish the application
+          dotnet publish -c Release -o ./publish
+          
+          # Stop the service
+          sudo systemctl stop myapi.service
+          
+          # Copy published files
+          sudo cp -r ./publish/* /var/www/myapi/
+          
+          # Set proper permissions
+          sudo chown -R myapi-user:myapi-user /var/www/myapi
+          sudo chmod +x /var/www/myapi/MyAPI
+          
+          # Start the service
+          sudo systemctl start myapi.service
+          
+          # Check service status
+          sudo systemctl status myapi.service
+          
+    - name: Verify Deployment
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          # Wait for service to start
+          sleep 10
+          
+          # Test API endpoint
+          curl -f http://localhost:5000/health || exit 1
+          
+          echo "Deployment successful!"
