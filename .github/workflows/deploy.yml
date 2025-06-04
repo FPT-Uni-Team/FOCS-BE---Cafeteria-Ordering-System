@@ -1,4 +1,4 @@
-name: Deploy API
+name: Deploy to VPS
 
 on:
   push:
@@ -9,15 +9,18 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Deploy to VPS via SSH
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: root
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
-        script: |
-          cd /FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS
-          git pull origin main
-          docker-compose down
-          docker-compose up -d --build
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: SSH Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          port: ${{ secrets.PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS
+            git pull origin main
+            docker compose down
+            docker compose up -d --build
