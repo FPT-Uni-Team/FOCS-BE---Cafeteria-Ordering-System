@@ -18,7 +18,7 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "."
-          target: "/FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS"   
+          target: "~/FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS"
 
       - name: SSH deploy commands
         uses: appleboy/ssh-action@master
@@ -27,6 +27,6 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /FOCS-BE---Cafeteria-Ordering-System
+            cd ~/FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS
             docker compose down
             docker compose up -d --build
