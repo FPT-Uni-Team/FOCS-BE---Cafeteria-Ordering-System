@@ -2,19 +2,16 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
 WORKDIR /src
 
-# Copy solution and all projects
-COPY FOCS.sln ./
-COPY FOCS/ FOCS/
-COPY FOCS.Application/ FOCS.Application/
-COPY FOCS.Common/ FOCS.Common/
-COPY FOCS.Infrastructure.Identity/ FOCS.Infrastructure.Identity/
-# copy other referenced projects similarly
+# COPY toàn bộ mã nguồn (bao gồm cả các project con)
+COPY . .
 
-# Restore dependencies (runs dotnet restore on the solution)
-RUN dotnet restore
+# restore solution
+RUN dotnet restore FOCS.sln
 
-# Publish main project
-WORKDIR /src/FOCS
-RUN dotnet publish -c Release -o /out
+# build & publish
+RUN dotnet publish FOCS/FOCS.csproj -c Release -o /app/publish
 
-# Then your runtime image stage follows...
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "FOCS.dll"]
