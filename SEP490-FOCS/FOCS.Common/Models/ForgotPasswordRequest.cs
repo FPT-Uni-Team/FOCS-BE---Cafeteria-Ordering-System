@@ -1,7 +1,11 @@
-﻿namespace FOCS.Common.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace FOCS.Common.Models
 {
     public class ForgotPasswordRequest
     {
-        public string Email { get; set; } = string.Empty;
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
     }
 }

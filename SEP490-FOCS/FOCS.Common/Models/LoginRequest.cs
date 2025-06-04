@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -9,9 +10,12 @@ namespace FOCS.Common.Models
 {
     public class LoginRequest
     {
+        [Required]
+        [EmailAddress]
         public string Email { get; set; }
-        public string Password { get; set; }
 
-        public string StoreId {get; set; }
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
     }
 }
