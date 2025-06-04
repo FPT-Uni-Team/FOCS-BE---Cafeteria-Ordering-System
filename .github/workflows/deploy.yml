@@ -9,18 +9,24 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: SSH Deploy
+      - name: Copy source code to VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "."
+          target: "/FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS"   
+
+      - name: SSH deploy commands
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          port: ${{ secrets.PORT }}
+          username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS
-            git pull origin main
+            cd /FOCS-BE---Cafeteria-Ordering-System
             docker compose down
             docker compose up -d --build
