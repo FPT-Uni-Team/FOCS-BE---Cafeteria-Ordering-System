@@ -55,7 +55,7 @@ namespace FOCS.Application.Services
         {
             var user = await _userManager.FindByEmailAsync(email);
 
-            if (user == null) return false;
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
 
             var result = await _userManager.ConfirmEmailAsync(user, token);
 
@@ -65,7 +65,8 @@ namespace FOCS.Application.Services
         public async Task<bool> ForgotPasswordAsync(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
-            if (user == null) return false;
+
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
 
             // generate reset token
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -108,7 +109,7 @@ namespace FOCS.Application.Services
                 };
             }
 
-            return await GenerateAuthResult(user, request.StoreId);
+            return await GenerateAuthResult(user);
 
         }
 
@@ -151,13 +152,13 @@ namespace FOCS.Application.Services
             tokenEntity.IsRevoked = true;
             await _userRefreshTokenRepository.SaveChangesAsync();
 
-            return await GenerateAuthResult(user, string.Empty);
+            return await GenerateAuthResult(user);
         }
 
         public async Task<bool> RegisterAsync(RegisterRequest request)
         {
-                var store = _storeRepository.GetByIdAsync(request.StoreId);
-                ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
+            var store = _storeRepository.GetByIdAsync(request.StoreId);
+            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
 
             var user = new User
             {
@@ -170,8 +171,8 @@ namespace FOCS.Application.Services
             };
 
             var result = await _userManager.CreateAsync(user, request.Password);
-                ConditionCheck.CheckCondition(result.Succeeded,
-                        string.Join("; ", result.Errors.Select(e => e.Description)));
+            ConditionCheck.CheckCondition(result.Succeeded,
+                    string.Join("; ", result.Errors.Select(e => e.Description)));
 
             await _userManager.AddToRoleAsync(user, Roles.User);
 
@@ -187,7 +188,7 @@ namespace FOCS.Application.Services
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
 
-            if (user == null) return false;
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
 
             var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
 
@@ -196,27 +197,23 @@ namespace FOCS.Application.Services
 
         public async Task<bool> ChangePassword(ChangePasswordRequest request, string email)
         {
-            try
-            {
-                var user = await _userManager.FindByEmailAsync(email);
-                ConditionCheck.CheckCondition(user != null, Errors.Common.NotFound);
+            ConditionCheck.CheckCondition(request.OldPassword != request.NewPassword, Errors.AuthError.PasswordReuse);
 
-                var changePasswordResult = await _userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
-                ConditionCheck.CheckCondition(changePasswordResult.Succeeded, 
-                    string.Join("; ", changePasswordResult.Errors.Select(e => e.Description)));
+            var user = await _userManager.FindByEmailAsync(email);
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
 
-                await _signInManager.RefreshSignInAsync(user);
-                _logger.LogInformation($"User changed their password successfully.");
+            var changePasswordResult = await _userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
+            ConditionCheck.CheckCondition(changePasswordResult.Succeeded,
+                string.Join("; ", changePasswordResult.Errors.Select(e => e.Description)));
 
-                return true;
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
+            await _signInManager.RefreshSignInAsync(user);
+            _logger.LogInformation($"User changed their password successfully.");
+
+            return true;
         }
+
         #region private method
-        private async Task<AuthResult> GenerateAuthResult(User user, string storeId)
+        private async Task<AuthResult> GenerateAuthResult(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
@@ -228,8 +225,8 @@ namespace FOCS.Application.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, role), 
-                new Claim("StoreId", storeId)
+                new Claim(ClaimTypes.Role, role),
+                new Claim("StoreId", user.StoreId.ToString()),
             };
 
             var accessToken = _tokenService.GenerateAccessToken(claims);
