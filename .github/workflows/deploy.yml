@@ -8,7 +8,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
@@ -17,5 +21,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
+            cd /FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS
+            git pull origin main  
             docker-compose down
             docker-compose up -d --build
