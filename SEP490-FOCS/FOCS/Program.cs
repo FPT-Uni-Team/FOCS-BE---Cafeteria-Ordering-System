@@ -58,7 +58,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IRepository<MenuItemVariant>, Repository<MenuItemVariant, OrderDbContext>>()
                 .AddSingleton<IRedisCacheService>(sp => new RedisCacheService("localhost:6379"));
 ;
-builder.Services.AddHostedService<OrderBatchingService>();
+//builder.Services.AddHostedService<OrderBatchingService>();
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(
