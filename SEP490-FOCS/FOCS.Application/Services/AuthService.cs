@@ -19,6 +19,7 @@ using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using Microsoft.Extensions.Logging;
 using FOCS.Common.Utils;
+using Newtonsoft.Json.Linq;
 
 namespace FOCS.Application.Services
 {
@@ -47,9 +48,9 @@ namespace FOCS.Application.Services
             _logger = logger;
         }
 
-        public async Task<bool> ConfirmEmailAsync(string userId, string token)
+        public async Task<bool> ConfirmEmailAsync(string email, string token)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByEmailAsync(email);
 
             if (user == null) return false;
 
@@ -66,11 +67,7 @@ namespace FOCS.Application.Services
             // generate reset token
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            // create reset password link
-            var encodedToken = Uri.EscapeDataString(resetToken);
-            var callbackUrl = $"https://your-frontend-url.com/reset-password?email={Uri.EscapeDataString(email)}&token={encodedToken}";
-
-            return await _emailService.SendPasswordResetLinkAsync(email, callbackUrl);
+            return await _emailService.SendPasswordResetLinkAsync(email, resetToken);
         }
 
         public async Task<AuthResult> LoginAsync(LoginRequest request)
@@ -237,17 +234,8 @@ namespace FOCS.Application.Services
                 new Claim("StoreId", storeId)
             };
 
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddHours(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var accessToken = _tokenService.GenerateAccessToken(claims);
             var refreshToken = _tokenService.GenerateRefreshToken();
-            var jwt = tokenHandler.WriteToken(token);
 
             //save refresh token to db
             var userRefreshTokenDTO = new UserRefreshTokenDTO
@@ -264,7 +252,7 @@ namespace FOCS.Application.Services
             return new AuthResult
             {
                 IsSuccess = true,
-                AccessToken = jwt,
+                AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 Errors = null
             };

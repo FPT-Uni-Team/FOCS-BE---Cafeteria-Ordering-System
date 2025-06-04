@@ -14,8 +14,6 @@ namespace FOCS.Infrastructure.Identity.Identity
     {
         public static void Seed(this ModelBuilder modelBuilder)
         {
-            // Admin role
-            var adminRoleId = Guid.NewGuid().ToString();
             modelBuilder.Entity<IdentityRole>().HasData(
                 new
                 {
@@ -26,8 +24,6 @@ namespace FOCS.Infrastructure.Identity.Identity
                 }
             );
 
-            // Customer role
-            var customerRoleId = Guid.NewGuid().ToString();
             modelBuilder.Entity<IdentityRole>().HasData(
                 new
                 {
@@ -35,6 +31,26 @@ namespace FOCS.Infrastructure.Identity.Identity
                     Name = Roles.Customer,
                     NormalizedName = Roles.Customer.ToUpper(),
                     ConcurrencyStamp = "cf0a1168-7764-4a16-8e7e-f69c834ba3fe",
+                }
+            );
+                
+            modelBuilder.Entity<IdentityRole>().HasData(
+                new
+                {
+                    Id = "123dc5a4-2ce6-4497-9c3a-f614752c28fa",
+                    Name = Roles.User,
+                    NormalizedName = Roles.User.ToUpper(),
+                    ConcurrencyStamp = "123dc5a4-2ce6-4497-9c3a-f614752c28fa",
+                }
+            );
+
+            modelBuilder.Entity<IdentityRole>().HasData(
+                new
+                {
+                    Id = "5961f48a-d700-4807-bc3d-4fa9d229e9fb",
+                    Name = Roles.KitchenStaff,
+                    NormalizedName = Roles.KitchenStaff.ToUpper(),
+                    ConcurrencyStamp = "5961f48a-d700-4807-bc3d-4fa9d229e9fb",
                 }
             );
         }

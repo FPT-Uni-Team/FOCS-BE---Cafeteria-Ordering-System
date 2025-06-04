@@ -61,9 +61,9 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        public async Task<IActionResult> ConfirmEmail(string email, string token)
         {
-            var result = await _authService.ConfirmEmailAsync(userId, token);
+            var result = await _authService.ConfirmEmailAsync(email, token);
             if (result)
             {
                 return Ok(new { message = "Email confirmed successfully!" });
