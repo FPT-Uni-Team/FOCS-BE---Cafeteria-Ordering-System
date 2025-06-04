@@ -60,7 +60,7 @@ namespace FOCS.Controllers
             return Ok("Password has been reset successfully.");
         }
 
-        [HttpPost("confirm-email")]
+        [HttpGet("confirm-email")]
         public async Task<IActionResult> ConfirmEmail(string email, string token)
         {
             var result = await _authService.ConfirmEmailAsync(email, token);
