@@ -20,6 +20,7 @@ using FOCS.Infrastructure.Identity.Identity.Model;
 using Microsoft.Extensions.Logging;
 using FOCS.Common.Utils;
 using Newtonsoft.Json.Linq;
+using FOCS.Order.Infrastucture.Entities;
 
 namespace FOCS.Application.Services
 {
@@ -32,11 +33,12 @@ namespace FOCS.Application.Services
         private readonly IEmailService _emailService;
         private readonly ITokenService _tokenService;
         private readonly IRepository<UserRefreshToken> _userRefreshTokenRepository;
+        private readonly IRepository<Store> _storeRepository;
         private readonly ILogger<AuthService> _logger;
 
         public AuthService(UserManager<User> userManager, SignInManager<User> signInManager,
             IConfiguration config, IMapper mapper, IEmailService emailService, ITokenService tokenService,
-            IRepository<UserRefreshToken> userRepo, ILogger<AuthService> logger)
+            IRepository<UserRefreshToken> userRepo, IRepository<Store> storeRepository, ILogger<AuthService> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -45,6 +47,7 @@ namespace FOCS.Application.Services
             _emailService = emailService;
             _tokenService = tokenService;
             _userRefreshTokenRepository = userRepo;
+            _storeRepository = storeRepository;
             _logger = logger;
         }
 
@@ -151,12 +154,10 @@ namespace FOCS.Application.Services
             return await GenerateAuthResult(user, string.Empty);
         }
 
-        public async Task<AuthResult> RegisterAsync(RegisterRequest request)
+        public async Task<bool> RegisterAsync(RegisterRequest request)
         {
-            if (request.Password != request.ConfirmPassword)
-            {
-                return new AuthResult { IsSuccess = false, Errors = new[] { Errors.AuthError.PasswordNotMatch } };
-            }
+                var store = _storeRepository.GetByIdAsync(request.StoreId);
+                ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
 
             var user = new User
             {
@@ -169,11 +170,8 @@ namespace FOCS.Application.Services
             };
 
             var result = await _userManager.CreateAsync(user, request.Password);
-
-            if (!result.Succeeded)
-            {
-                return new AuthResult { IsSuccess = false, Errors = result.Errors.Select(e => e.Description) };
-            }
+                ConditionCheck.CheckCondition(result.Succeeded,
+                        string.Join("; ", result.Errors.Select(e => e.Description)));
 
             await _userManager.AddToRoleAsync(user, Roles.User);
 
@@ -182,7 +180,7 @@ namespace FOCS.Application.Services
             // Send confirmation email (external email service assumed)
             await _emailService.SendEmailConfirmationAsync(user.Email, token);
 
-            return await GenerateAuthResult(user, request.StoreId);
+            return true;
         }
 
         public async Task<bool> ResetPasswordAsync(ResetPasswordRequest request)

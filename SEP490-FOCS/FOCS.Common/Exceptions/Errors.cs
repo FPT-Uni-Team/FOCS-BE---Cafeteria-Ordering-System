@@ -16,6 +16,7 @@ namespace FOCS.Common.Exceptions
         public static class Common
         {
             public const string NotFound = "Not found";
+            public const string StoreNotFound = "Store Not found";
         }
 
         public static class AuthError
