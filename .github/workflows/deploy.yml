@@ -21,13 +21,13 @@ jobs:
         run: ls -l
 
       - name: Restore dependencies
-        run: dotnet restore ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS.sln
+        run: dotnet restore ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS/FOCS.sln
 
       - name: Build project
-        run: dotnet build ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS.sln --configuration Release --no-restore
+        run: dotnet build ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS/FOCS.sln --configuration Release --no-restore
 
       - name: Publish project
-        run: dotnet publish ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS.sln --configuration Release --output ./publish --no-build
+        run: dotnet publish ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS/FOCS.sln --configuration Release --output ./publish --no-build
 
       - name: Deploy - restart container
         run: |
