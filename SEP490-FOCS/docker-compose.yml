@@ -1,10 +1,11 @@
-version: "3.8"
+version: '3.8'
+
 services:
-  myapi:
-    image: myapiapp
+  api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: SEP490-FOCS/Dockerfile
     ports:
-      - "80:80"
-    restart: always
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
