@@ -40,7 +40,8 @@ jobs:
         run: |
           docker stop focs-api || true
           docker rm focs-api || true
-          docker build -t focs-api -f ./SEP490-FOCS/Dockerfile ./SEP490-FOCS
+          mv Dockerfile.txt Dockerfile
+          docker build -t focs-api .
           docker run -d -p 5000:8080 --name focs-api focs-api
 
 
