@@ -29,19 +29,18 @@ jobs:
         run: dotnet publish FOCS/FOCS.csproj --configuration Release --output ./publish --no-build
         working-directory: ./SEP490-FOCS
 
-      - name: List files in current directory
+      - name: List files in SEP490-FOCS (debug)
         run: ls -l
         working-directory: ./SEP490-FOCS
 
-      - name: Rename Dockerfile
+      - name: Rename Dockerfile.txt to Dockerfile
         run: mv Dockerfile.txt Dockerfile
+        working-directory: ./SEP490-FOCS
 
       - name: Deploy - restart container
         run: |
           docker stop focs-api || true
           docker rm focs-api || true
-          mv Dockerfile.txt Dockerfile
-          docker build -t focs-api .
+          docker build -t focs-api -f Dockerfile .
           docker run -d -p 5000:8080 --name focs-api focs-api
-
-
+        working-directory: ./SEP490-FOCS
