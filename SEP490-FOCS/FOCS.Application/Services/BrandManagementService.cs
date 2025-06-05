@@ -1,0 +1,98 @@
+﻿using AutoMapper;
+using FOCS.Application.DTOs.AdminServiceDTO;
+using FOCS.Application.Services.Interface;
+using FOCS.Common.Models;
+using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Order.Infrastucture.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace FOCS.Application.Services
+{
+    public class BrandManagementService : IBrandManagementService
+    {
+        private readonly IRepository<Brand> _brandRepository;
+        private readonly IMapper _mapper;
+
+        public BrandManagementService(IRepository<Brand> brandRepository, IMapper mapper)
+        {
+            _brandRepository = brandRepository;
+            _mapper = mapper;
+        }
+
+        public async Task<BrandAdminServiceDTO> CreateBrandAsync(BrandAdminServiceDTO dto, string userId)
+        {
+            var newBrand = _mapper.Map<Brand>(dto);
+            newBrand.Id = Guid.NewGuid();
+            newBrand.IsDelete = false;
+            newBrand.CreatedAt = DateTime.UtcNow;
+            newBrand.CreatedBy = userId;
+
+            await _brandRepository.AddAsync(newBrand);
+            await _brandRepository.SaveChangesAsync();
+
+            return _mapper.Map<BrandAdminServiceDTO>(newBrand);
+        }
+
+        public async Task<PagedResult<BrandAdminServiceDTO>> GetAllBrandsAsync(UrlQueryParameters query)
+        {
+            var brandQuery = _brandRepository.AsQueryable().Where(b => !b.IsDelete);
+
+            // Search
+            if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))
+            {
+                if (query.SearchBy.Equals("name", StringComparison.OrdinalIgnoreCase))
+                    brandQuery = brandQuery.Where(b => b.Name.Contains(query.SearchValue));
+            }
+
+            // Sort
+            if (!string.IsNullOrEmpty(query.SortBy))
+            {
+                bool desc = query.SortOrder?.ToLower() == "desc";
+                brandQuery = query.SortBy.ToLower() switch
+                {
+                    "name" => desc ? brandQuery.OrderByDescending(b => b.Name) : brandQuery.OrderBy(b => b.Name),
+                    "taxrate" => desc ? brandQuery.OrderByDescending(b => b.DefaultTaxRate) : brandQuery.OrderBy(b => b.DefaultTaxRate),
+                    _ => brandQuery
+                };
+            }
+
+            // Pagination
+            var total = await brandQuery.CountAsync();
+            var items = await brandQuery
+                .Skip((query.Page - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .ToListAsync();
+
+            var mapped = _mapper.Map<List<BrandAdminServiceDTO>>(items);
+            return new PagedResult<BrandAdminServiceDTO>(mapped, total, query.Page, query.PageSize);
+        }
+
+        public async Task<bool> UpdateBrandAsync(Guid id, BrandAdminServiceDTO dto, string userId)
+        {
+            var brand = await _brandRepository.GetByIdAsync(id);
+            if (brand == null || brand.IsDelete)
+                return false;
+
+            _mapper.Map(dto, brand);
+            brand.UpdatedAt = DateTime.UtcNow;
+            brand.UpdatedBy = userId;
+
+            await _brandRepository.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteBrandAsync(Guid id, string userId)
+        {
+            var brand = await _brandRepository.GetByIdAsync(id);
+            if (brand == null || brand.IsDelete)
+                return false;
+
+            brand.IsDelete = true;
+            brand.UpdatedAt = DateTime.UtcNow;
+            brand.UpdatedBy = userId;
+
+            await _brandRepository.SaveChangesAsync();
+            return true;
+        }
+    }
+}
