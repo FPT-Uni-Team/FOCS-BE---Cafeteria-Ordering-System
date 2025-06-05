@@ -11,11 +11,13 @@ namespace FOCS.Controllers
     {
         private readonly IMenuManagementService _adminMenuItemService;
         private readonly IBrandManagementService _adminBrandService;
+        private readonly IStoreManagementService _adminStoreService;
 
-        public AdminController(IMenuManagementService menuService, IBrandManagementService adminBrand)
+        public AdminController(IMenuManagementService menuService, IBrandManagementService adminBrand, IStoreManagementService storeService)
         {
             _adminMenuItemService = menuService;
             _adminBrandService = adminBrand;
+            _adminStoreService = storeService;
         }
 
         [HttpPost("menu-item")]
@@ -96,7 +98,7 @@ namespace FOCS.Controllers
             if (!updated)
                 return NotFound();
 
-            return NoContent();
+            return Ok();
         }
 
         [HttpDelete("brand/{id}")]
@@ -106,8 +108,41 @@ namespace FOCS.Controllers
             if (!deleted)
                 return NotFound();
 
-            return NoContent();
+            return Ok();
         }
 
+        [HttpPost("store")]
+        public async Task<IActionResult> CreateStore([FromBody] StoreAdminServiceDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var created = await _adminStoreService.CreateStoreAsync(dto, UserId);
+            return Ok(created);
+        }
+
+        [HttpPost("stores")]
+        public async Task<IActionResult> GetStores([FromBody] UrlQueryParameters query)
+        {
+            var result = await _adminStoreService.GetAllStoresAsync(query);
+            return Ok(result);
+        }
+
+        [HttpPut("store/{id}")]
+        public async Task<IActionResult> UpdateStore(Guid id, [FromBody] StoreAdminServiceDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var success = await _adminStoreService.UpdateStoreAsync(id, dto, UserId);
+            return success ? Ok() : NotFound();
+        }
+
+        [HttpDelete("store/{id}")]
+        public async Task<IActionResult> DeleteStore(Guid id)
+        {
+            var success = await _adminStoreService.DeleteStoreAsync(id, UserId);
+            return success ? Ok() : NotFound();
+        }
     }
 }
