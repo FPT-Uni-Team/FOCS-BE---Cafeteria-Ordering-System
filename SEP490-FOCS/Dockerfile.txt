@@ -5,9 +5,6 @@ WORKDIR /src
 # Copy source code
 COPY . .
 
-# Restore all projects
-RUN dotnet restore FOCS.sln
-
 # Build
 RUN dotnet build FOCS.sln -c Release -o /app/build
 
