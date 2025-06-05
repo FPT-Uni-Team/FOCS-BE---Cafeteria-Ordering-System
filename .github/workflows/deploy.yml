@@ -17,17 +17,17 @@ jobs:
         with:
           dotnet-version: '8.0.407'
 
-      - name: List repo root files (debug)
-        run: ls -l
-
       - name: Restore dependencies
-        run: dotnet restore ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS.sln
+        run: dotnet restore FOCS.sln
+        working-directory: ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS
 
       - name: Build project
-        run: dotnet build ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS.sln --configuration Release --no-restore
+        run: dotnet build FOCS.sln --configuration Release --no-restore
+        working-directory: ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS
 
       - name: Publish project
-        run: dotnet publish ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS/FOCS.csproj --configuration Release --output ./publish --no-build
+        run: dotnet publish FOCS/FOCS.csproj --configuration Release --output ./publish --no-build
+        working-directory: ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS
 
       - name: Deploy - restart container
         working-directory: ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS
