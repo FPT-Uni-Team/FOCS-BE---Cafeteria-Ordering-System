@@ -18,6 +18,8 @@ RUN dotnet restore FOCS.sln
 # Copy everything else
 COPY . .
 
+RUN apt-get update && apt-get install -y libgssapi-krb5-2
+
 
 # Build the solution
 RUN dotnet build FOCS.sln -c Release -o /app/build
