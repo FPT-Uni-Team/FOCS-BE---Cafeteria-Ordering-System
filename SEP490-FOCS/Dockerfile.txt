@@ -1,35 +1,24 @@
-# Build stage
+# Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Copy only needed project files and .sln first
-COPY FOCS.sln ./
-COPY FOCS/FOCS.csproj ./FOCS/
-COPY FOCS.Common/FOCS.Common.csproj ./FOCS.Common/
-COPY FOCS.Infrastructure.Identity/FOCS.Infrastructure.Identity.csproj ./FOCS.Infrastructure.Identity/
-COPY FOCS.Application/FOCS.Application.csproj ./FOCS.Application/
-COPY FOCS.Order.Infrastucture/FOCS.Order.Infrastucture.csproj ./FOCS.Order.Infrastucture/
+COPY *.sln .
+COPY FOCS.Application/*.csproj ./FOCS.Application/
+COPY FOCS.Common/*.csproj ./FOCS.Common/
+COPY FOCS.Infrastructure.Identity/*.csproj ./FOCS.Infrastructure.Identity/
+COPY FOCS.Order.Infrastucture/*.csproj ./FOCS.Order.Infrastucture/
+COPY FOCS.Realtime.Hub/*.csproj ./FOCS.Realtime.Hub/
+COPY FOCS/*.csproj ./FOCS/
 
-# ...add các csproj khác nếu cần
+RUN dotnet restore
 
-# Restore (sẽ chỉ restore đúng các project reference)
-RUN dotnet restore FOCS.sln
-
-# Copy everything else
 COPY . .
+WORKDIR /app/FOCS
+RUN dotnet publish -c Release -o /out
 
-RUN apt-get update && apt-get install -y libgssapi-krb5-2
-
-
-# Build the solution
-RUN dotnet build FOCS.sln -c Release -o /app/build
-
-# Publish the main API project
-RUN dotnet publish ./FOCS/FOCS.csproj -c Release -o /app/publish /p:UseAppHost=false
-
-# Runtime stage
+# Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-COPY --from=build /app/publish .
+COPY --from=build /out .
 
 ENTRYPOINT ["dotnet", "FOCS.dll"]
