@@ -2,15 +2,22 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy only necessary files first to leverage Docker cache
+# Copy only needed project files and .sln first
 COPY FOCS.sln ./
 COPY FOCS/FOCS.csproj ./FOCS/
+COPY FOCS.Common/FOCS.Common.csproj ./FOCS.Common/
+COPY FOCS.Infrastructure.Identity/FOCS.Infrastructure.Identity.csproj ./FOCS.Infrastructure.Identity/
+COPY FOCS.Application/FOCS.Application.csproj ./FOCS.Application/
+COPY FOCS.Order.Infrastucture/FOCS.Order.Infrastucture.csproj ./FOCS.Order.Infrastucture/
 
-# Restore packages
+# ...add các csproj khác nếu cần
+
+# Restore (sẽ chỉ restore đúng các project reference)
 RUN dotnet restore FOCS.sln
 
-# Copy the rest of the source code
+# Copy everything else
 COPY . .
+
 
 # Build the solution
 RUN dotnet build FOCS.sln -c Release -o /app/build
