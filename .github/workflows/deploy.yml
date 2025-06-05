@@ -33,6 +33,9 @@ jobs:
         run: ls -l
         working-directory: ./SEP490-FOCS
 
+      - name: Rename Dockerfile
+        run: mv Dockerfile.txt Dockerfile
+
       - name: Deploy - restart container
         run: |
           docker stop focs-api || true
