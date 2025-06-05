@@ -30,9 +30,9 @@ jobs:
         working-directory: ./SEP490-FOCS
 
       - name: Deploy - restart container
-        working-directory:  ./SEP490-FOCS
         run: |
           docker stop focs-api || true
           docker rm focs-api || true
-          docker build -t focs-api .
+          docker build -t focs-api -f ./FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/Dockerfile .
           docker run -d -p 5000:8080 --name focs-api focs-api
+
