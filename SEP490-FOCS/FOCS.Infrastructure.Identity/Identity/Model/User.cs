@@ -17,6 +17,6 @@ namespace FOCS.Infrastructure.Identity.Identity.Model
         public DateTime? UpdatedAt { get; set; }
         public string? UpdatedBy { get; set; }
 
-        public Guid StoreId { get; set; }
+        public Guid? StoreId { get; set; }
     }
 }
