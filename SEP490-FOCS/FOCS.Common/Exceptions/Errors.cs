@@ -18,6 +18,7 @@ namespace FOCS.Common.Exceptions
             public const string NotFound = "Not found";
             public const string StoreNotFound = "Store Not found";
             public const string UserNotFound = "User Not found";
+            public const string Empty = "Empty";
         }
 
         public static class AuthError
@@ -34,6 +35,13 @@ namespace FOCS.Common.Exceptions
             public const string NotFoundStore = "Store not found";
             public const string MenuItemNotFound = "Item Not Found";
             public const string CouponIsNotValid = "Coupon is not valid";
+        }
+
+        public static class PromotionError
+        {
+            public const string CouponNotFound = "Coupon code not found";
+            public const string CouponMaxUsed = "Coupon is max used";
+            public const string InvalidPeriodDatetime = "Coupon/Promotion is out of date";
         }
     }
 }

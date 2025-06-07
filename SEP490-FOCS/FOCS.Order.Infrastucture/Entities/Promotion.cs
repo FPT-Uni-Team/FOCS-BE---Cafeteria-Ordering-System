@@ -22,6 +22,8 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public double DiscountValue { get; set; }
 
+        public string? AcceptForItems {  get; set; }
+
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 

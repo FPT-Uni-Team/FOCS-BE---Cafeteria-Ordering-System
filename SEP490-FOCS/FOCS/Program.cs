@@ -59,6 +59,9 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IRepository<Brand>, Repository<Brand, OrderDbContext>>()
                 .AddScoped<IRepository<Store>, Repository<Store, OrderDbContext>>()
                 .AddScoped<IRepository<MenuItemVariant>, Repository<MenuItemVariant, OrderDbContext>>()
+                .AddScoped<ICouponService, CouponService>()
+                .AddScoped<IRepository<Coupon>, Repository<Coupon, OrderDbContext>>()
+                .AddScoped<IRepository<Promotion>, Repository<Promotion, OrderDbContext>>()
                 .AddSingleton<IRedisCacheService>(sp => new RedisCacheService("localhost:6379"));
 ;
 //builder.Services.AddHostedService<OrderBatchingService>();

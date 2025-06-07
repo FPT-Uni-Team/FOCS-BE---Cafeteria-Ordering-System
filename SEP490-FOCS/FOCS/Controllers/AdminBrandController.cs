@@ -17,7 +17,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("brand")]
-        public async Task<IActionResult> CreateBrand([FromBody] BrandAdminServiceDTO dto)
+        public async Task<IActionResult> CreateBrand([FromBody] CreateAdminBrandRequest dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
