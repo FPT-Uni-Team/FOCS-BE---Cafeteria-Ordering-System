@@ -1,12 +1,11 @@
 ﻿using AutoMapper;
-using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Enums;
+using FOCS.Common.Exceptions;
 using FOCS.Common.Models;
+using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
-using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
-using FOCS.Order.Infrastucture.Migrations;
 using Microsoft.EntityFrameworkCore;
 
 namespace FOCS.Application.Services
@@ -26,6 +25,7 @@ namespace FOCS.Application.Services
         {
             var storeSetting = await _storeSettingRepository.AsQueryable()
                 .Where(s => s.StoreId.Equals(storeId) && s.IsDeleted == false).FirstOrDefaultAsync();
+            ConditionCheck.CheckCondition(storeSetting != null, Errors.Common.NotFound);
             return _mapper.Map<StoreSettingDTO>(storeSetting);
         }
 
