@@ -1,4 +1,5 @@
-﻿using FOCS.Common.Models;
+﻿using FOCS.Common.Enums;
+using FOCS.Common.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,12 @@ namespace FOCS.Order.Infrastucture.Entities
         public PaymentConfig PaymentConfig { get; set; }
         
         public string logoUrl { get; set; }
+
+        public bool IsSelfService { get; set; } = true;
+
+        public DiscountStrategy discountStrategy { get; set; }
+
+        public double? CustomTaxRate { get; set; }
 
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
