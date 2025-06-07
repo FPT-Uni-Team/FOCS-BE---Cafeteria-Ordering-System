@@ -19,7 +19,7 @@ namespace FOCS.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<BrandAdminServiceDTO> CreateBrandAsync(BrandAdminServiceDTO dto, string userId)
+        public async Task<BrandAdminServiceDTO> CreateBrandAsync(CreateAdminBrandRequest dto, string userId)
         {
             var newBrand = _mapper.Map<Brand>(dto);
             newBrand.Id = Guid.NewGuid();

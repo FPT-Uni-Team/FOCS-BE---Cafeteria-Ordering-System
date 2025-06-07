@@ -19,12 +19,15 @@ namespace FOCS.Application.Services
         private readonly IRepository<MenuItemVariant> _variantRepository;
         private readonly IRepository<FOCS.Order.Infrastucture.Entities.Order> _orderRepository;
 
-        public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository, IRepository<Store> storeRepository, IRepository<MenuItem> menuRepository, IRepository<MenuItemVariant> variantRepository)
+        private readonly ICouponService _couponService;
+
+        public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository, IRepository<Store> storeRepository, IRepository<MenuItem> menuRepository, IRepository<MenuItemVariant> variantRepository, ICouponService couponService)
         {
             _orderRepository = orderRepository;
             _storeRepository = storeRepository;
             _menuItemRepository = menuRepository;
             _variantRepository = variantRepository;
+            _couponService = couponService;
         }
 
         public async Task<OrderResultDTO> CreateOrderAsGuestAsync(CreateOrderGuestDTO dto)
@@ -41,11 +44,9 @@ namespace FOCS.Application.Services
                 ConditionCheck.CheckCondition(currentVariant.Any(), Errors.OrderError.MenuItemNotFound);
             }
 
-            ConditionCheck.CheckCondition(await IsValidApplyCoupon(dto.CouponCode), Errors.OrderError.CouponIsNotValid);
+            await _couponService.IsValidApplyCouponAsync(dto.CouponCode);
 
-            //Calculate total price
-
-            //Save order as guest
+            // Get Store Config
 
             return new OrderResultDTO
             {
