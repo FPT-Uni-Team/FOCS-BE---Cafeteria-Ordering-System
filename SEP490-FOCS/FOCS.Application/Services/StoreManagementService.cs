@@ -11,11 +11,13 @@ namespace FOCS.Application.Services
     public class StoreManagementService : IStoreManagementService
     {
         private readonly IRepository<Store> _storeRepository;
+        private readonly IRepository<StoreSetting> _storeSettingRepository;
         private readonly IMapper _mapper;
 
-        public StoreManagementService(IRepository<Store> storeRepository, IMapper mapper)
+        public StoreManagementService(IRepository<Store> storeRepository, IRepository<StoreSetting> storeSettingRepository, IMapper mapper)
         {
             _storeRepository = storeRepository;
+            _storeSettingRepository = storeSettingRepository;
             _mapper = mapper;
         }
 
@@ -29,6 +31,18 @@ namespace FOCS.Application.Services
 
             await _storeRepository.AddAsync(newStore);
             await _storeRepository.SaveChangesAsync();
+
+            var defaultSetting = new StoreSetting
+            {
+                StoreId = newStore.Id,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = userId,
+                UpdatedAt = DateTime.UtcNow,
+                UpdatedBy = userId,
+            };
+
+            await _storeSettingRepository.AddAsync(defaultSetting);
+            await _storeSettingRepository.SaveChangesAsync();
 
             return _mapper.Map<StoreAdminServiceDTO>(newStore);
         }

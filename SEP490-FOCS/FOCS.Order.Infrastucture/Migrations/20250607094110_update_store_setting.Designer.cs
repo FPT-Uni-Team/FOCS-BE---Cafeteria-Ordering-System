@@ -4,6 +4,7 @@ using FOCS.Order.Infrastucture.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FOCS.Order.Infrastucture.Migrations
 {
     [DbContext(typeof(OrderDbContext))]
-    partial class OrderDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250607094110_update_store_setting")]
+    partial class update_store_setting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -55,7 +58,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Brands", (string)null);
+                    b.ToTable("Brands");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.CartItem", b =>
@@ -105,7 +108,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("TableId");
 
-                    b.ToTable("CartItems", (string)null);
+                    b.ToTable("CartItems");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Coupon", b =>
@@ -173,7 +176,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("Coupons", (string)null);
+                    b.ToTable("Coupons");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.CouponUsage", b =>
@@ -198,7 +201,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("CouponUsages", (string)null);
+                    b.ToTable("CouponUsages");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Feedback", b =>
@@ -236,7 +239,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("Feedbacks", (string)null);
+                    b.ToTable("Feedbacks");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.MenuCategory", b =>
@@ -281,7 +284,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("MenuCategories", (string)null);
+                    b.ToTable("MenuCategories");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.MenuItem", b =>
@@ -335,7 +338,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("MenuItems", (string)null);
+                    b.ToTable("MenuItems");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.MenuItemVariant", b =>
@@ -382,7 +385,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("VariantGroupId");
 
-                    b.ToTable("MenuItemVariants", (string)null);
+                    b.ToTable("MenuItemVariants");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Order", b =>
@@ -449,7 +452,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.OrderDetail", b =>
@@ -482,7 +485,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderDetails", (string)null);
+                    b.ToTable("OrderDetails");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.OrderWrap", b =>
@@ -508,7 +511,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("OrderWraps", (string)null);
+                    b.ToTable("OrderWraps");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Promotion", b =>
@@ -516,9 +519,6 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AcceptForItems")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -563,7 +563,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Promotions", (string)null);
+                    b.ToTable("Promotions");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.PromotionItemCondition", b =>
@@ -595,7 +595,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("PromotionId");
 
-                    b.ToTable("PromotionItemConditions", (string)null);
+                    b.ToTable("PromotionItemConditions");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Store", b =>
@@ -644,7 +644,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("BrandId");
 
-                    b.ToTable("Stores", (string)null);
+                    b.ToTable("Stores");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.StoreSetting", b =>
@@ -701,7 +701,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("StoreSettings", (string)null);
+                    b.ToTable("StoreSettings");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Table", b =>
@@ -742,7 +742,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("Tables", (string)null);
+                    b.ToTable("Tables");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.VariantGroup", b =>
@@ -774,7 +774,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("MenuItemId");
 
-                    b.ToTable("VariantGroups", (string)null);
+                    b.ToTable("VariantGroups");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.CartItem", b =>
