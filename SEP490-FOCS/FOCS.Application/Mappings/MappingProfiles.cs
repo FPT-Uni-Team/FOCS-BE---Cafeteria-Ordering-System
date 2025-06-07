@@ -36,6 +36,9 @@ namespace FOCS.Application.Mappings
 
             CreateMap<Brand, CreateAdminBrandRequest>().ReverseMap()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
+
+            CreateMap<StoreSetting, StoreSettingDTO>().ReverseMap()
+                .ForMember(dest => dest.Id, opt => opt.Ignore());
         }
     }
 }
