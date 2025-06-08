@@ -43,6 +43,8 @@ namespace FOCS.Common.Exceptions
             public const string CouponNotFound = "Coupon code not found";
             public const string CouponMaxUsed = "Coupon is max used";
             public const string InvalidPeriodDatetime = "Coupon/Promotion is out of date";
+            public const string PromotionActive = "Promotion is already active";
+            public const string PromotionInactive = "Promotion is already inactive";
         }
     }
 }
