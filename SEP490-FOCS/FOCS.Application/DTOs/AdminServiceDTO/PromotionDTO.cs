@@ -45,11 +45,11 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         {
             var results = new List<ValidationResult>();
 
-            if (StartDate <= DateTime.UtcNow)
+            if (StartDate.Date < DateTime.UtcNow.Date)
             {
                 results.Add(new ValidationResult(
                     "Start Date cannot be in the past",
-                    new[] { nameof(StartDate), nameof(EndDate) }));
+                    new[] { nameof(StartDate) }));
             }
 
             // Validate Start Date must be before End Date
