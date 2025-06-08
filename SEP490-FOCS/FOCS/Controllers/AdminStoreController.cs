@@ -9,9 +9,9 @@ namespace FOCS.Controllers
     [ApiController]
     public class AdminStoreController : FocsController
     {
-        private readonly IStoreManagementService _adminStoreService;
+        private readonly IAdminStoreService _adminStoreService;
 
-        public AdminStoreController(IStoreManagementService storeService)
+        public AdminStoreController(IAdminStoreService storeService)
         {
             _adminStoreService = storeService;
         }
@@ -29,7 +29,7 @@ namespace FOCS.Controllers
         [HttpPost("stores")]
         public async Task<IActionResult> GetStores([FromBody] UrlQueryParameters query)
         {
-            var result = await _adminStoreService.GetAllStoresAsync(query);
+            var result = await _adminStoreService.GetAllStoresAsync(query, UserId);
             return Ok(result);
         }
 

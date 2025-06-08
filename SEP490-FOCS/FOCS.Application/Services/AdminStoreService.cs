@@ -8,13 +8,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FOCS.Application.Services
 {
-    public class StoreManagementService : IStoreManagementService
+    public class AdminStoreService : IAdminStoreService
     {
         private readonly IRepository<Store> _storeRepository;
         private readonly IRepository<StoreSetting> _storeSettingRepository;
         private readonly IMapper _mapper;
 
-        public StoreManagementService(IRepository<Store> storeRepository, IRepository<StoreSetting> storeSettingRepository, IMapper mapper)
+        public AdminStoreService(IRepository<Store> storeRepository, IRepository<StoreSetting> storeSettingRepository, IMapper mapper)
         {
             _storeRepository = storeRepository;
             _storeSettingRepository = storeSettingRepository;
@@ -23,6 +23,8 @@ namespace FOCS.Application.Services
 
         public async Task<StoreAdminServiceDTO> CreateStoreAsync(StoreAdminServiceDTO dto, string userId)
         {
+            CheckValidInput(userId);
+
             var newStore = _mapper.Map<Store>(dto);
             newStore.Id = Guid.NewGuid();
             newStore.IsDeleted = false;
@@ -47,9 +49,10 @@ namespace FOCS.Application.Services
             return _mapper.Map<StoreAdminServiceDTO>(newStore);
         }
 
-        public async Task<PagedResult<StoreAdminServiceDTO>> GetAllStoresAsync(UrlQueryParameters query)
+        public async Task<PagedResult<StoreAdminServiceDTO>> GetAllStoresAsync(UrlQueryParameters query, string userId)
         {
-            var storeQuery = _storeRepository.AsQueryable().Where(s => !s.IsDeleted);
+            CheckValidInput(userId);
+            var storeQuery = _storeRepository.AsQueryable().Include(i => i.Brand).Where(s => !s.IsDeleted && s.Brand.CreatedBy.Equals(userId));
 
             // Search
             if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))
@@ -93,6 +96,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> UpdateStoreAsync(Guid id, StoreAdminServiceDTO dto, string userId)
         {
+            CheckValidInput(userId);
             var store = await _storeRepository.GetByIdAsync(id);
             if (store == null || store.IsDeleted)
                 return false;
@@ -107,6 +111,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> DeleteStoreAsync(Guid id, string userId)
         {
+            CheckValidInput(userId);
             var store = await _storeRepository.GetByIdAsync(id);
             if (store == null || store.IsDeleted)
                 return false;
@@ -117,6 +122,15 @@ namespace FOCS.Application.Services
 
             await _storeRepository.SaveChangesAsync();
             return true;
+        }
+
+        public void CheckValidInput(string userId)
+        {
+            //check userId is not null or empty
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new ArgumentException("UserId is required(Please login).");
+            }
         }
     }
 }

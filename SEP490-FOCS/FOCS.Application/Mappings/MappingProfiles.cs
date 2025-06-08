@@ -33,6 +33,9 @@ namespace FOCS.Application.Mappings
             // Admin Mappings for Store
             CreateMap<Store, StoreAdminServiceDTO>().ReverseMap()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
+            // Admin Mappings for Store
+            CreateMap<Coupon, CouponAdminServiceDTO>().ReverseMap()
+                .ForMember(dest => dest.Id, opt => opt.Ignore());
 
             CreateMap<Brand, CreateAdminBrandRequest>().ReverseMap()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());

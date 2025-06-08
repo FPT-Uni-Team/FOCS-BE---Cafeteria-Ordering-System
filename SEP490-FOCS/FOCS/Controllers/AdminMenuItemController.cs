@@ -9,15 +9,11 @@ namespace FOCS.Controllers
     [ApiController]
     public class AdminMenuItemController : FocsController
     {
-        private readonly IMenuManagementService _adminMenuItemService;
-        private readonly IBrandManagementService _adminBrandService;
-        private readonly IStoreManagementService _adminStoreService;
+        private readonly IAdminMenuItemService _adminMenuItemService;
 
-        public AdminMenuItemController(IMenuManagementService menuService, IBrandManagementService adminBrand, IStoreManagementService storeService)
+        public AdminMenuItemController(IAdminMenuItemService menuService)
         {
             _adminMenuItemService = menuService;
-            _adminBrandService = adminBrand;
-            _adminStoreService = storeService;
         }
 
         [HttpPost("menu-item")]

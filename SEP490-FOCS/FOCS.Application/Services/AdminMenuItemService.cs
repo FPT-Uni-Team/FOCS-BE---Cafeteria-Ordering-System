@@ -8,12 +8,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FOCS.Application.Services
 {
-    public class MenuManagementService : IMenuManagementService
+    public class AdminMenuItemService : IAdminMenuItemService
     {
         private readonly IRepository<MenuItem> _menuRepository;
         private readonly IMapper _mapper;
 
-        public MenuManagementService(IRepository<MenuItem> menuRepository, IMapper mapper)
+        public AdminMenuItemService(IRepository<MenuItem> menuRepository, IMapper mapper)
         {
             _menuRepository = menuRepository;
             _mapper = mapper;

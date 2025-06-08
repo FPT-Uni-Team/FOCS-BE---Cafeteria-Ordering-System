@@ -3,7 +3,7 @@ using FOCS.Common.Models;
 
 namespace FOCS.Application.Services.Interface
 {
-    public interface IMenuManagementService
+    public interface IAdminMenuItemService
     {
         Task<MenuItemAdminServiceDTO> CreateMenuAsync(MenuItemAdminServiceDTO dto, string userId);
         Task<PagedResult<MenuItemAdminServiceDTO>> GetAllMenuItemAsync(UrlQueryParameters query, Guid storeId);
