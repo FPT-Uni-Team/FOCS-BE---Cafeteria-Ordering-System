@@ -40,8 +40,8 @@ namespace FOCS.Order.Infrastucture.Entities
         public Store Store { get; set; }
 
         //promotion
-        public Guid PromotionId {  get; set; }
-        public Promotion Promotion { get; set; }
+        public Guid? PromotionId {  get; set; }
+        public Promotion? Promotion { get; set; }
     }
 
 }
