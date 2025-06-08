@@ -35,6 +35,7 @@ namespace FOCS.Common.Exceptions
             public const string NotFoundStore = "Store not found";
             public const string MenuItemNotFound = "Item Not Found";
             public const string CouponIsNotValid = "Coupon is not valid";
+            public const string TableNotFound = "Table is not found in system";
         }
 
         public static class PromotionError
