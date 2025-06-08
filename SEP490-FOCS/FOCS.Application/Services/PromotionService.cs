@@ -8,8 +8,6 @@ using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
 
 namespace FOCS.Application.Services
@@ -22,9 +20,12 @@ namespace FOCS.Application.Services
         private readonly IRepository<MenuItem> _menuItemRepository;
         private readonly IMapper _mapper;
 
-        public PromotionService(IRepository<Promotion> promotionRepository,
+        public PromotionService(
+            IRepository<Promotion> promotionRepository,
             IRepository<PromotionItemCondition> promotionItemConditionRepository,
-            IRepository<Store> storeRepository, IRepository<MenuItem> menuItemRepository, IMapper mapper)
+            IRepository<Store> storeRepository,
+            IRepository<MenuItem> menuItemRepository,
+            IMapper mapper)
         {
             _promotionRepository = promotionRepository;
             _promotionItemConditionRepository = promotionItemConditionRepository;
@@ -35,97 +36,32 @@ namespace FOCS.Application.Services
 
         public async Task<PromotionDTO> CreatePromotionAsync(PromotionDTO dto, string userId)
         {
-            var context = new ValidationContext(dto);
-            var validationResults = dto.Validate(context);
-            ConditionCheck.CheckCondition(!validationResults.Any(), string.Join("; ", validationResults.Select(r => r.ErrorMessage)));
+            await ValidatePromotionDto(dto);
+            await ValidatePromotionUniqueness(dto);
+            await ValidateStoreExists(dto.StoreId);
 
-            var existingPromotionTitle = await _promotionRepository
-                .AsQueryable()
-                .FirstOrDefaultAsync(p => p.Title.Equals(dto.Title) && !p.IsDeleted);
-            ConditionCheck.CheckCondition(existingPromotionTitle == null, "Promotion with this title already exists.");
-
-            var existingPromotionTypeAndRange = await _promotionRepository
-                .AsQueryable()
-                .FirstOrDefaultAsync(p => p.PromotionType.Equals(dto.PromotionType)
-                                        && ((dto.StartDate > p.StartDate && dto.StartDate < p.EndDate)
-                                                    || (dto.EndDate > p.StartDate && dto.EndDate < p.EndDate))
-                                        && !p.IsDeleted);
-
-            var store = await _storeRepository.GetByIdAsync(dto.StoreId);
-            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
-
-            var newPromotion = _mapper.Map<Promotion>(dto);
-            newPromotion.Id = Guid.NewGuid();
-            newPromotion.IsDeleted = false;
-            newPromotion.CreatedAt = DateTime.UtcNow;
-            newPromotion.CreatedBy = userId;
-
-            if (newPromotion.PromotionType == PromotionType.BuyXGetY)
-            {
-                var buyItem = _menuItemRepository.GetByIdAsync(dto.PromotionItemConditionDTO.BuyItemId);
-                ConditionCheck.CheckCondition(buyItem != null, Errors.OrderError.MenuItemNotFound);
-                var getItem = _menuItemRepository.GetByIdAsync(dto.PromotionItemConditionDTO.GetItemId);
-                ConditionCheck.CheckCondition(getItem != null, Errors.OrderError.MenuItemNotFound);
-                var newPromotionItemCondition = _mapper.Map<PromotionItemCondition>(dto.PromotionItemConditionDTO);
-                newPromotionItemCondition.Id = Guid.NewGuid();
-                newPromotionItemCondition.PromotionId = newPromotion.Id;
-
-                await _promotionItemConditionRepository.AddAsync(newPromotionItemCondition);
-                await _promotionItemConditionRepository.SaveChangesAsync();
-            }
+            var newPromotion = CreatePromotionEntity(dto, userId);
 
             await _promotionRepository.AddAsync(newPromotion);
             await _promotionRepository.SaveChangesAsync();
+
+            if (newPromotion.PromotionType == PromotionType.BuyXGetY)
+            {
+                await CreatePromotionItemCondition(dto, newPromotion.Id);
+            }
 
             return _mapper.Map<PromotionDTO>(newPromotion);
         }
 
         public async Task<PagedResult<PromotionDTO>> GetPromotionsByStoreAsync(UrlQueryParameters query, Guid storeId)
         {
-            var promotionQuery = _promotionRepository.AsQueryable().Where(p => p.StoreId.Equals(storeId) && !p.IsDeleted);
+            var promotionQuery = _promotionRepository.AsQueryable()
+                .Where(p => p.StoreId == storeId && !p.IsDeleted);
 
-            if (query.Filters?.Any() == true)
-            {
-                foreach (var (key, value) in query.Filters)
-                {
-                    promotionQuery = key switch
-                    {
-                        "promotion_type" when double.TryParse(value, out var price) =>
-                            promotionQuery.Where(m => m.PromotionType.Equals(value)),
-                        _ => promotionQuery
-                    };
-                }
-            }
+            promotionQuery = ApplyFilters(promotionQuery, query);
+            promotionQuery = ApplySearch(promotionQuery, query);
+            promotionQuery = ApplySort(promotionQuery, query);
 
-            // Search
-            if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))
-            {
-                var searchValue = query.SearchValue.ToLower();
-
-                promotionQuery = query.SearchBy.ToLower() switch
-                {
-                    "title" => promotionQuery.Where(s => s.Title.ToLower().Contains(searchValue)),
-                    _ => promotionQuery
-                };
-            }
-
-            // Sort
-            if (!string.IsNullOrEmpty(query.SortBy))
-            {
-                bool desc = query.SortOrder?.ToLower() == "desc";
-
-                promotionQuery = query.SortBy.ToLower() switch
-                {
-                    "title" => desc ? promotionQuery.OrderByDescending(s => s.Title) : promotionQuery.OrderBy(s => s.Title),
-                    "end_date" => desc ? promotionQuery.OrderByDescending(s => s.EndDate) : promotionQuery.OrderBy(s => s.EndDate),
-                    "start_date" => desc ? promotionQuery.OrderByDescending(s => s.StartDate) : promotionQuery.OrderBy(s => s.StartDate),
-                    "promotion_type" => desc ? promotionQuery.OrderByDescending(s => s.PromotionType) : promotionQuery.OrderBy(s => s.PromotionType),
-                    "discount_value" => desc ? promotionQuery.OrderByDescending(s => s.DiscountValue) : promotionQuery.OrderBy(s => s.DiscountValue),
-                    _ => promotionQuery
-                };
-            }
-
-            // Pagination
             var total = await promotionQuery.CountAsync();
             var items = await promotionQuery
                 .Skip((query.Page - 1) * query.PageSize)
@@ -139,50 +75,47 @@ namespace FOCS.Application.Services
         public async Task<PromotionDTO> GetPromotionAsync(Guid promotionId)
         {
             var promotion = await _promotionRepository.AsQueryable()
-                                .Where(p => p.Id.Equals(promotionId) && !p.IsDeleted).FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(p => p.Id == promotionId && !p.IsDeleted);
+
             ConditionCheck.CheckCondition(promotion != null, Errors.Common.NotFound);
             return _mapper.Map<PromotionDTO>(promotion);
         }
 
         public async Task<bool> UpdatePromotionAsync(Guid id, PromotionDTO dto, string userId)
         {
-            var promotion = await _promotionRepository.GetByIdAsync(id);
-            if (promotion == null || promotion.IsDeleted)
-                return false;
+            var promotion = await GetActivePromotionById(id);
+            if (promotion == null) return false;
 
             _mapper.Map(dto, promotion);
-            promotion.UpdatedAt = DateTime.UtcNow;
-            promotion.UpdatedBy = userId;
+            UpdateAuditFields(promotion, userId);
 
             await _promotionRepository.SaveChangesAsync();
             return true;
         }
 
-        public async Task<bool> ActivePromotionAsync(Guid id, string userId)
+        public async Task<bool> ActivatePromotionAsync(Guid id, string userId)
         {
-            var promotion = await _promotionRepository.GetByIdAsync(id);
-            if (promotion == null || promotion.IsDeleted)
-                return false;
+            var promotion = await GetActivePromotionById(id);
+            if (promotion == null) return false;
 
             ConditionCheck.CheckCondition(!promotion.IsActive, Errors.PromotionError.PromotionActive);
+
             promotion.IsActive = true;
-            promotion.UpdatedAt = DateTime.UtcNow;
-            promotion.UpdatedBy = userId;
+            UpdateAuditFields(promotion, userId);
 
             await _promotionRepository.SaveChangesAsync();
             return true;
         }
 
-        public async Task<bool> InactivePromotionAsync(Guid id, string userId)
+        public async Task<bool> DeactivatePromotionAsync(Guid id, string userId)
         {
-            var promotion = await _promotionRepository.GetByIdAsync(id);
-            if (promotion == null || promotion.IsDeleted)
-                return false;
+            var promotion = await GetActivePromotionById(id);
+            if (promotion == null) return false;
 
             ConditionCheck.CheckCondition(promotion.IsActive, Errors.PromotionError.PromotionInactive);
+
             promotion.IsActive = false;
-            promotion.UpdatedAt = DateTime.UtcNow;
-            promotion.UpdatedBy = userId;
+            UpdateAuditFields(promotion, userId);
 
             await _promotionRepository.SaveChangesAsync();
             return true;
@@ -190,14 +123,12 @@ namespace FOCS.Application.Services
 
         public async Task<bool> DeletePromotionAsync(Guid id, string userId)
         {
-            var promotion = await _promotionRepository.GetByIdAsync(id);
-            if (promotion == null || promotion.IsDeleted)
-                return false;
+            var promotion = await GetActivePromotionById(id);
+            if (promotion == null) return false;
 
             promotion.IsActive = false;
             promotion.IsDeleted = true;
-            promotion.UpdatedAt = DateTime.UtcNow;
-            promotion.UpdatedBy = userId;
+            UpdateAuditFields(promotion, userId);
 
             await _promotionRepository.SaveChangesAsync();
             return true;
@@ -207,5 +138,140 @@ namespace FOCS.Application.Services
         {
             throw new NotImplementedException();
         }
+
+
+        #region Private Helper Methods
+
+        private async Task ValidatePromotionDto(PromotionDTO dto)
+        {
+            var context = new ValidationContext(dto);
+            var validationResults = dto.Validate(context);
+            ConditionCheck.CheckCondition(!validationResults.Any(),
+                string.Join("; ", validationResults.Select(r => r.ErrorMessage)));
+        }
+
+        private async Task ValidatePromotionUniqueness(PromotionDTO dto)
+        {
+            var existingPromotionTitle = await _promotionRepository
+                .AsQueryable()
+                .FirstOrDefaultAsync(p => p.Title == dto.Title && !p.IsDeleted);
+
+            ConditionCheck.CheckCondition(existingPromotionTitle == null, Errors.PromotionError.PromotionTitleExist);
+
+            var overlappingPromotion = await _promotionRepository
+                .AsQueryable()
+                .FirstOrDefaultAsync(p => p.PromotionType == dto.PromotionType
+                                        && p.StoreId == dto.StoreId
+                                        && ((dto.StartDate >= p.StartDate && dto.StartDate <= p.EndDate)
+                                            || (dto.EndDate >= p.StartDate && dto.EndDate <= p.EndDate)
+                                            || (dto.StartDate <= p.StartDate && dto.EndDate >= p.EndDate))
+                                        && !p.IsDeleted);
+
+            ConditionCheck.CheckCondition(overlappingPromotion == null, Errors.PromotionError.PromotionOverLapping);
+        }
+
+        private async Task ValidateStoreExists(Guid storeId)
+        {
+            var store = await _storeRepository.GetByIdAsync(storeId);
+            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
+        }
+
+        private Promotion CreatePromotionEntity(PromotionDTO dto, string userId)
+        {
+            var promotion = _mapper.Map<Promotion>(dto);
+            promotion.Id = Guid.NewGuid();
+            promotion.IsDeleted = false;
+            promotion.CreatedAt = DateTime.UtcNow;
+            promotion.CreatedBy = userId;
+            return promotion;
+        }
+
+        private async Task CreatePromotionItemCondition(PromotionDTO dto, Guid promotionId)
+        {
+            var buyItem = await _menuItemRepository.GetByIdAsync(dto.PromotionItemConditionDTO.BuyItemId);
+            ConditionCheck.CheckCondition(buyItem != null, Errors.OrderError.MenuItemNotFound);
+
+            var getItem = await _menuItemRepository.GetByIdAsync(dto.PromotionItemConditionDTO.GetItemId);
+            ConditionCheck.CheckCondition(getItem != null, Errors.OrderError.MenuItemNotFound);
+
+            var condition = _mapper.Map<PromotionItemCondition>(dto.PromotionItemConditionDTO);
+            condition.Id = Guid.NewGuid();
+            condition.PromotionId = promotionId;
+
+            await _promotionItemConditionRepository.AddAsync(condition);
+            await _promotionItemConditionRepository.SaveChangesAsync();
+        }
+
+        private async Task<Promotion> GetActivePromotionById(Guid id)
+        {
+            var promotion = await _promotionRepository.GetByIdAsync(id);
+            return (promotion?.IsDeleted == false) ? promotion : null;
+        }
+
+        private static void UpdateAuditFields(Promotion promotion, string userId)
+        {
+            promotion.UpdatedAt = DateTime.UtcNow;
+            promotion.UpdatedBy = userId;
+        }
+
+        private static IQueryable<Promotion> ApplyFilters(IQueryable<Promotion> query, UrlQueryParameters parameters)
+        {
+            if (parameters.Filters?.Any() != true) return query;
+
+            foreach (var (key, value) in parameters.Filters)
+            {
+                query = key.ToLowerInvariant() switch
+                {
+                    "promotion_type" when Enum.TryParse<PromotionType>(value, true, out var promotionType) =>
+                        query.Where(p => p.PromotionType == promotionType),
+                    _ => query
+                };
+            }
+
+            return query;
+        }
+
+        private static IQueryable<Promotion> ApplySearch(IQueryable<Promotion> query, UrlQueryParameters parameters)
+        {
+            if (string.IsNullOrWhiteSpace(parameters.SearchBy) || string.IsNullOrWhiteSpace(parameters.SearchValue))
+                return query;
+
+            var searchValue = parameters.SearchValue.ToLowerInvariant();
+
+            return parameters.SearchBy.ToLowerInvariant() switch
+            {
+                "title" => query.Where(p => p.Title.ToLower().Contains(searchValue)),
+                _ => query
+            };
+        }
+
+        private static IQueryable<Promotion> ApplySort(IQueryable<Promotion> query, UrlQueryParameters parameters)
+        {
+            if (string.IsNullOrWhiteSpace(parameters.SortBy)) return query;
+
+            var isDescending = string.Equals(parameters.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+
+            return parameters.SortBy.ToLowerInvariant() switch
+            {
+                "title" => isDescending
+                    ? query.OrderByDescending(p => p.Title)
+                    : query.OrderBy(p => p.Title),
+                "end_date" => isDescending
+                    ? query.OrderByDescending(p => p.EndDate)
+                    : query.OrderBy(p => p.EndDate),
+                "start_date" => isDescending
+                    ? query.OrderByDescending(p => p.StartDate)
+                    : query.OrderBy(p => p.StartDate),
+                "promotion_type" => isDescending
+                    ? query.OrderByDescending(p => p.PromotionType)
+                    : query.OrderBy(p => p.PromotionType),
+                "discount_value" => isDescending
+                    ? query.OrderByDescending(p => p.DiscountValue)
+                    : query.OrderBy(p => p.DiscountValue),
+                _ => query
+            };
+        }
+
+        #endregion
     }
 }

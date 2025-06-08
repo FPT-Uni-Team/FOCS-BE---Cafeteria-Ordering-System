@@ -45,6 +45,8 @@ namespace FOCS.Common.Exceptions
             public const string InvalidPeriodDatetime = "Coupon/Promotion is out of date";
             public const string PromotionActive = "Promotion is already active";
             public const string PromotionInactive = "Promotion is already inactive";
+            public const string PromotionTitleExist = "Promotion with this title already exists.";
+            public const string PromotionOverLapping = "A promotion of this type already exists in the specified date range.";
         }
     }
 }

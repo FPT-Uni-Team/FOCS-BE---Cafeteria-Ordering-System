@@ -1,10 +1,14 @@
 ﻿using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
+using FOCS.Common.Constants;
 using FOCS.Common.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
+    [Authorize(Roles = Roles.Manager)]
+    [Authorize(Roles = Roles.Admin)]
     [Route("api/admin/promotion")]
     [ApiController]
     public class PromotionController : FocsController
@@ -53,14 +57,14 @@ namespace FOCS.Controllers
         [HttpPatch("active/{id}")]
         public async Task<IActionResult> ActivePromotion(Guid id)
         {
-            var success = await _promotionService.ActivePromotionAsync(id, UserId);
+            var success = await _promotionService.ActivatePromotionAsync(id, UserId);
             return success ? Ok() : NotFound();
         }
 
         [HttpPatch("inactive/{id}")]
         public async Task<IActionResult> InactivePromotion(Guid id)
         {
-            var success = await _promotionService.InactivePromotionAsync(id, UserId);
+            var success = await _promotionService.DeactivatePromotionAsync(id, UserId);
             return success ? Ok() : NotFound();
         }
 
