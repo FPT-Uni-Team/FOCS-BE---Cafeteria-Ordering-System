@@ -14,13 +14,11 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public string Title { get; set; }
         
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public PromotionType PromotionType { get; set; }
 
-        public DiscountType DiscountType { get; set; }
-
-        public double DiscountValue { get; set; }
+        public double? DiscountValue { get; set; }
 
         public string? AcceptForItems {  get; set; }
 
@@ -35,8 +33,12 @@ namespace FOCS.Order.Infrastucture.Entities
         public DateTime? UpdatedAt { get; set; }
         public string? UpdatedBy { get; set; }
 
-        public ICollection<Coupon> Coupons { get; set; }
-        public ICollection<PromotionItemCondition> PromotionItemConditions { get; set; }
+        // Foreign key store
+        public Guid StoreId { get; set; }
+        public Store Store { get; set; }
+
+        public ICollection<Coupon>? Coupons { get; set; }
+        public ICollection<PromotionItemCondition>? PromotionItemConditions { get; set; }
 
     }
 }
