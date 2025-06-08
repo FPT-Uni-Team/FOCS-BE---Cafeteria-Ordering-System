@@ -74,9 +74,9 @@ namespace FOCS.Application.Services
             return newCode;
         }
 
-        public async Task<PagedResult<CouponAdminServiceDTO>> GetAllCouponsAsync(UrlQueryParameters query)
+        public async Task<PagedResult<CouponAdminServiceDTO>> GetAllCouponsAsync(UrlQueryParameters query, string storeId)
         {
-            var couponQuery = _couponRepository.AsQueryable().Where(c => !c.IsDeleted);
+            var couponQuery = _couponRepository.AsQueryable().Where(c => !c.IsDeleted && c.StoreId.Equals(storeId));
 
             // Search
             if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))

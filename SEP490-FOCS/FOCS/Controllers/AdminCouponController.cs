@@ -29,7 +29,7 @@ namespace FOCS.Controllers
         [HttpPost("coupons")]
         public async Task<IActionResult> GetAllCoupons([FromBody] UrlQueryParameters query)
         {
-            var pagedResult = await _adminCouponService.GetAllCouponsAsync(query);
+            var pagedResult = await _adminCouponService.GetAllCouponsAsync(query, StoreId);
             return Ok(pagedResult);
         }
 
