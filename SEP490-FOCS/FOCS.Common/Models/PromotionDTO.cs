@@ -1,5 +1,4 @@
 ﻿using FOCS.Common.Enums;
-using FOCS.Order.Infrastucture.Entities;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
