@@ -1,7 +1,12 @@
 ﻿using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Common.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace FOCS.Application.Services.Interface
+namespace FOCS.Common.Interfaces
 {
     public interface IPromotionService
     {
@@ -12,6 +17,8 @@ namespace FOCS.Application.Services.Interface
         Task<bool> ActivatePromotionAsync(Guid id, string userId);
         Task<bool> DeactivatePromotionAsync(Guid id, string userId);
         Task<bool> DeletePromotionAsync(Guid id, string userId);
-        Task IsValidPromotionCouponAsync(string couponCode, string storeId);
+
+        Task IsValidPromotionCouponAsync(string couponCode, string userId, Guid storeId);
+
     }
 }

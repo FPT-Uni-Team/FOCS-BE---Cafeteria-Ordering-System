@@ -7,10 +7,13 @@ using System.Threading.Tasks;
 
 namespace FOCS.Common.Models
 {
-    public class CreateOrderGuestDTO
+    public class CreateOrderRequest
     {
         [JsonPropertyName("store_id")]
         public Guid StoreId { get; set; }
+
+        [JsonPropertyName("table_id")]
+        public Guid TableId { get; set; }
 
         [JsonPropertyName("items")]
         public List<OrderItemDTO> Items { get; set; }

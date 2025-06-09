@@ -1,36 +1,41 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FOCS.Application.DTOs.AdminServiceDTO;
-using FOCS.Application.Services.Interface;
 using FOCS.Common.Enums;
 using FOCS.Common.Exceptions;
+using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
-
 namespace FOCS.Application.Services
 {
     public class PromotionService : IPromotionService
     {
         private readonly IRepository<Promotion> _promotionRepository;
+        private readonly IRepository<Coupon> _couponRepository;
+
+        private readonly IRepository<CouponUsage> _couponUsageRepository;
         private readonly IRepository<PromotionItemCondition> _promotionItemConditionRepository;
         private readonly IRepository<Store> _storeRepository;
         private readonly IRepository<MenuItem> _menuItemRepository;
         private readonly IMapper _mapper;
-
         public PromotionService(
             IRepository<Promotion> promotionRepository,
             IRepository<PromotionItemCondition> promotionItemConditionRepository,
             IRepository<Store> storeRepository,
             IRepository<MenuItem> menuItemRepository,
+            IRepository<Coupon> couponRepository,
+            IRepository<CouponUsage> couponUsageRepository,
             IMapper mapper)
         {
             _promotionRepository = promotionRepository;
             _promotionItemConditionRepository = promotionItemConditionRepository;
             _storeRepository = storeRepository;
             _menuItemRepository = menuItemRepository;
+            _couponRepository = couponRepository;
+            _couponUsageRepository = couponUsageRepository;
             _mapper = mapper;
         }
 
@@ -134,9 +139,33 @@ namespace FOCS.Application.Services
             return true;
         }
 
-        public Task IsValidPromotionCouponAsync(string couponCode, string storeId)
+        public async Task IsValidPromotionCouponAsync(string couponCode, string userId, Guid storeId)
         {
-            throw new NotImplementedException();
+            //Check coupon eligible
+            ConditionCheck.CheckCondition(!string.IsNullOrWhiteSpace(couponCode), Errors.Common.Empty);
+
+            var couponList = await _couponRepository.FindAsync(x => x.Code == couponCode && x.StoreId == storeId);
+            ConditionCheck.CheckCondition(couponList.Any(), Errors.PromotionError.CouponNotFound);
+
+            var coupon = couponList.First();
+
+            ConditionCheck.CheckCondition(coupon.CountUsed < coupon.MaxUsage, Errors.PromotionError.CouponMaxUsed);
+
+            //Validate max use per user
+            var couponUsageTime = await _couponUsageRepository.FindAsync(x => x.UserId == Guid.Parse(userId) && x.CouponId == Guid.Parse(couponCode));
+            ConditionCheck.CheckCondition(couponUsageTime.Count() <= coupon.MaxUsagePerUser, Errors.PromotionError.CouponMaxUsed);
+
+            var currentDate = DateTime.Now;
+            ConditionCheck.CheckCondition(currentDate >= coupon.StartDate && currentDate <= coupon.EndDate, Errors.PromotionError.InvalidPeriodDatetime);
+
+            //Check promotion eligible
+            if (coupon.PromotionId.HasValue)
+            {
+                var promotion = await _promotionRepository.FindAsync(x => x.Id == coupon.PromotionId && x.StoreId == storeId);
+                ConditionCheck.CheckCondition(promotion != null, Errors.PromotionError.PromotionNotFound);
+                var currentPromotion = promotion?.FirstOrDefault();
+                ConditionCheck.CheckCondition(currentDate >= currentPromotion?.StartDate && currentDate <= currentPromotion.EndDate, Errors.PromotionError.InvalidPeriodDatetime);
+            }
         }
 
 
