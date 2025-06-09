@@ -5,11 +5,11 @@ namespace FOCS.Application.Services.Interface
 {
     public interface IAdminMenuItemService
     {
-        Task<MenuItemAdminServiceDTO> CreateMenuAsync(MenuItemAdminServiceDTO dto, string userId);
-        Task<PagedResult<MenuItemAdminServiceDTO>> GetAllMenuItemAsync(UrlQueryParameters query, Guid storeId);
-        Task<MenuItemAdminServiceDTO?> GetMenuDetailAsync(Guid id);
-        Task<bool> UpdateMenuAsync(Guid id, MenuItemAdminServiceDTO dto, string userId);
+        Task<MenuItemAdminDTO> CreateMenuAsync(MenuItemAdminDTO dto, string userId);
+        Task<PagedResult<MenuItemAdminDTO>> GetAllMenuItemAsync(UrlQueryParameters query, Guid storeId);
+        Task<MenuItemAdminDTO?> GetMenuDetailAsync(Guid id);
+        Task<bool> UpdateMenuAsync(Guid id, MenuItemAdminDTO dto, string userId);
         Task<bool> DeleteMenuAsync(Guid id, string userId);
-        Task<MenuItemDetailAdminServiceDTO> GetMenuItemDetail(Guid menuItemId, string StoreId);
+        Task<MenuItemDetailAdminDTO> GetMenuItemDetail(Guid menuItemId, string StoreId);
     }
 }

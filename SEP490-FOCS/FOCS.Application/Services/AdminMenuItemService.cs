@@ -19,7 +19,7 @@ namespace FOCS.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<MenuItemAdminServiceDTO> CreateMenuAsync(MenuItemAdminServiceDTO dto, string userId)
+        public async Task<MenuItemAdminDTO> CreateMenuAsync(MenuItemAdminDTO dto, string userId)
         {
             var newItem = _mapper.Map<MenuItem>(dto);
 
@@ -32,10 +32,10 @@ namespace FOCS.Application.Services
             await _menuRepository.AddAsync(newItem);
             await _menuRepository.SaveChangesAsync();
 
-            return _mapper.Map<MenuItemAdminServiceDTO>(newItem);
+            return _mapper.Map<MenuItemAdminDTO>(newItem);
         }
 
-        public async Task<PagedResult<MenuItemAdminServiceDTO>> GetAllMenuItemAsync(UrlQueryParameters query, Guid storeId)
+        public async Task<PagedResult<MenuItemAdminDTO>> GetAllMenuItemAsync(UrlQueryParameters query, Guid storeId)
         {
             var menuQuery = _menuRepository.AsQueryable()
                 .Include(m => m.MenuCategory)
@@ -92,21 +92,21 @@ namespace FOCS.Application.Services
                 .Take(query.PageSize)
                 .ToListAsync();
 
-            var mappedItems = _mapper.Map<List<MenuItemAdminServiceDTO>>(items);
+            var mappedItems = _mapper.Map<List<MenuItemAdminDTO>>(items);
 
-            return new PagedResult<MenuItemAdminServiceDTO>(mappedItems, totalCount, query.Page, query.PageSize);
+            return new PagedResult<MenuItemAdminDTO>(mappedItems, totalCount, query.Page, query.PageSize);
         }
 
 
-        public async Task<MenuItemAdminServiceDTO?> GetMenuDetailAsync(Guid id)
+        public async Task<MenuItemAdminDTO?> GetMenuDetailAsync(Guid id)
         {
             var items = await _menuRepository.FindAsync(m => m.Id == id && !m.IsDeleted);
             var item = items.FirstOrDefault();
 
-            return item != null ? _mapper.Map<MenuItemAdminServiceDTO>(item) : null;
+            return item != null ? _mapper.Map<MenuItemAdminDTO>(item) : null;
         }
 
-        public async Task<bool> UpdateMenuAsync(Guid id, MenuItemAdminServiceDTO dto, string userId)
+        public async Task<bool> UpdateMenuAsync(Guid id, MenuItemAdminDTO dto, string userId)
         {
             var item = await _menuRepository.GetByIdAsync(id);
             if (item == null || item.IsDeleted) return false;
@@ -133,7 +133,7 @@ namespace FOCS.Application.Services
             return true;
         }
 
-        public async Task<MenuItemDetailAdminServiceDTO> GetMenuItemDetail(Guid menuItemId, string storeId)
+        public async Task<MenuItemDetailAdminDTO> GetMenuItemDetail(Guid menuItemId, string storeId)
         {
             var menuItems = await _menuRepository.IncludeAsync(source => source
                                                                .Where(m => m.StoreId == Guid.Parse(storeId) && m.Id == menuItemId)
@@ -142,7 +142,7 @@ namespace FOCS.Application.Services
                                                                .ThenInclude(v => v.Variants));
 
 
-            return _mapper.Map<MenuItemDetailAdminServiceDTO>(menuItems.FirstOrDefault());
+            return _mapper.Map<MenuItemDetailAdminDTO>(menuItems.FirstOrDefault());
         }
     }
 }

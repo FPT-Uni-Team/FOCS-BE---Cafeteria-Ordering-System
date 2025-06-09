@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace FOCS.Application.DTOs.AdminServiceDTO
 {
-    public class CouponAdminServiceDTO
+    public class CouponAdminDTO
     {
         [JsonPropertyName("id")]
         public Guid? Id { get; set; }

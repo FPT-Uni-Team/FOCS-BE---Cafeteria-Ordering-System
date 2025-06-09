@@ -17,7 +17,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("store")]
-        public async Task<IActionResult> CreateStore([FromBody] StoreAdminServiceDTO dto)
+        public async Task<IActionResult> CreateStore([FromBody] StoreAdminDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -34,7 +34,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPut("store/{id}")]
-        public async Task<IActionResult> UpdateStore(Guid id, [FromBody] StoreAdminServiceDTO dto)
+        public async Task<IActionResult> UpdateStore(Guid id, [FromBody] StoreAdminDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

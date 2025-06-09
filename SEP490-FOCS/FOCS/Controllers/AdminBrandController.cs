@@ -34,7 +34,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPut("brand/{id}")]
-        public async Task<IActionResult> UpdateBrand(Guid id, [FromBody] BrandAdminServiceDTO dto)
+        public async Task<IActionResult> UpdateBrand(Guid id, [FromBody] BrandAdminDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

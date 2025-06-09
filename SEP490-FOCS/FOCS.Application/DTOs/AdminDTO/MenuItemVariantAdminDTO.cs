@@ -2,7 +2,7 @@
 
 namespace FOCS.Application.DTOs.AdminServiceDTO
 {
-    public class MenuItemVariantAdminServiceDTO
+    public class MenuItemVariantAdminDTO
     {
         [JsonPropertyName("id")]
         public Guid Id { get; set; }

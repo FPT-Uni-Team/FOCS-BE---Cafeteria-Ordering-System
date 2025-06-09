@@ -17,7 +17,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("menu-item")]
-        public async Task<IActionResult> CreateMenuItem([FromBody] MenuItemAdminServiceDTO dto)
+        public async Task<IActionResult> CreateMenuItem([FromBody] MenuItemAdminDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -45,7 +45,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPut("menu-item/{id}")]
-        public async Task<IActionResult> UpdateMenuItem(Guid id, [FromBody] MenuItemAdminServiceDTO dto)
+        public async Task<IActionResult> UpdateMenuItem(Guid id, [FromBody] MenuItemAdminDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

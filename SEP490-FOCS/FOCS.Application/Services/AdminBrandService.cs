@@ -20,7 +20,7 @@ namespace FOCS.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<BrandAdminServiceDTO> CreateBrandAsync(CreateAdminBrandRequest dto, string userId)
+        public async Task<BrandAdminDTO> CreateBrandAsync(CreateAdminBrandRequest dto, string userId)
         {
             CheckValidInput(userId);
             var newBrand = _mapper.Map<Brand>(dto);
@@ -32,10 +32,10 @@ namespace FOCS.Application.Services
             await _brandRepository.AddAsync(newBrand);
             await _brandRepository.SaveChangesAsync();
 
-            return _mapper.Map<BrandAdminServiceDTO>(newBrand);
+            return _mapper.Map<BrandAdminDTO>(newBrand);
         }
 
-        public async Task<PagedResult<BrandAdminServiceDTO>> GetAllBrandsAsync(UrlQueryParameters query, string userId)
+        public async Task<PagedResult<BrandAdminDTO>> GetAllBrandsAsync(UrlQueryParameters query, string userId)
         {
             CheckValidInput(userId);
             var brandQuery = _brandRepository.AsQueryable().Where(b => !b.IsDelete && b.CreatedBy.Equals(userId));
@@ -66,11 +66,11 @@ namespace FOCS.Application.Services
                 .Take(query.PageSize)
                 .ToListAsync();
 
-            var mapped = _mapper.Map<List<BrandAdminServiceDTO>>(items);
-            return new PagedResult<BrandAdminServiceDTO>(mapped, total, query.Page, query.PageSize);
+            var mapped = _mapper.Map<List<BrandAdminDTO>>(items);
+            return new PagedResult<BrandAdminDTO>(mapped, total, query.Page, query.PageSize);
         }
 
-        public async Task<bool> UpdateBrandAsync(Guid id, BrandAdminServiceDTO dto, string userId)
+        public async Task<bool> UpdateBrandAsync(Guid id, BrandAdminDTO dto, string userId)
         {
             CheckValidInput(userId);
             var brand = await _brandRepository.GetByIdAsync(id);

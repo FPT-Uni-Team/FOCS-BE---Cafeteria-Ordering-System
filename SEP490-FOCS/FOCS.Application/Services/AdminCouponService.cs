@@ -3,6 +3,7 @@ using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Enums;
 using FOCS.Common.Models;
+using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -22,22 +23,28 @@ namespace FOCS.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<CouponAdminServiceDTO> CreateCouponAsync(CouponAdminServiceDTO dto, string userId)
+        public async Task<CouponAdminDTO> CreateCouponAsync(CouponAdminDTO dto, string couponType, string userId)
         {
-            // Code empty => generate unique code
-            string couponCode = string.IsNullOrWhiteSpace(dto.Code)
-                ? await GenerateUniqueCouponCodeAsync()
-                : dto.Code.Trim();
+            // Check userId is valid
+            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), "User ID cannot be null or empty.");
+
+            // Validate input Coupon Code
+            ConditionCheck.CheckCondition(couponType == "auto" || couponType == "manual",
+                                          "Invalid coupon type. Must be 'auto' or 'manual'.");
+
+            string couponCode = couponType == "auto" ? await GenerateUniqueCouponCodeAsync()
+                                                     : dto.Code?.Trim() ?? "";
+
+            ConditionCheck.CheckCondition(couponType != "manual" || !string.IsNullOrWhiteSpace(couponCode),
+                                          "Coupon code must be provided for manual type.");
 
             // Check unique code
             var existing = await _couponRepository.AsQueryable()
                                                   .AnyAsync(c => c.Code == couponCode && !c.IsDeleted);
-            if (existing)
-                throw new InvalidOperationException("Coupon code already exists.");
+            ConditionCheck.CheckCondition(!existing, "Coupon code already exists");
 
             // Check dates
-            if (dto.StartDate > dto.EndDate)
-                throw new ArgumentException("Start date must be before end date.");
+            ConditionCheck.CheckCondition(dto.StartDate <= dto.EndDate, "Start date must be before end date.");
 
             // Map DTO to entity
             var newCoupon = _mapper.Map<Coupon>(dto);
@@ -50,7 +57,7 @@ namespace FOCS.Application.Services
             await _couponRepository.AddAsync(newCoupon);
             await _couponRepository.SaveChangesAsync();
 
-            return _mapper.Map<CouponAdminServiceDTO>(newCoupon);
+            return _mapper.Map<CouponAdminDTO>(newCoupon);
         }
 
         private async Task<string> GenerateUniqueCouponCodeAsync()
@@ -74,9 +81,12 @@ namespace FOCS.Application.Services
             return newCode;
         }
 
-        public async Task<PagedResult<CouponAdminServiceDTO>> GetAllCouponsAsync(UrlQueryParameters query, string storeId)
+        public async Task<PagedResult<CouponAdminDTO>> GetAllCouponsAsync(UrlQueryParameters query, string userId)
         {
-            var couponQuery = _couponRepository.AsQueryable().Where(c => !c.IsDeleted && c.StoreId.Equals(storeId));
+            // Check userId is valid
+            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), "User ID cannot be null or empty.");
+
+            var couponQuery = _couponRepository.AsQueryable().Include(x => x.Store).Where(c => !c.IsDeleted && c.Store.CreatedBy.Equals(userId));
 
             // Search
             if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))
@@ -119,11 +129,11 @@ namespace FOCS.Application.Services
                 .Take(query.PageSize)
                 .ToListAsync();
 
-            var mapped = _mapper.Map<List<CouponAdminServiceDTO>>(items);
-            return new PagedResult<CouponAdminServiceDTO>(mapped, total, query.Page, query.PageSize);
+            var mapped = _mapper.Map<List<CouponAdminDTO>>(items);
+            return new PagedResult<CouponAdminDTO>(mapped, total, query.Page, query.PageSize);
         }
 
-        public async Task<bool> UpdateCouponAsync(Guid id, CouponAdminServiceDTO dto, string userId)
+        public async Task<bool> UpdateCouponAsync(Guid id, CouponAdminDTO dto, string userId)
         {
             var coupon = await _couponRepository.GetByIdAsync(id);
             if (coupon == null || coupon.IsDeleted)
@@ -132,12 +142,10 @@ namespace FOCS.Application.Services
             // Check unique code (exclude current coupon)
             var existing = await _couponRepository.AsQueryable()
                                                   .AnyAsync(c => c.Id != id && c.Code == dto.Code && !c.IsDeleted);
-            if (existing)
-                throw new InvalidOperationException("Coupon code already exists.");
+            ConditionCheck.CheckCondition(existing, "Coupon code already exists.");
 
             // Check dates
-            if (dto.StartDate > dto.EndDate)
-                throw new ArgumentException("Start date must be before end date.");
+            ConditionCheck.CheckCondition(dto.StartDate > dto.EndDate, "Start date must be before end date.");
 
             _mapper.Map(dto, coupon);
             coupon.UpdatedAt = DateTime.UtcNow;
@@ -187,28 +195,34 @@ namespace FOCS.Application.Services
             return true;
         }
 
-        public async Task<bool> AssignCouponToPromotionAsync(Guid couponId, Guid promotionId, string userId)
+        public async Task<bool> AssignCouponsToPromotionAsync(List<Guid> couponIds, Guid promotionId, string userId, Guid storeId)
         {
-            var coupon = await _couponRepository.GetByIdAsync(couponId);
-            if (coupon == null || coupon.IsDeleted)
-                return false;
-
+            // Get promotion
             var promotion = await _promotionRepository.GetByIdAsync(promotionId);
-            if (promotion == null || promotion.IsDeleted)
-                return false;
+            ConditionCheck.CheckCondition(promotion != null && !promotion.IsDeleted, "Promotion not found or deleted.");
 
-            // Check if coupon dates are within promotion dates
-            if (coupon.StartDate < promotion.StartDate || coupon.EndDate > promotion.EndDate)
-                return false;
+            // Get coupons
+            var coupons = await _couponRepository.FindAsync(c => couponIds.Contains(c.Id) && !c.IsDeleted);
 
-            // Update coupon
-            coupon.PromotionId = promotionId;
-            coupon.UpdatedAt = DateTime.UtcNow;
-            coupon.UpdatedBy = userId;
+            foreach (var coupon in coupons)
+            {
+                // Check exists store
+                ConditionCheck.CheckCondition(coupon.StoreId == storeId, $"Coupon {coupon.Code} does not belong to this store.");
+
+                // Check coupon dates within promotion dates
+                ConditionCheck.CheckCondition(coupon.StartDate >= promotion.StartDate && coupon.EndDate <= promotion.EndDate,
+                                              $"Coupon {coupon.Code} must be within the promotion period.");
+
+                // Gán PromotionId
+                coupon.PromotionId = promotionId;
+                coupon.UpdatedAt = DateTime.UtcNow;
+                coupon.UpdatedBy = userId.ToString();
+            }
 
             await _couponRepository.SaveChangesAsync();
             return true;
         }
+
 
     }
 }

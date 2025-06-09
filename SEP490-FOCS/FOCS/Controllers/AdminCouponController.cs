@@ -17,24 +17,24 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("coupon")]
-        public async Task<IActionResult> CreateCoupon([FromBody] CouponAdminServiceDTO dto)
+        public async Task<IActionResult> CreateCoupon([FromBody] CouponAdminDTO dto, [FromQuery] string couponType)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var created = await _adminCouponService.CreateCouponAsync(dto, UserId);
+            var created = await _adminCouponService.CreateCouponAsync(dto, couponType, UserId);
             return Ok(created);
         }
 
         [HttpPost("coupons")]
         public async Task<IActionResult> GetAllCoupons([FromBody] UrlQueryParameters query)
         {
-            var pagedResult = await _adminCouponService.GetAllCouponsAsync(query, StoreId);
+            var pagedResult = await _adminCouponService.GetAllCouponsAsync(query, UserId);
             return Ok(pagedResult);
         }
 
         [HttpPut("coupon/{id}")]
-        public async Task<IActionResult> UpdateCoupon(Guid id, [FromBody] CouponAdminServiceDTO dto)
+        public async Task<IActionResult> UpdateCoupon(Guid id, [FromBody] CouponAdminDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -79,12 +79,12 @@ namespace FOCS.Controllers
             return Ok($"Coupon has been {(isActive ? "enabled" : "disabled")} successfully.");
         }
 
-        [HttpPut("coupon/{id}/assign-promotion")]
-        public async Task<IActionResult> AssignCouponToPromotion(Guid id, [FromQuery] Guid promotionId)
+        [HttpPut("coupon/{storeId}/assign-promotion")]
+        public async Task<IActionResult> AssignCouponToPromotion(List<Guid> couponIds, Guid promotionId, Guid storeId)
         {
             var userId = User?.Identity?.Name ?? "system";
 
-            var result = await _adminCouponService.AssignCouponToPromotionAsync(id, promotionId, userId);
+            var result = await _adminCouponService.AssignCouponsToPromotionAsync(couponIds, promotionId, userId, storeId);
             if (!result)
                 return NotFound();
 

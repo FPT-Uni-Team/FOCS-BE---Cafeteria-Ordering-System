@@ -21,7 +21,7 @@ namespace FOCS.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<StoreAdminServiceDTO> CreateStoreAsync(StoreAdminServiceDTO dto, string userId)
+        public async Task<StoreAdminDTO> CreateStoreAsync(StoreAdminDTO dto, string userId)
         {
             CheckValidInput(userId);
 
@@ -46,10 +46,10 @@ namespace FOCS.Application.Services
             await _storeSettingRepository.AddAsync(defaultSetting);
             await _storeSettingRepository.SaveChangesAsync();
 
-            return _mapper.Map<StoreAdminServiceDTO>(newStore);
+            return _mapper.Map<StoreAdminDTO>(newStore);
         }
 
-        public async Task<PagedResult<StoreAdminServiceDTO>> GetAllStoresAsync(UrlQueryParameters query, string userId)
+        public async Task<PagedResult<StoreAdminDTO>> GetAllStoresAsync(UrlQueryParameters query, string userId)
         {
             CheckValidInput(userId);
             var storeQuery = _storeRepository.AsQueryable().Include(i => i.Brand).Where(s => !s.IsDeleted && s.Brand.CreatedBy.Equals(userId));
@@ -90,11 +90,11 @@ namespace FOCS.Application.Services
                 .Take(query.PageSize)
                 .ToListAsync();
 
-            var mapped = _mapper.Map<List<StoreAdminServiceDTO>>(items);
-            return new PagedResult<StoreAdminServiceDTO>(mapped, total, query.Page, query.PageSize);
+            var mapped = _mapper.Map<List<StoreAdminDTO>>(items);
+            return new PagedResult<StoreAdminDTO>(mapped, total, query.Page, query.PageSize);
         }
 
-        public async Task<bool> UpdateStoreAsync(Guid id, StoreAdminServiceDTO dto, string userId)
+        public async Task<bool> UpdateStoreAsync(Guid id, StoreAdminDTO dto, string userId)
         {
             CheckValidInput(userId);
             var store = await _storeRepository.GetByIdAsync(id);
