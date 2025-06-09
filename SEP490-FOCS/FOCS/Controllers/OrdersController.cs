@@ -1,5 +1,7 @@
 ﻿using FOCS.Application.DTOs;
 using FOCS.Common.Constants;
+using FOCS.Common.Interfaces;
+using FOCS.Common.Models;
 using FOCS.Realtime.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -15,17 +17,18 @@ namespace FOCS.Controllers
         //SignalR 
         private readonly IHubContext<OrderHub> _orderHubContext;
 
-        public OrdersController(IHubContext<OrderHub> hubContext)
+        private readonly IOrderService _orderService;
+
+        public OrdersController(IHubContext<OrderHub> hubContext, IOrderService orderService)
         {
             _orderHubContext = hubContext;  
+            _orderService = orderService;
         }
 
-        [HttpPost("notify-kitchen")]
-        public async Task NotifyKitchenAsync(OrderWrapDTO orderWrapDTO)
+        [HttpPost("order/guest")]
+        public async Task<DiscountResultDTO> CreateOrderAsGuest([FromBody] CreateOrderRequest request)
         {
-            var group = SignalRGroups.Kitchen(orderWrapDTO.StoreId);
-            await _orderHubContext.Clients.Group(group).SendAsync(Constants.Method.ReceiveOrderWrapUpdate, orderWrapDTO);
+            return await _orderService.CreateOrderAsGuestAsync(request, UserId);
         }
-
     }
 }
