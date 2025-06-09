@@ -48,10 +48,7 @@ namespace FOCS.Application.Services
                 AppliedPromotions = new List<string> { promotion.Title }
             };
 
-            var acceptItemIds = promotion.AcceptForItems?
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(Guid.Parse)
-                .ToHashSet();
+            var acceptItemIds = promotion.AcceptForItems;
 
             double totalDiscount = 0;
 
