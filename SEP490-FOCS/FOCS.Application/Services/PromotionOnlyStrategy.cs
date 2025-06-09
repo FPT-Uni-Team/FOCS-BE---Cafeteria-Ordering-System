@@ -41,7 +41,7 @@ namespace FOCS.Application.Services
 
             var result = new DiscountResultDTO();
 
-            var acceptItemIds = promotion.AcceptForItems?.Split(',').Select(Guid.Parse).ToHashSet();
+            var acceptItemIds = promotion.AcceptForItems?.ToHashSet();
 
             double totalDiscount = 0;
 

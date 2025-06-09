@@ -197,6 +197,14 @@ namespace FOCS.Application.Services
                                         && !p.IsDeleted);
 
             ConditionCheck.CheckCondition(overlappingPromotion == null, Errors.PromotionError.PromotionOverLapping);
+
+            if (dto.AcceptForItems?.Count > 0)
+            {
+                foreach (var item in dto.AcceptForItems)
+                {
+                    _ = ValidateMenuItem(item);
+                }
+            }
         }
 
         private async Task ValidateStoreExists(Guid storeId)
@@ -215,13 +223,16 @@ namespace FOCS.Application.Services
             return promotion;
         }
 
+        private async Task ValidateMenuItem(Guid id)
+        {
+            var menuItem = await _menuItemRepository.GetByIdAsync(id);
+            ConditionCheck.CheckCondition(menuItem != null, Errors.OrderError.MenuItemNotFound);
+        }
+
         private async Task CreatePromotionItemCondition(PromotionDTO dto, Guid promotionId)
         {
-            var buyItem = await _menuItemRepository.GetByIdAsync(dto.PromotionItemConditionDTO.BuyItemId);
-            ConditionCheck.CheckCondition(buyItem != null, Errors.OrderError.MenuItemNotFound);
-
-            var getItem = await _menuItemRepository.GetByIdAsync(dto.PromotionItemConditionDTO.GetItemId);
-            ConditionCheck.CheckCondition(getItem != null, Errors.OrderError.MenuItemNotFound);
+            await ValidateMenuItem(dto.PromotionItemConditionDTO.BuyItemId);
+            await ValidateMenuItem(dto.PromotionItemConditionDTO.GetItemId);
 
             var condition = _mapper.Map<PromotionItemCondition>(dto.PromotionItemConditionDTO);
             condition.Id = Guid.NewGuid();
