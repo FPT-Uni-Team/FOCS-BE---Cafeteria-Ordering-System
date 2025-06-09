@@ -13,7 +13,7 @@ namespace FOCS.Common.Models
         public decimal TotalDiscount { get; set; }
 
         [JsonPropertyName("total_price")]
-        public decimal TotalPice {  get; set; }
+        public decimal TotalPrice {  get; set; }
 
         [JsonPropertyName("applied_coupon_code")]
         public string? AppliedCouponCode { get; set; }
@@ -45,6 +45,6 @@ namespace FOCS.Common.Models
         public decimal DiscountAmount { get; set; }
 
         [JsonPropertyName("source")]
-        public string Source { get; set; } = string.Empty; // eg. "Coupon", "Promotion: HappyLunch"
+        public string Source { get; set; } = string.Empty;
     }
 }
