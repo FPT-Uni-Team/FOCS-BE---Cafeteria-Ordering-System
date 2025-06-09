@@ -65,6 +65,9 @@ namespace FOCS.Application.Services
             }
 
             result.TotalDiscount = (decimal)totalDiscount;
+            result.AppliedCouponCode = coupon.Code;
+            result.AppliedPromotions = new List<string>();
+            result.Messages = new List<string>();
             return result;
         }
     }

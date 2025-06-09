@@ -25,14 +25,14 @@ namespace FOCS.Application.Services
         private readonly IRepository<FOCS.Order.Infrastucture.Entities.Order> _orderRepository;
 
         private readonly IPromotionService _promotionService;
-        private readonly DiscountContext discountContext;
+        private readonly DiscountContext _discountContext;
         private readonly IStoreSettingService _storeSettingService;
 
         public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository, DiscountContext discountContext, IStoreSettingService storeSettingService, IRepository<Table> tableRepo, IRepository<Store> storeRepository, IRepository<MenuItem> menuRepository, IRepository<MenuItemVariant> variantRepository, IPromotionService promotionService)
         {
             _orderRepository = orderRepository;
             _storeRepository = storeRepository;
-            this.discountContext = discountContext;
+            this._discountContext = discountContext;
             _menuItemRepository = menuRepository;
             _storeSettingService = storeSettingService;
             _variantRepository = variantRepository;
@@ -65,7 +65,7 @@ namespace FOCS.Application.Services
 
             // Pricing
             ConditionCheck.CheckCondition(storeSettings.DiscountStrategy.HasValue, Errors.StoreSetting.DiscountStrategyNotConfig);
-            var discountResult = await discountContext.CalculateDiscountAsync(order, order.CouponCode, (DiscountStrategy)storeSettings.DiscountStrategy);
+            var discountResult = await _discountContext.CalculateDiscountAsync(order, order.CouponCode, (DiscountStrategy)storeSettings.DiscountStrategy);
 
             return new OrderResultDTO
             {
