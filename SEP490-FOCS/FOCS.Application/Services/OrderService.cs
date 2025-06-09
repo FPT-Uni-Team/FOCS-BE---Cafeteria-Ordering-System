@@ -40,7 +40,7 @@ namespace FOCS.Application.Services
             _tableRepository = tableRepo;
         }
 
-        public async Task<OrderResultDTO> CreateOrderAsGuestAsync(CreateOrderRequest order, string userId)
+        public async Task<DiscountResultDTO> CreateOrderAsGuestAsync(CreateOrderRequest order, string userId)
         {
             var store = await _storeRepository.FindAsync(x => x.Id == order.StoreId);
             ConditionCheck.CheckCondition(store != null, Errors.OrderError.NotFoundStore);
@@ -53,11 +53,14 @@ namespace FOCS.Application.Services
                 var currentItem = await _menuItemRepository.FindAsync(x => x.Id == item.MenuItemId);
                 ConditionCheck.CheckCondition(currentItem.Any(), Errors.OrderError.MenuItemNotFound);
 
-                var currentVariant = await _variantRepository.FindAsync(x => x.Id == item.VariantId);
-                ConditionCheck.CheckCondition(currentVariant.Any(), Errors.OrderError.MenuItemNotFound);
+                if (item.VariantId.HasValue)
+                {
+                    var currentVariant = await _variantRepository.FindAsync(x => x.Id == item.VariantId);
+                    ConditionCheck.CheckCondition(currentVariant.Any(), Errors.OrderError.MenuItemNotFound);
+                }
             }
 
-            var storeSettings = await _storeSettingService.GetStoreSettingAsync(order.StoreId);
+            var storeSettings = await _storeSettingService.GetStoreSettingAsync(order.StoreId); 
             ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.StoreNotFound);
 
             // Validate promotion and coupon
@@ -67,10 +70,7 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(storeSettings.DiscountStrategy.HasValue, Errors.StoreSetting.DiscountStrategyNotConfig);
             var discountResult = await _discountContext.CalculateDiscountAsync(order, order.CouponCode, (DiscountStrategy)storeSettings.DiscountStrategy);
 
-            return new OrderResultDTO
-            {
-
-            };
+            return discountResult;
         }
 
         public Task<DiscountResultDTO> ApplyCouponAsync(Guid userId, string couponCode, Guid storeId)

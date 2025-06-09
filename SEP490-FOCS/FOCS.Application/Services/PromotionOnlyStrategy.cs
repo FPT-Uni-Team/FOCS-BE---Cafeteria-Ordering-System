@@ -36,48 +36,119 @@ namespace FOCS.Application.Services
 
         public async Task<DiscountResultDTO> ApplyDiscountAsync(CreateOrderRequest order, string? couponCode = null)
         {
-            var promotion = await _promotionRepository.AsQueryable().Include(x => x.Coupons).FirstOrDefaultAsync(x => x.Coupons.Any(x => x.Code == couponCode));
+            var promotion = await _promotionRepository.AsQueryable()
+                .Include(x => x.Coupons)
+                .FirstOrDefaultAsync(x => x.Coupons.Any(c => c.Code == couponCode));
+
             ConditionCheck.CheckCondition(promotion != null, Errors.PromotionError.PromotionNotFound);
 
-            var result = new DiscountResultDTO();
+            var result = new DiscountResultDTO
+            {
+                ItemDiscountDetails = new List<DiscountItemDetail>(),
+                AppliedPromotions = new List<string> { promotion.Title }
+            };
 
-            var acceptItemIds = promotion.AcceptForItems?.Split(',').Select(Guid.Parse).ToHashSet();
+            var acceptItemIds = promotion.AcceptForItems?
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(Guid.Parse)
+                .ToHashSet();
 
             double totalDiscount = 0;
 
             foreach (var itemOrder in order.Items)
             {
-                var isAccepted = acceptItemIds == null || acceptItemIds.Contains(itemOrder.MenuItemId);
+                bool isAccepted = acceptItemIds == null || acceptItemIds.Contains(itemOrder.MenuItemId);
+                if (!isAccepted) continue;
 
                 var pricing = await _pricingService.GetPriceByProduct(itemOrder.MenuItemId, itemOrder.VariantId, order.StoreId);
-                var itemPrice = pricing.ProductPrice + pricing.VariantPrice;
+                double itemPrice = (double)pricing.ProductPrice + (double)pricing.VariantPrice;
+
+                double itemDiscount = 0;
 
                 switch (promotion.PromotionType)
                 {
                     case PromotionType.Percentage:
-                        if (isAccepted)
-                            totalDiscount += Math.Round((double)itemPrice * (double)promotion.DiscountValue, 2);
+                        itemDiscount = ApplyPercentageDiscount(itemPrice, promotion.DiscountValue);
                         break;
-
                     case PromotionType.FixedAmount:
-                        if (isAccepted)
-                            totalDiscount += Math.Min((double)itemPrice, (double)promotion.DiscountValue);
+                        itemDiscount = ApplyFixedAmountDiscount(itemPrice, promotion.DiscountValue);
                         break;
-
                     case PromotionType.BuyXGetY:
-                        if (isAccepted)
-                        {
-                            var promotionItemCondition = (await _promotionItemConditionRepo.FindAsync(x => x.PromotionId == promotion.Id)).FirstOrDefault();
-                        }
+                        var buyXGetYDiscounts = await ApplyBuyXGetYDiscount(order, promotion);
+                        result.ItemDiscountDetails.AddRange(buyXGetYDiscounts);
+                        itemDiscount = buyXGetYDiscounts.Sum(d => (double)d.DiscountAmount);
                         break;
                     default:
+                        itemDiscount = 0;
                         break;
+                }
+
+
+                if (itemDiscount > 0)
+                {
+                    totalDiscount += itemDiscount;
+
+                    result.ItemDiscountDetails.Add(new DiscountItemDetail
+                    {
+                        DiscountAmount = (decimal)itemDiscount,
+                        ItemCode = $"{itemOrder.MenuItemId}_{itemOrder.VariantId}",
+                        ItemName = itemOrder.MenuItemId.ToString(),
+                        Quantity = itemOrder.Quantity,
+                        Source = $"Promotion_{promotion.PromotionType}_{promotion.Title}"
+                    });
                 }
             }
 
             result.TotalDiscount = (decimal)totalDiscount;
             return result;
-
         }
+
+        private double ApplyPercentageDiscount(double itemPrice, double? discountValue)
+        {
+            if (discountValue == null) return 0;
+            return Math.Round(itemPrice * (double)discountValue, 2);
+        }
+
+        private double ApplyFixedAmountDiscount(double itemPrice, double? discountValue)
+        {
+            if (discountValue == null) return 0;
+            return Math.Min(itemPrice, (double)discountValue);
+        }
+
+        private async Task<List<DiscountItemDetail>> ApplyBuyXGetYDiscount(CreateOrderRequest order, Promotion promotion)
+        {
+            var discountDetails = new List<DiscountItemDetail>();
+
+            var promotionItemCondition = (await _promotionItemConditionRepo.FindAsync(x => x.PromotionId == promotion.Id)).FirstOrDefault();
+            if (promotionItemCondition == null) return discountDetails;
+
+            var buyItemId = promotionItemCondition.BuyItemId;
+            var getItemId = promotionItemCondition.GetItemId;
+            var buyQuantity = promotionItemCondition.BuyQuantity;
+            var getQuantity = promotionItemCondition.GetQuantity;
+
+            var boughtItem = order.Items.FirstOrDefault(i => i.MenuItemId == buyItemId);
+            if (boughtItem == null || boughtItem.Quantity < buyQuantity)
+                return discountDetails;
+
+            int applicableSets = boughtItem.Quantity / buyQuantity;
+
+            var pricing = await _pricingService.GetPriceByProduct(getItemId, null, order.StoreId);
+            var freeItemPrice = pricing.ProductPrice;
+
+            double totalDiscount = (double)freeItemPrice * getQuantity * applicableSets;
+
+            discountDetails.Add(new DiscountItemDetail
+            {
+                DiscountAmount = (decimal)totalDiscount,
+                ItemCode = getItemId.ToString(),
+                ItemName = getItemId.ToString(),
+                Quantity = getQuantity * applicableSets,
+                Source = $"Promotion_Buy{buyQuantity}Get{getQuantity}_{promotion.Title}"
+            });
+
+            return discountDetails;
+        }
+
     }
 }
