@@ -39,6 +39,10 @@ namespace FOCS.Application.Mappings
 
             CreateMap<StoreSetting, StoreSettingDTO>().ReverseMap()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
+
+            CreateMap<Promotion, PromotionDTO>().ReverseMap();
+
+            CreateMap<PromotionItemCondition, PromotionItemConditionDTO>().ReverseMap();
         }
     }
 }

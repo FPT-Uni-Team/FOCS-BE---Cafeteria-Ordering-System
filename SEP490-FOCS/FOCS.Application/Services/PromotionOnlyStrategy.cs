@@ -68,8 +68,6 @@ namespace FOCS.Application.Services
                         if (isAccepted)
                         {
                             var promotionItemCondition = (await _promotionItemConditionRepo.FindAsync(x => x.PromotionId == promotion.Id)).FirstOrDefault();
-
-
                         }
                         break;
                     default:
