@@ -1,9 +1,13 @@
-﻿using FOCS.Common.Exceptions;
+﻿using FOCS.Application.Services.Interface;
+using FOCS.Common.Enums;
+using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
+using Org.BouncyCastle.Crypto.Modes.Gcm;
+using Org.BouncyCastle.Utilities.Collections;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,25 +21,34 @@ namespace FOCS.Application.Services
         private readonly IRepository<Store> _storeRepository;
         private readonly IRepository<MenuItem> _menuItemRepository;
         private readonly IRepository<MenuItemVariant> _variantRepository;
+        private readonly IRepository<Table> _tableRepository;
         private readonly IRepository<FOCS.Order.Infrastucture.Entities.Order> _orderRepository;
 
-        private readonly ICouponService _couponService;
+        private readonly IPromotionService _promotionService;
+        private readonly DiscountContext discountContext;
+        private readonly IStoreSettingService _storeSettingService;
 
-        public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository, IRepository<Store> storeRepository, IRepository<MenuItem> menuRepository, IRepository<MenuItemVariant> variantRepository, ICouponService couponService)
+        public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository, DiscountContext discountContext, IStoreSettingService storeSettingService, IRepository<Table> tableRepo, IRepository<Store> storeRepository, IRepository<MenuItem> menuRepository, IRepository<MenuItemVariant> variantRepository, IPromotionService promotionService)
         {
             _orderRepository = orderRepository;
             _storeRepository = storeRepository;
+            this.discountContext = discountContext;
             _menuItemRepository = menuRepository;
+            _storeSettingService = storeSettingService;
             _variantRepository = variantRepository;
-            _couponService = couponService;
+            _promotionService = promotionService;
+            _tableRepository = tableRepo;
         }
 
-        public async Task<OrderResultDTO> CreateOrderAsGuestAsync(CreateOrderGuestDTO dto)
+        public async Task<OrderResultDTO> CreateOrderAsGuestAsync(CreateOrderRequest order, string userId)
         {
-            var store = await _storeRepository.FindAsync(x => x.Id == dto.StoreId);
+            var store = await _storeRepository.FindAsync(x => x.Id == order.StoreId);
             ConditionCheck.CheckCondition(store != null, Errors.OrderError.NotFoundStore);
 
-            foreach(var item in dto.Items)
+            var tableInStore = await _tableRepository.FindAsync(x => x.StoreId == store.FirstOrDefault().Id && x.Id == order.TableId);
+            ConditionCheck.CheckCondition(tableInStore.Count() < 1 || tableInStore.Count() > 1 || tableInStore.FirstOrDefault() != null, Errors.OrderError.TableNotFound);
+
+            foreach(var item in order.Items)
             {
                 var currentItem = await _menuItemRepository.FindAsync(x => x.Id == item.MenuItemId);
                 ConditionCheck.CheckCondition(currentItem.Any(), Errors.OrderError.MenuItemNotFound);
@@ -44,9 +57,15 @@ namespace FOCS.Application.Services
                 ConditionCheck.CheckCondition(currentVariant.Any(), Errors.OrderError.MenuItemNotFound);
             }
 
-            await _couponService.IsValidApplyCouponAsync(dto.CouponCode);
+            var storeSettings = await _storeSettingService.GetStoreSettingAsync(order.StoreId);
+            ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.StoreNotFound);
 
-            // Get Store Config
+            // Validate promotion and coupon
+            await _promotionService.IsValidPromotionCouponAsync(order.CouponCode, userId, order.StoreId);
+
+            // Pricing
+            ConditionCheck.CheckCondition(storeSettings.DiscountStrategy.HasValue, Errors.StoreSetting.DiscountStrategyNotConfig);
+            var discountResult = await discountContext.CalculateDiscountAsync(order, order.CouponCode, (DiscountStrategy)storeSettings.DiscountStrategy);
 
             return new OrderResultDTO
             {

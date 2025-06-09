@@ -4,6 +4,7 @@ using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Org.BouncyCastle.Utilities.IO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,21 +24,20 @@ namespace FOCS.Application.Services
             _promotionRepository = proRepo;
         }
 
-        public async Task IsValidApplyCouponAsync(string couponCode)
+        public async Task IsValidApplyCouponAsync(string couponCode, Guid storeId)
         {
-            ConditionCheck.CheckCondition(couponCode != null, Errors.Common.Empty);
-            
-            var coupon = await _couponRepository.FindAsync(x => x.Code == couponCode);
-            ConditionCheck.CheckCondition(coupon != null && coupon.Count() > 1, Errors.PromotionError.CouponNotFound);
-            var couponExist = coupon.FirstOrDefault();
+            ConditionCheck.CheckCondition(!string.IsNullOrWhiteSpace(couponCode), Errors.Common.Empty);
+
+            var couponList = await _couponRepository.FindAsync(x => x.Code == couponCode && x.StoreId == storeId);
+            ConditionCheck.CheckCondition(couponList.Any(), Errors.PromotionError.CouponNotFound);
+
+            var coupon = couponList.First();
+
+            ConditionCheck.CheckCondition(coupon.CountUsed < coupon.MaxUsage, Errors.PromotionError.CouponMaxUsed);
+
             var currentDate = DateTime.Now;
-            ConditionCheck.CheckCondition(couponExist?.CountUsed >= couponExist?.MaxUsage, Errors.PromotionError.CouponMaxUsed);
-
-            //Validate max usage per user by store setting
-
-            //Check period time
-            ConditionCheck.CheckCondition(couponExist.StartDate < currentDate && couponExist.EndDate > currentDate, Errors.PromotionError.InvalidPeriodDatetime);
-            ConditionCheck.CheckCondition(couponExist.Promotion.StartDate < currentDate && couponExist.Promotion.EndDate > currentDate, Errors.PromotionError.InvalidPeriodDatetime);
+            ConditionCheck.CheckCondition(currentDate >= coupon.StartDate && currentDate <= coupon.EndDate, Errors.PromotionError.InvalidPeriodDatetime);
         }
+
     }
 }

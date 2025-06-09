@@ -13,7 +13,7 @@ namespace FOCS.Common.Interfaces
 
         #region guest
 
-        Task<OrderResultDTO> CreateOrderAsGuestAsync(CreateOrderGuestDTO dto);
+        Task<OrderResultDTO> CreateOrderAsGuestAsync(CreateOrderRequest dto, string userId);
 
         Task<OrderDetailDTO> GetOrderByCodeAsync(string orderCode);
 

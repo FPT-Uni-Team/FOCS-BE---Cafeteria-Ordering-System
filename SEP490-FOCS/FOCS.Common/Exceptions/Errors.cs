@@ -21,6 +21,11 @@ namespace FOCS.Common.Exceptions
             public const string Empty = "Empty";
         }
 
+        public static class StoreSetting
+        {
+            public const string DiscountStrategyNotConfig = "Discount Strategy is not config in system";
+        }
+
         public static class AuthError
         {
             public const string WrongPassword = "Wrong password";
@@ -28,6 +33,11 @@ namespace FOCS.Common.Exceptions
             public const string PasswordReuse = "New password cannot be the same as old password.";
             public const string InvalidRefreshToken = "Invalid refresh token";
             public const string NotVerifyAccount = "Account is not verify";
+        }
+
+        public static class Pricing
+        {
+            public const string InvalidPrice = "Prduct price is not set";
         }
 
         public static class OrderError
@@ -43,6 +53,7 @@ namespace FOCS.Common.Exceptions
             public const string CouponNotFound = "Coupon code not found";
             public const string CouponMaxUsed = "Coupon is max used";
             public const string InvalidPeriodDatetime = "Coupon/Promotion is out of date";
+            public const string PromotionNotFound = "Promotion not found";
         }
     }
 }

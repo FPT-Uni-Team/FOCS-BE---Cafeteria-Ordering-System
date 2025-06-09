@@ -8,6 +8,6 @@ namespace FOCS.Common.Interfaces
 {
     public interface ICouponService
     {
-        Task IsValidApplyCouponAsync(string couponCode);
+        Task IsValidApplyCouponAsync(string couponCode, Guid storeId);
     }
 }
