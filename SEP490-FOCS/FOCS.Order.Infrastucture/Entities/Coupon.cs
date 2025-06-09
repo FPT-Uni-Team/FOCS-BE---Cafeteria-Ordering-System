@@ -27,6 +27,8 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public int? MaxUsagePerUser { get; set; } 
 
+        public string? AcceptForItems { get; set; } 
+
         public bool IsActive { get; set; }
         public bool IsDeleted { get; set; }
 
