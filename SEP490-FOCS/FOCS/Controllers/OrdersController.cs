@@ -15,13 +15,12 @@ namespace FOCS.Controllers
     public class OrdersController : FocsController
     {
         //SignalR 
-        private readonly IHubContext<OrderHub> _orderHubContext;
+        //private readonly IHubContext<OrderHub> _orderHubContext;
 
         private readonly IOrderService _orderService;
 
-        public OrdersController(IHubContext<OrderHub> hubContext, IOrderService orderService)
+        public OrdersController(IOrderService orderService)
         {
-            _orderHubContext = hubContext;  
             _orderService = orderService;
         }
 

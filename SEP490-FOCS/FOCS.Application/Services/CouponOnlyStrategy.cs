@@ -96,6 +96,7 @@ namespace FOCS.Application.Services
                 .ToHashSet();
 
             double totalDiscount = 0;
+            double totalPrice = 0;
 
             foreach (var itemOrder in order.Items)
             {
@@ -124,6 +125,7 @@ namespace FOCS.Application.Services
                 }
 
                 totalDiscount += itemDiscount;
+                totalPrice += (double)itemPrice;
 
                 result.ItemDiscountDetails.Add(new DiscountItemDetail
                 {
@@ -136,6 +138,7 @@ namespace FOCS.Application.Services
             }
 
             result.TotalDiscount = (decimal)totalDiscount;
+            result.TotalPice -= result.TotalDiscount;
             return result;
         }
 
