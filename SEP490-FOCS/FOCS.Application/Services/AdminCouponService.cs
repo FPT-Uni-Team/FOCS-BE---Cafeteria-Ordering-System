@@ -145,7 +145,7 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(existing, "Coupon code already exists.");
 
             // Check dates
-            ConditionCheck.CheckCondition(dto.StartDate > dto.EndDate, "Start date must be before end date.");
+            ConditionCheck.CheckCondition(dto.StartDate <= dto.EndDate, "Start date must be before end date.");
 
             _mapper.Map(dto, coupon);
             coupon.UpdatedAt = DateTime.UtcNow;
