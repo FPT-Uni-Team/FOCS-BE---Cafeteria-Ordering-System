@@ -34,7 +34,7 @@ namespace FOCS.Application.Services
             if (variantId.HasValue)
             {
                 var variant = (await _menuItemVariantRepo.FindAsync(x => x.Id == variantId.Value)).FirstOrDefault();
-                ConditionCheck.CheckCondition(variant != null && variant.Price > 0, Errors.Pricing.InvalidPrice);
+                ConditionCheck.CheckCondition(variant != null && variant.Price >= 0, Errors.Pricing.InvalidPrice);
                 variantPrice = (double)variant.Price;
             }
 

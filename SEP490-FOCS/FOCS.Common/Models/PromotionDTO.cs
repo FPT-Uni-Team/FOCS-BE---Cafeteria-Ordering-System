@@ -32,7 +32,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         public bool? IsActive { get; set; }
 
         [JsonPropertyName("accept_for_items")]
-        public string? AcceptForItems { get; set; }
+        public List<Guid>? AcceptForItems { get; set; }
 
         [JsonPropertyName("promotion_item_condition")]
         public PromotionItemConditionDTO? PromotionItemConditionDTO { get; set; }
