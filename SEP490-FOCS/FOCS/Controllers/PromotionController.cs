@@ -8,8 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
-    [Authorize(Roles = Roles.Manager)]
-    [Authorize(Roles = Roles.Admin)]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
     [Route("api/admin/promotion")]
     [ApiController]
     public class PromotionController : FocsController
