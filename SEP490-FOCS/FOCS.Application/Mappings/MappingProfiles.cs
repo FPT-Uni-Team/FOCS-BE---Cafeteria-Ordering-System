@@ -21,17 +21,20 @@ namespace FOCS.Application.Mappings
             CreateMap<MenuCategory, MenuCategoryDTO>().ReverseMap();
             CreateMap<MenuItem, MenuItemDTO>().ReverseMap();
 
-            CreateMap<MenuItem, MenuItemDetailAdminServiceDTO>().ReverseMap();
+            CreateMap<MenuItem, MenuItemDetailAdminDTO>().ReverseMap();
             CreateMap<MenuItemVariant, MenuItemVariantDTO>().ReverseMap();
             CreateMap<VariantGroup, VariantGroupDTO>().ReverseMap();
             // Admin Mappings for Menu item
-            CreateMap<MenuItem, MenuItemAdminServiceDTO>().ReverseMap()
+            CreateMap<MenuItem, MenuItemAdminDTO>().ReverseMap()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
             // Admin Mappings for Brand
-            CreateMap<Brand, BrandAdminServiceDTO>().ReverseMap()
+            CreateMap<Brand, BrandAdminDTO>().ReverseMap()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
             // Admin Mappings for Store
-            CreateMap<Store, StoreAdminServiceDTO>().ReverseMap()
+            CreateMap<Store, StoreAdminDTO>().ReverseMap()
+                .ForMember(dest => dest.Id, opt => opt.Ignore());
+            // Admin Mappings for Store
+            CreateMap<Coupon, CouponAdminDTO>().ReverseMap()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
 
             CreateMap<Brand, CreateAdminBrandRequest>().ReverseMap()

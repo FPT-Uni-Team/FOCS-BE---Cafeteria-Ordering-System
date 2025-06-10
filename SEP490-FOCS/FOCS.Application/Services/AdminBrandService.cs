@@ -3,24 +3,26 @@ using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace FOCS.Application.Services
 {
-    public class BrandManagementService : IBrandManagementService
+    public class AdminBrandService : IAdminBrandService
     {
         private readonly IRepository<Brand> _brandRepository;
         private readonly IMapper _mapper;
 
-        public BrandManagementService(IRepository<Brand> brandRepository, IMapper mapper)
+        public AdminBrandService(IRepository<Brand> brandRepository, IMapper mapper)
         {
             _brandRepository = brandRepository;
             _mapper = mapper;
         }
 
-        public async Task<BrandAdminServiceDTO> CreateBrandAsync(CreateAdminBrandRequest dto, string userId)
+        public async Task<BrandAdminDTO> CreateBrandAsync(CreateAdminBrandRequest dto, string userId)
         {
+            CheckValidInput(userId);
             var newBrand = _mapper.Map<Brand>(dto);
             newBrand.Id = Guid.NewGuid();
             newBrand.IsDelete = false;
@@ -30,12 +32,13 @@ namespace FOCS.Application.Services
             await _brandRepository.AddAsync(newBrand);
             await _brandRepository.SaveChangesAsync();
 
-            return _mapper.Map<BrandAdminServiceDTO>(newBrand);
+            return _mapper.Map<BrandAdminDTO>(newBrand);
         }
 
-        public async Task<PagedResult<BrandAdminServiceDTO>> GetAllBrandsAsync(UrlQueryParameters query)
+        public async Task<PagedResult<BrandAdminDTO>> GetAllBrandsAsync(UrlQueryParameters query, string userId)
         {
-            var brandQuery = _brandRepository.AsQueryable().Where(b => !b.IsDelete);
+            CheckValidInput(userId);
+            var brandQuery = _brandRepository.AsQueryable().Where(b => !b.IsDelete && b.CreatedBy.Equals(userId));
 
             // Search
             if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))
@@ -63,12 +66,13 @@ namespace FOCS.Application.Services
                 .Take(query.PageSize)
                 .ToListAsync();
 
-            var mapped = _mapper.Map<List<BrandAdminServiceDTO>>(items);
-            return new PagedResult<BrandAdminServiceDTO>(mapped, total, query.Page, query.PageSize);
+            var mapped = _mapper.Map<List<BrandAdminDTO>>(items);
+            return new PagedResult<BrandAdminDTO>(mapped, total, query.Page, query.PageSize);
         }
 
-        public async Task<bool> UpdateBrandAsync(Guid id, BrandAdminServiceDTO dto, string userId)
+        public async Task<bool> UpdateBrandAsync(Guid id, BrandAdminDTO dto, string userId)
         {
+            CheckValidInput(userId);
             var brand = await _brandRepository.GetByIdAsync(id);
             if (brand == null || brand.IsDelete)
                 return false;
@@ -83,6 +87,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> DeleteBrandAsync(Guid id, string userId)
         {
+            CheckValidInput(userId);
             var brand = await _brandRepository.GetByIdAsync(id);
             if (brand == null || brand.IsDelete)
                 return false;
@@ -93,6 +98,15 @@ namespace FOCS.Application.Services
 
             await _brandRepository.SaveChangesAsync();
             return true;
+        }
+
+        public void CheckValidInput(string userId)
+        {
+            //check userId is not null or empty
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new ArgumentException("UserId is required(Please login).");
+            }
         }
     }
 }

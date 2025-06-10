@@ -9,19 +9,15 @@ namespace FOCS.Controllers
     [ApiController]
     public class AdminMenuItemController : FocsController
     {
-        private readonly IMenuManagementService _adminMenuItemService;
-        private readonly IBrandManagementService _adminBrandService;
-        private readonly IStoreManagementService _adminStoreService;
+        private readonly IAdminMenuItemService _adminMenuItemService;
 
-        public AdminMenuItemController(IMenuManagementService menuService, IBrandManagementService adminBrand, IStoreManagementService storeService)
+        public AdminMenuItemController(IAdminMenuItemService menuService)
         {
             _adminMenuItemService = menuService;
-            _adminBrandService = adminBrand;
-            _adminStoreService = storeService;
         }
 
         [HttpPost("menu-item")]
-        public async Task<IActionResult> CreateMenuItem([FromBody] MenuItemAdminServiceDTO dto)
+        public async Task<IActionResult> CreateMenuItem([FromBody] MenuItemAdminDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -49,7 +45,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPut("menu-item/{id}")]
-        public async Task<IActionResult> UpdateMenuItem(Guid id, [FromBody] MenuItemAdminServiceDTO dto)
+        public async Task<IActionResult> UpdateMenuItem(Guid id, [FromBody] MenuItemAdminDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

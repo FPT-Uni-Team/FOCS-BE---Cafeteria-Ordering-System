@@ -2,7 +2,7 @@
 
 namespace FOCS.Application.DTOs.AdminServiceDTO
 {
-    public class StoreAdminServiceDTO
+    public class StoreAdminDTO
     {
         [JsonPropertyName("id")]
         public Guid? Id { get; set; }
