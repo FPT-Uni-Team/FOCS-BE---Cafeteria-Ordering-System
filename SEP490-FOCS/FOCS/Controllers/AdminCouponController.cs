@@ -1,5 +1,6 @@
 ﻿using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
+using FOCS.Common.Constants;
 using FOCS.Common.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -41,9 +42,9 @@ namespace FOCS.Controllers
 
             var updated = await _adminCouponService.UpdateCouponAsync(id, dto, UserId);
             if (!updated)
-                return NotFound();
+                return NotFound(AdminCoupon.UpdateNotFound);
 
-            return Ok();
+            return Ok(AdminCoupon.UpdateOk);
         }
 
         [HttpDelete("coupon/{id}")]
@@ -51,9 +52,9 @@ namespace FOCS.Controllers
         {
             var deleted = await _adminCouponService.DeleteCouponAsync(id, UserId);
             if (!deleted)
-                return NotFound();
+                return NotFound(AdminCoupon.DeleteNotFound);
 
-            return Ok();
+            return Ok(AdminCoupon.DeleteOk);
         }
 
         [HttpPost("coupon/{id}/track-usage")]
@@ -61,7 +62,7 @@ namespace FOCS.Controllers
         {
             var result = await _adminCouponService.TrackCouponUsageAsync(id);
             if (result <= 0)
-                return NotFound("Coupon cannot be used anymore.");
+                return NotFound(AdminCoupon.TrackNotFound);
 
             return Ok(result);
         }
@@ -69,26 +70,21 @@ namespace FOCS.Controllers
         [HttpPut("coupon/{id}/status")]
         public async Task<IActionResult> SetCouponStatus(Guid id, [FromQuery] bool isActive)
         {
-            // Lấy userId từ token hoặc context
-            var userId = User?.Identity?.Name ?? "system";
-
-            var result = await _adminCouponService.SetCouponStatusAsync(id, isActive, userId);
+            var result = await _adminCouponService.SetCouponStatusAsync(id, isActive, UserId);
             if (!result)
-                return NotFound("Coupon not found or has been deleted.");
+                return NotFound(AdminCoupon.CouponStatusNotFound);
 
-            return Ok($"Coupon has been {(isActive ? "enabled" : "disabled")} successfully.");
+            return Ok(string.Format(AdminCoupon.CouponStatusOk, isActive ? "enabled" : "disabled"));
         }
 
         [HttpPut("coupon/{storeId}/assign-promotion")]
         public async Task<IActionResult> AssignCouponToPromotion(List<Guid> couponIds, Guid promotionId, Guid storeId)
         {
-            var userId = User?.Identity?.Name ?? "system";
-
-            var result = await _adminCouponService.AssignCouponsToPromotionAsync(couponIds, promotionId, userId, storeId);
+            var result = await _adminCouponService.AssignCouponsToPromotionAsync(couponIds, promotionId, UserId, storeId);
             if (!result)
-                return NotFound();
+                return NotFound(AdminCoupon.CouponsToPromotionNotFound);
 
-            return Ok("Coupon assigned to promotion successfully.");
+            return Ok(AdminCoupon.CouponsToPromotionOk);
         }
 
     }
