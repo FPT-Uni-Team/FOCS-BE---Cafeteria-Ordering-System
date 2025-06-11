@@ -10,24 +10,24 @@ namespace FOCS.Common.Models
         public Guid? Id { get; set; }
 
         [JsonPropertyName("open_time")]
-        public TimeSpan? OpenTime { get; set; }
+        public TimeSpan OpenTime { get; set; }
 
         [JsonPropertyName("close_time")]
-        public TimeSpan? CloseTime { get; set; }
+        public TimeSpan CloseTime { get; set; }
 
         [JsonPropertyName("currency")]
         public string? Currency {  get; set; } = "VND";
 
         [JsonPropertyName("payment_config")]
-        public PaymentConfig? PaymentConfig { get; set; }
+        public PaymentConfig PaymentConfig { get; set; }
 
         [JsonPropertyName("logo_url")]
         public string? LogoUrl { get; set; } = "";
 
         [JsonPropertyName("is_self_service")]
-        public bool? IsSelfService { get; set; }
+        public bool IsSelfService { get; set; }
 
         [JsonPropertyName("discount_strategy")]
-        public DiscountStrategy? DiscountStrategy { get; set; }
+        public DiscountStrategy DiscountStrategy { get; set; }
     }
 }

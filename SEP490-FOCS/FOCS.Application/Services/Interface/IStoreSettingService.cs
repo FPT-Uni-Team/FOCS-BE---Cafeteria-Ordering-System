@@ -5,8 +5,8 @@ namespace FOCS.Application.Services.Interface
 {
     public interface IStoreSettingService
     {
-        Task<StoreSettingDTO> GetStoreSettingAsync(Guid storeId);
+        Task<StoreSettingDTO> GetStoreSettingAsync(Guid storeId, string userId);
         Task<bool> UpdateStoreSettingAsync(Guid storeId, StoreSettingDTO dto, string userId);
-        Task<bool> ResetStoreSettingAsync(Guid storeId, string userId);
+        Task<StoreSettingDTO> CreateStoreSettingAsync(Guid storeId, StoreSettingDTO dto, string userId);
     }
 }

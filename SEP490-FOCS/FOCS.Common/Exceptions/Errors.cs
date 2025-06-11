@@ -27,6 +27,8 @@ namespace FOCS.Common.Exceptions
         }
         public static class StoreSetting
         {
+            public const string StoreSettingNotFound = "No store settings found for this store";
+            public const string SettingExist = "Store have setting already";
             public const string DiscountStrategyNotConfig = "Discount Strategy is not config in system";
         }
 
@@ -37,6 +39,7 @@ namespace FOCS.Common.Exceptions
             public const string PasswordReuse = "New password cannot be the same as old password.";
             public const string InvalidRefreshToken = "Invalid refresh token";
             public const string NotVerifyAccount = "Account is not verify";
+            public const string UserUnauthor = "You don't have permission to access";
         }
 
         public static class Pricing
