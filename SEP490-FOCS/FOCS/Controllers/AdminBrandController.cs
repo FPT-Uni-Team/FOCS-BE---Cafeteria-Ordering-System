@@ -9,9 +9,9 @@ namespace FOCS.Controllers
     [ApiController]
     public class AdminBrandController : FocsController
     {
-        private readonly IBrandManagementService _adminBrandService;
+        private readonly IAdminBrandService _adminBrandService;
 
-        public AdminBrandController(IBrandManagementService adminBrand)
+        public AdminBrandController(IAdminBrandService adminBrand)
         {
             _adminBrandService = adminBrand;
         }
@@ -29,12 +29,12 @@ namespace FOCS.Controllers
         [HttpPost("brands")]
         public async Task<IActionResult> GetAllBrands([FromBody] UrlQueryParameters query)
         {
-            var pagedResult = await _adminBrandService.GetAllBrandsAsync(query);
+            var pagedResult = await _adminBrandService.GetAllBrandsAsync(query, UserId);
             return Ok(pagedResult);
         }
 
         [HttpPut("brand/{id}")]
-        public async Task<IActionResult> UpdateBrand(Guid id, [FromBody] BrandAdminServiceDTO dto)
+        public async Task<IActionResult> UpdateBrand(Guid id, [FromBody] BrandAdminDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FOCS.Application.DTOs.AdminServiceDTO
 {
-    public class BrandAdminServiceDTO
+    public class BrandAdminDTO
     {
         [JsonPropertyName("id")]
         public Guid? Id { get; set; }

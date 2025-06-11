@@ -8,21 +8,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FOCS.Application.Services
 {
-    public class StoreManagementService : IStoreManagementService
+    public class AdminStoreService : IAdminStoreService
     {
         private readonly IRepository<Store> _storeRepository;
         private readonly IRepository<StoreSetting> _storeSettingRepository;
         private readonly IMapper _mapper;
 
-        public StoreManagementService(IRepository<Store> storeRepository, IRepository<StoreSetting> storeSettingRepository, IMapper mapper)
+        public AdminStoreService(IRepository<Store> storeRepository, IRepository<StoreSetting> storeSettingRepository, IMapper mapper)
         {
             _storeRepository = storeRepository;
             _storeSettingRepository = storeSettingRepository;
             _mapper = mapper;
         }
 
-        public async Task<StoreAdminServiceDTO> CreateStoreAsync(StoreAdminServiceDTO dto, string userId)
+        public async Task<StoreAdminDTO> CreateStoreAsync(StoreAdminDTO dto, string userId)
         {
+            CheckValidInput(userId);
+
             var newStore = _mapper.Map<Store>(dto);
             newStore.Id = Guid.NewGuid();
             newStore.IsDeleted = false;
@@ -44,12 +46,13 @@ namespace FOCS.Application.Services
             await _storeSettingRepository.AddAsync(defaultSetting);
             await _storeSettingRepository.SaveChangesAsync();
 
-            return _mapper.Map<StoreAdminServiceDTO>(newStore);
+            return _mapper.Map<StoreAdminDTO>(newStore);
         }
 
-        public async Task<PagedResult<StoreAdminServiceDTO>> GetAllStoresAsync(UrlQueryParameters query)
+        public async Task<PagedResult<StoreAdminDTO>> GetAllStoresAsync(UrlQueryParameters query, string userId)
         {
-            var storeQuery = _storeRepository.AsQueryable().Where(s => !s.IsDeleted);
+            CheckValidInput(userId);
+            var storeQuery = _storeRepository.AsQueryable().Include(i => i.Brand).Where(s => !s.IsDeleted && s.Brand.CreatedBy.Equals(userId));
 
             // Search
             if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))
@@ -87,12 +90,13 @@ namespace FOCS.Application.Services
                 .Take(query.PageSize)
                 .ToListAsync();
 
-            var mapped = _mapper.Map<List<StoreAdminServiceDTO>>(items);
-            return new PagedResult<StoreAdminServiceDTO>(mapped, total, query.Page, query.PageSize);
+            var mapped = _mapper.Map<List<StoreAdminDTO>>(items);
+            return new PagedResult<StoreAdminDTO>(mapped, total, query.Page, query.PageSize);
         }
 
-        public async Task<bool> UpdateStoreAsync(Guid id, StoreAdminServiceDTO dto, string userId)
+        public async Task<bool> UpdateStoreAsync(Guid id, StoreAdminDTO dto, string userId)
         {
+            CheckValidInput(userId);
             var store = await _storeRepository.GetByIdAsync(id);
             if (store == null || store.IsDeleted)
                 return false;
@@ -107,6 +111,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> DeleteStoreAsync(Guid id, string userId)
         {
+            CheckValidInput(userId);
             var store = await _storeRepository.GetByIdAsync(id);
             if (store == null || store.IsDeleted)
                 return false;
@@ -117,6 +122,15 @@ namespace FOCS.Application.Services
 
             await _storeRepository.SaveChangesAsync();
             return true;
+        }
+
+        public void CheckValidInput(string userId)
+        {
+            //check userId is not null or empty
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                throw new ArgumentException("UserId is required(Please login).");
+            }
         }
     }
 }
