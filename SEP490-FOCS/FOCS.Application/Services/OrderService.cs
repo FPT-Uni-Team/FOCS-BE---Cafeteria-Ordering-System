@@ -60,14 +60,14 @@ namespace FOCS.Application.Services
                 }
             }
 
-            var storeSettings = await _storeSettingService.GetStoreSettingAsync(order.StoreId); 
+            var storeSettings = await _storeSettingService.GetStoreSettingAsync(order.StoreId, userId); 
             ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.StoreNotFound);
 
             // Validate promotion and coupon
             await _promotionService.IsValidPromotionCouponAsync(order.CouponCode, userId, order.StoreId);
 
             // Pricing
-            ConditionCheck.CheckCondition(storeSettings.DiscountStrategy.HasValue, Errors.StoreSetting.DiscountStrategyNotConfig);
+            ConditionCheck.CheckCondition(storeSettings.DiscountStrategy.Equals(null), Errors.StoreSetting.DiscountStrategyNotConfig);
             var discountResult = await _discountContext.CalculateDiscountAsync(order, order.CouponCode, (DiscountStrategy)storeSettings.DiscountStrategy);
 
             return discountResult;

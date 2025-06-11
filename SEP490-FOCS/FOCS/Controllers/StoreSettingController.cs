@@ -22,10 +22,10 @@ namespace FOCS.Controllers
         [HttpGet("{storeId}")]
         public async Task<StoreSettingDTO> GetStoreSettingAsync(Guid storeId)
         {
-            return await _storeSettingService.GetStoreSettingAsync(storeId);
+            return await _storeSettingService.GetStoreSettingAsync(storeId, UserId);
         }
 
-        [HttpPut("{storeId}")]
+        [HttpPut("update/{storeId}")]
         public async Task<IActionResult> UpdateStoreSettingAsync(Guid storeId, StoreSettingDTO dto)
         {
             if (!ModelState.IsValid)
@@ -35,11 +35,11 @@ namespace FOCS.Controllers
             return success ? Ok() : NotFound();
         }
 
-        [HttpPut("reset-setting/{storeId}")]
-        public async Task<IActionResult> ResetStoreSettingAsync(Guid storeId)
+        [HttpPut("{storeId}")]
+        public async Task<StoreSettingDTO> CreateStoreSettingAsync(Guid storeId, StoreSettingDTO dto)
         {
-            var success = await _storeSettingService.ResetStoreSettingAsync(storeId, UserId);
-            return success ? Ok() : NotFound();
+            var created = await _storeSettingService.CreateStoreSettingAsync(storeId, dto, UserId);
+            return created;
         }
     }
 }

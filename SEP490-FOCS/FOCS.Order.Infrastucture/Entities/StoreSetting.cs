@@ -12,19 +12,19 @@ namespace FOCS.Order.Infrastucture.Entities
     {
         public Guid Id { get; set; } = Guid.NewGuid();
 
-        public TimeSpan OpenTime { get; set; } = new TimeSpan(0, 0, 0); // Default to start of day if not set
+        public TimeSpan OpenTime { get; set; }
 
-        public TimeSpan CloseTime { get; set; } = new TimeSpan(23, 59, 59); // Default to end of day if not set
+        public TimeSpan CloseTime { get; set; }
 
         public string Currency {  get; set; } = "VND";
 
-        public PaymentConfig PaymentConfig { get; set; } = Entities.PaymentConfig.Momo;
+        public PaymentConfig PaymentConfig { get; set; }
 
-        public string logoUrl { get; set; } = "";
+        public string LogoUrl { get; set; }
 
-        public bool IsSelfService { get; set; } = true;
+        public bool IsSelfService { get; set; }
 
-        public DiscountStrategy discountStrategy { get; set; } = DiscountStrategy.CouponThenPromotion;
+        public DiscountStrategy discountStrategy { get; set; }
 
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
