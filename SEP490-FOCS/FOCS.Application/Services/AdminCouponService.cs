@@ -149,7 +149,7 @@ namespace FOCS.Application.Services
             // Check unique code (exclude current coupon)
             var existing = await _couponRepository.AsQueryable()
                                                   .AnyAsync(c => c.Id != id && c.Code == dto.Code && !c.IsDeleted);
-            ConditionCheck.CheckCondition(existing, AdminCoupon.CheckUpdateUniqueCode);
+            ConditionCheck.CheckCondition(!existing, AdminCoupon.CheckUpdateUniqueCode);
 
             // Check dates
             ConditionCheck.CheckCondition(dto.StartDate <= dto.EndDate, AdminCoupon.CheckUpdateDate);
@@ -182,11 +182,16 @@ namespace FOCS.Application.Services
             if (coupon == null || coupon.IsDeleted || !coupon.IsActive)
                 return -1;
 
+            var now = DateTime.UtcNow;
+            if (now <= coupon.StartDate || now >= coupon.EndDate)
+                return -1;
+
             if (coupon.CountUsed >= coupon.MaxUsage)
                 return -1;
 
             return coupon.MaxUsage - coupon.CountUsed;
         }
+
 
         public async Task<bool> SetCouponStatusAsync(Guid couponId, bool isActive, string userId)
         {

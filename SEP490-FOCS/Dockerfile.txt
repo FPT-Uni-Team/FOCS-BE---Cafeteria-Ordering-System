@@ -2,6 +2,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
+# Add this to keep the build clean
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=true
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true
+
 COPY *.sln .
 COPY FOCS.Application/*.csproj ./FOCS.Application/
 COPY FOCS.Common/*.csproj ./FOCS.Common/
