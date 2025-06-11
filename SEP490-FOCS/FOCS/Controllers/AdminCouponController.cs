@@ -80,14 +80,15 @@ namespace FOCS.Controllers
         }
 
         [HttpPut("coupon/{storeId}/assign-promotion")]
-        public async Task<IActionResult> AssignCouponToPromotion(List<Guid> couponIds, Guid promotionId, Guid storeId)
+        public async Task<IActionResult> AssignCouponToPromotion(Guid storeId, [FromBody] AssignCouponRequest request)
         {
-            var result = await _adminCouponService.AssignCouponsToPromotionAsync(couponIds, promotionId, UserId, storeId);
+            var result = await _adminCouponService.AssignCouponsToPromotionAsync(
+                request.CouponIds, request.PromotionId, UserId, storeId);
+
             if (!result)
                 return NotFound(AdminCoupon.CouponsToPromotionNotFound);
 
             return Ok(AdminCoupon.CouponsToPromotionOk);
         }
-
     }
 }

@@ -37,7 +37,18 @@ namespace FOCS.Application.Services
 
         private readonly ILogger<string> _logger;
 
-        public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository, ILogger<string> logger, IRepository<OrderDetail> orderDetailRepository, IPricingService pricingService, IRepository<Coupon> couponRepository, DiscountContext discountContext, IStoreSettingService storeSettingService, IRepository<Table> tableRepo, IRepository<Store> storeRepository, IRepository<MenuItem> menuRepository, IRepository<MenuItemVariant> variantRepository, IPromotionService promotionService)
+        public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository, 
+                            ILogger<string> logger, 
+                            IRepository<OrderDetail> orderDetailRepository, 
+                            IPricingService pricingService, 
+                            IRepository<Coupon> couponRepository, 
+                            DiscountContext discountContext, 
+                            IStoreSettingService storeSettingService, 
+                            IRepository<Table> tableRepo, 
+                            IRepository<Store> storeRepository, 
+                            IRepository<MenuItem> menuRepository, 
+                            IRepository<MenuItemVariant> variantRepository, 
+                            IPromotionService promotionService)
         {
             _orderRepository = orderRepository;
             _logger = logger;
