@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FOCS.Common.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,12 @@ namespace FOCS.Common.Models
 
         [JsonPropertyName("coupon_code")]
         public string? CouponCode { get; set; }
+
+        [JsonPropertyName("payment_type")]
+        public PaymentType PaymentType { get; set; }
+
+        [JsonPropertyName("order_type")]
+        public OrderType OrderType { get; set; }
 
         [JsonPropertyName("customer_info")]
         public CustomerInfo customerInfo { get; set; }
