@@ -21,6 +21,10 @@ namespace FOCS.Common.Exceptions
             public const string Empty = "Empty";
         }
 
+        public static class Category
+        {
+            public const string CategoryIsExist = "Category is exist in system";
+        }
         public static class StoreSetting
         {
             public const string DiscountStrategyNotConfig = "Discount Strategy is not config in system";

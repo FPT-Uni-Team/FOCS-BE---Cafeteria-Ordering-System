@@ -17,9 +17,9 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public int SortOrder { get; set; }
 
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
 
-        public bool IsDeleted { get; set; }
+        public bool IsDeleted { get; set; } = false;
 
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }

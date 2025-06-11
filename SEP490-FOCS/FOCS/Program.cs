@@ -1,5 +1,6 @@
 ﻿using FOCS.Application.Mappings;
 using FOCS.Application.Services;
+using FOCS.Application.Services.ApplyStrategy;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Helpers;
 using FOCS.Common.Interfaces;
@@ -64,12 +65,16 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IRepository<Promotion>, Repository<Promotion, OrderDbContext>>()
                 .AddScoped<IRepository<PromotionItemCondition>, Repository<PromotionItemCondition, OrderDbContext>>()
                 .AddScoped<IRepository<MenuItemVariant>, Repository<MenuItemVariant, OrderDbContext>>()
+                .AddScoped<IRepository<MenuCategory>, Repository<MenuCategory, OrderDbContext>>()
+                .AddScoped<ICategoryService, CategoryService>()
                 .AddScoped<ICouponService, CouponService>()
                 .AddScoped<IPricingService, PricingService>()
                 .AddScoped<IRepository<PromotionItemCondition>, Repository<PromotionItemCondition, OrderDbContext>>()
                 .AddScoped<DiscountContext>()
                 .AddScoped<CouponOnlyStrategy>()
+                .AddScoped<PromotionOnlyStrategy>()
                 .AddScoped<IDiscountStrategyService, CouponOnlyStrategy>()
+                .AddScoped<IDiscountStrategyService, PromotionOnlyStrategy>()
                 .AddScoped<IRepository<CouponUsage>, Repository<CouponUsage, OrderDbContext>>()
                 .AddScoped<IRepository<Coupon>, Repository<Coupon, OrderDbContext>>()
                 .AddScoped<IRepository<Promotion>, Repository<Promotion, OrderDbContext>>()
