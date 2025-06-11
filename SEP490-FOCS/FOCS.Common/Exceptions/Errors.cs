@@ -58,10 +58,11 @@ namespace FOCS.Common.Exceptions
             public const string CouponMaxUsed = "Coupon is max used";
             public const string InvalidPeriodDatetime = "Coupon/Promotion is out of date";
             public const string PromotionNotFound = "Promotion not found";
-            public const string PromotionActive = "Promotion is already active";
-            public const string PromotionInactive = "Promotion is already inactive";
-            public const string PromotionTitleExist = "Promotion with this title already exists.";
-            public const string PromotionOverLapping = "A promotion of this type already exists in the specified date range.";
+            public const string PromotionActive = "Promotion is active now";
+            public const string PromotionInactive = "Promotion is inactive now";
+            public const string PromotionTitleExist = "Promotion with this title exists";
+            public const string PromotionOverLapping = "A promotion of this type exists in the specified date range.";
+            public const string PromotionInvalidDateToActive = "Invalid date to active promotion";
         }
     }
 }
