@@ -46,6 +46,10 @@ namespace FOCS.Application.Mappings
             CreateMap<Promotion, PromotionDTO>().ReverseMap();
 
             CreateMap<PromotionItemCondition, PromotionItemConditionDTO>().ReverseMap();
+
+            CreateMap<MenuCategory, CreateCategoryRequest>().ReverseMap();
+            CreateMap<MenuCategory, UpdateCategoryRequest>().ReverseMap();
+
         }
     }
 }

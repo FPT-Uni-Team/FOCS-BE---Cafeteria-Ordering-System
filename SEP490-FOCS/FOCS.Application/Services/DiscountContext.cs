@@ -1,4 +1,5 @@
-﻿using FOCS.Application.Services.Interface;
+﻿using FOCS.Application.Services.ApplyStrategy;
+using FOCS.Application.Services.Interface;
 using FOCS.Common.Enums;
 using FOCS.Common.Models;
 using FOCS.Order.Infrastucture.Entities;

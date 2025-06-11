@@ -14,7 +14,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FOCS.Application.Services
+namespace FOCS.Application.Services.ApplyStrategy
 {
     public class PromotionOnlyStrategy : IDiscountStrategyService
     {
