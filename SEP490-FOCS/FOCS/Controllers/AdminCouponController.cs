@@ -2,10 +2,12 @@
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
 using FOCS.Common.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
+    [Authorize(Roles = Roles.Admin)]
     [Route("api/admin")]
     [ApiController]
     public class AdminCouponController : FocsController
