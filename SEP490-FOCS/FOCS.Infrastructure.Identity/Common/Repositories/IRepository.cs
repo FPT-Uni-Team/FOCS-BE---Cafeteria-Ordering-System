@@ -9,6 +9,8 @@ namespace FOCS.Infrastructure.Identity.Common.Repositories
         Task<IEnumerable<TEntity>> GetAllAsync();
         Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
         Task AddAsync(TEntity entity);
+
+        Task AddRangeAsync(IEnumerable<TEntity> entities);
         void Update(TEntity entity);
         void Remove(TEntity entity);
         Task<int> SaveChangesAsync();

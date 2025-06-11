@@ -19,5 +19,8 @@ namespace FOCS.Order.Infrastucture.Entities
         public string Note { get; set; }
 
         public string Variants { get; set; } // save with string format or json format. exmaple: "size L, trung" -> after that split(",") -> List variants and check with db variants list
+
+        public Guid? OrderId { get; set; }
+        public Order? Order { get; set; }    
     }
 }

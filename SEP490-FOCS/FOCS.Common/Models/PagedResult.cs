@@ -9,8 +9,6 @@ namespace FOCS.Common.Models
 {
     public class PagedResult<T>
     {
-        [JsonPropertyName("items")]
-        public List<T> Items { get; set; }
 
         [JsonPropertyName("total_count")]
         public int TotalCount { get; set; }
@@ -20,6 +18,9 @@ namespace FOCS.Common.Models
 
         [JsonPropertyName("page_size")]
         public int PageSize { get; set; }
+
+        [JsonPropertyName("items")]
+        public List<T> Items { get; set; }
 
         public PagedResult(List<T> items, int totalCount, int pageIndex, int pageSize)
         {

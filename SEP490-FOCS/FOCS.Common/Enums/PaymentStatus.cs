@@ -31,7 +31,10 @@ namespace FOCS.Common.Enums
         /// <summary>
         /// Đã hoàn tiền
         /// </summary>
-        Refunded = 4
+        Refunded = 4,
+
+
+        Waiting
     }
 
 }
