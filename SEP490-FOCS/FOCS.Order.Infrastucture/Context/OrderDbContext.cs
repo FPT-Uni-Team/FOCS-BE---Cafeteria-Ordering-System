@@ -33,6 +33,8 @@ namespace FOCS.Order.Infrastucture.Context
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<OrderWrap> OrderWraps { get; set; }
 
+        public DbSet<UserStore> UserStores { get; set; }
+
         public DbSet<Promotion> Promotions { get; set; }
         public DbSet<PromotionItemCondition> PromotionItemConditions { get; set; }
         public DbSet<Coupon> Coupons { get; set; }

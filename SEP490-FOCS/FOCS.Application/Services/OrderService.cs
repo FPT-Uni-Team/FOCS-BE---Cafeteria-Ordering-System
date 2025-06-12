@@ -86,7 +86,7 @@ namespace FOCS.Application.Services
             var discountResult = await _discountContext.CalculateDiscountAsync(order, order.CouponCode, (DiscountStrategy)storeSettings.DiscountStrategy);
             
             //save order and order detail
-            await SaveOrderAsync(order, discountResult, store, userId);
+            await SaveOrderAsync(order, discountResult, tableInStore.FirstOrDefault(), store, userId);
 
             return discountResult;
         }
@@ -144,7 +144,7 @@ namespace FOCS.Application.Services
             throw new NotImplementedException();
         }
 
-        private async Task SaveOrderAsync(CreateOrderRequest order, DiscountResultDTO discountResult, Store store, string userId)
+        private async Task SaveOrderAsync(CreateOrderRequest order, DiscountResultDTO discountResult, Table table, Store store, string userId)
         {
             Random randomNum = new Random();
 
@@ -205,6 +205,11 @@ namespace FOCS.Application.Services
 
                 await _orderDetailRepository.AddRangeAsync(ordersDetailCreate);
                 await _orderDetailRepository.SaveChangesAsync();
+
+                table.IsOccupied = TableStatus.Occupied;
+                _tableRepository.Update(table);
+                await _tableRepository.SaveChangesAsync();
+
             }
             catch (Exception ex)
             {
