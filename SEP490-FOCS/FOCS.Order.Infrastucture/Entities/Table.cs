@@ -1,4 +1,5 @@
-﻿using FOCS.Common.Models;
+﻿using FOCS.Common.Enums;
+using FOCS.Common.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace FOCS.Order.Infrastucture.Entities
         public int TableNumber {  get; set; }
 
         public string QrCode { get; set; }
+
+        public TableStatus Status { get; set; }
 
         public bool IsActive { get; set; }
         

@@ -32,6 +32,8 @@ namespace FOCS.Order.Infrastucture.Entities
         public Brand Brand { get; set; }
 
         public ICollection<MenuItem> MenuItems { get; set; } = new List<MenuItem>();
+
+        public ICollection<UserStore> UserStores { get; set; }
         public double GetEffectiveTaxRate()
         {
             return CustomTaxRate ?? Brand?.DefaultTaxRate ?? 0.0;
