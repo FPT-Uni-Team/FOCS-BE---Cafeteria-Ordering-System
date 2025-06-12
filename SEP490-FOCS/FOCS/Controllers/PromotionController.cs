@@ -23,14 +23,14 @@ namespace FOCS.Controllers
         [HttpGet("{promotionId}")]
         public async Task<IActionResult> GetPromotion(Guid promotionId)
         {
-            var result = await _promotionService.GetPromotionAsync(promotionId);
+            var result = await _promotionService.GetPromotionAsync(promotionId, UserId);
             return Ok(result);
         }
 
         [HttpPost("{storeId}")]
         public async Task<IActionResult> GetPromotions([FromBody] UrlQueryParameters query, Guid storeId)
         {
-            var result = await _promotionService.GetPromotionsByStoreAsync(query, storeId);
+            var result = await _promotionService.GetPromotionsByStoreAsync(query, storeId, UserId);
             return Ok(result);
         }
 
@@ -44,27 +44,27 @@ namespace FOCS.Controllers
             return Ok(created);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePromotion(Guid id, [FromBody] PromotionDTO dto)
+        [HttpPut("{promotionId}")]
+        public async Task<IActionResult> UpdatePromotion(Guid promotionId, [FromBody] PromotionDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var success = await _promotionService.UpdatePromotionAsync(id, dto, UserId);
+            var success = await _promotionService.UpdatePromotionAsync(promotionId, dto, UserId);
             return success ? Ok() : NotFound();
         }
 
-        [HttpPatch("active/{id}")]
-        public async Task<IActionResult> ActivePromotion(Guid id)
+        [HttpPatch("active/{promotionId}")]
+        public async Task<IActionResult> ActivePromotion(Guid promotionId)
         {
-            var success = await _promotionService.ActivatePromotionAsync(id, UserId);
+            var success = await _promotionService.ActivatePromotionAsync(promotionId, UserId);
             return success ? Ok() : NotFound();
         }
 
-        [HttpPatch("inactive/{id}")]
-        public async Task<IActionResult> InactivePromotion(Guid id)
+        [HttpPatch("deactive/{promotionId}")]
+        public async Task<IActionResult> DeactivePromotion(Guid promotionId)
         {
-            var success = await _promotionService.DeactivatePromotionAsync(id, UserId);
+            var success = await _promotionService.DeactivatePromotionAsync(promotionId, UserId);
             return success ? Ok() : NotFound();
         }
 
