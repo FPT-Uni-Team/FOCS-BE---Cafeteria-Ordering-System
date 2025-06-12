@@ -206,7 +206,7 @@ namespace FOCS.Application.Services
                 await _orderDetailRepository.AddRangeAsync(ordersDetailCreate);
                 await _orderDetailRepository.SaveChangesAsync();
 
-                table.IsOccupied = TableStatus.Occupied;
+                table.Status = TableStatus.Occupied;
                 _tableRepository.Update(table);
                 await _tableRepository.SaveChangesAsync();
 
