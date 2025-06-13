@@ -81,6 +81,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IRepository<CouponUsage>, Repository<CouponUsage, OrderDbContext>>()
                 .AddScoped<IRepository<Coupon>, Repository<Coupon, OrderDbContext>>()
                 .AddScoped<IRepository<Promotion>, Repository<Promotion, OrderDbContext>>()
+                .AddScoped<IRepository<UserStore>, Repository<UserStore, OrderDbContext>>()
                 .AddScoped<IRepository<Table>, Repository<Table, OrderDbContext>>()
                 .AddSingleton<IRedisCacheService>(sp => new RedisCacheService("localhost:6379"));
 ;

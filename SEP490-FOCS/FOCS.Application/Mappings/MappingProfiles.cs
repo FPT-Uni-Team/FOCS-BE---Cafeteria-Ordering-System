@@ -50,6 +50,8 @@ namespace FOCS.Application.Mappings
             CreateMap<MenuCategory, CreateCategoryRequest>().ReverseMap();
             CreateMap<MenuCategory, UpdateCategoryRequest>().ReverseMap();
 
+            CreateMap<UserStore, UserStoreDTO>().ReverseMap();
+
         }
     }
 }

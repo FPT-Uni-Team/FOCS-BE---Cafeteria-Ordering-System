@@ -19,9 +19,9 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<AuthResult> LoginAsync(LoginRequest loginRequest)
+        public async Task<AuthResult> LoginAsync(LoginRequest loginRequest, [FromHeader] Guid storeId)
         {
-            return await _authService.LoginAsync(loginRequest);
+            return await _authService.LoginAsync(loginRequest, storeId);
         }
 
         [HttpPost("register")]
