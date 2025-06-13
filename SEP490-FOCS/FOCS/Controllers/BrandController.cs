@@ -10,11 +10,11 @@ namespace FOCS.Controllers
     [Authorize(Roles = Roles.Admin)]
     [Route("api/admin")]
     [ApiController]
-    public class AdminBrandController : FocsController
+    public class BrandController : FocsController
     {
         private readonly IAdminBrandService _adminBrandService;
 
-        public AdminBrandController(IAdminBrandService adminBrand)
+        public BrandController(IAdminBrandService adminBrand)
         {
             _adminBrandService = adminBrand;
         }

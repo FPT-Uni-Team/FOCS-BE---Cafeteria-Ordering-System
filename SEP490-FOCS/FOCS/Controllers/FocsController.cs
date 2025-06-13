@@ -12,16 +12,13 @@ namespace FOCS.Controllers
     [ApiController]
     public class FocsController : ControllerBase
     {
-        // Property to retrieve the UserId from the claims
         protected string UserId => User?.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        // Property to retrieve the User's Email from the claims
         protected string Email => User?.FindFirstValue(ClaimTypes.Email);
 
-        // Property to retrieve the User's Role from the claims
         protected string Role => User?.FindFirstValue(ClaimTypes.Role);
 
-        // Property to retrieve StoreId from the request headers
+        
         protected string StoreId
         {
             get
@@ -36,7 +33,6 @@ namespace FOCS.Controllers
             }
         }
 
-        // Async method to get the Access Token from the Authorization header
         protected async Task<string> GetAccessTokenAsync()
         {
             var token = await HttpContext.GetTokenAsync(JwtBearerDefaults.AuthenticationScheme, "access_token");

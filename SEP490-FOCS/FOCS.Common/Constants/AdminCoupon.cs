@@ -4,8 +4,8 @@
     {
         // Create service
         public const string UserIdEmpty = "User ID cannot be null or empty.";
-        public const string CouponCodeAuto = "auto";
-        public const string CouponCodeManual = "manual";
+        public const string CouponCodeAuto = "AutoGenerate";
+        public const string CouponCodeManual = "Manual";
         public const string CheckCouponCodeType = "Invalid coupon type. Must be 'auto' or 'manual'.";
         public const string CheckCouponCodeForManual = "Coupon code must be provided for manual type.";
         public const string CheckCreateUniqueCode = "Coupon code already exists";

@@ -10,11 +10,11 @@ namespace FOCS.Controllers
     [Authorize(Roles = Roles.Admin)]
     [Route("api/admin")]
     [ApiController]
-    public class AdminStoreController : FocsController
+    public class StoreController : FocsController
     {
         private readonly IAdminStoreService _adminStoreService;
 
-        public AdminStoreController(IAdminStoreService storeService)
+        public StoreController(IAdminStoreService storeService)
         {
             _adminStoreService = storeService;
         }

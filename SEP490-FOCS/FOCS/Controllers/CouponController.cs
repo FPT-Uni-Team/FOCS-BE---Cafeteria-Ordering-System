@@ -7,32 +7,49 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
-    [Authorize(Roles = Roles.Admin)]
     [Route("api/admin")]
     [ApiController]
-    public class AdminCouponController : FocsController
+    public class CouponController : FocsController
     {
         private readonly IAdminCouponService _adminCouponService;
 
-        public AdminCouponController(IAdminCouponService adminCouponService)
+        public CouponController(IAdminCouponService adminCouponService)
         {
             _adminCouponService = adminCouponService;
         }
 
+        [Authorize]
+        [HttpGet("debug-token")]
+        public IActionResult Debug()
+        {
+            return Ok(User.Claims.Select(c => new { c.Type, c.Value }));
+        }
+
+        [Authorize(Roles = Roles.Admin)]
         [HttpPost("coupon")]
-        public async Task<IActionResult> CreateCoupon([FromBody] CouponAdminDTO dto, [FromQuery] string couponType)
+        public async Task<IActionResult> CreateCoupon([FromBody] CouponAdminDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var created = await _adminCouponService.CreateCouponAsync(dto, couponType, UserId);
+            var created = await _adminCouponService.CreateCouponAsync(dto, UserId);
             return Ok(created);
+        }
+
+        [HttpPost("{couponId}/set-condition")]
+        public async Task<IActionResult> SetConditionForCoupon(Guid couponId, [FromBody] SetCouponConditionRequest setCouponConditionRequest)
+        {
+            if(!ModelState.IsValid) return BadRequest(ModelState);
+
+            await _adminCouponService.SetCouponConditionAsync(couponId, setCouponConditionRequest);
+
+            return Ok();
         }
 
         [HttpPost("coupons")]
         public async Task<IActionResult> GetAllCoupons([FromBody] UrlQueryParameters query)
         {
-            var pagedResult = await _adminCouponService.GetAllCouponsAsync(query, UserId);
+            var pagedResult = await _adminCouponService.GetAllCouponsAsync(query, StoreId, UserId);
             return Ok(pagedResult);
         }
 

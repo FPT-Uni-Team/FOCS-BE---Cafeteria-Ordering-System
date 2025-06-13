@@ -3,11 +3,13 @@ using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
 using FOCS.Common.Enums;
+using FOCS.Common.Exceptions;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FOCS.Application.Services
 {
@@ -17,31 +19,32 @@ namespace FOCS.Application.Services
         private readonly IRepository<Promotion> _promotionRepository;
         private readonly IMapper _mapper;
 
-        public AdminCouponService(IRepository<Coupon> couponRepository, IRepository<Promotion> promotionRepository, IMapper mapper)
+        private readonly ILogger<Coupon> _logger;
+
+        public AdminCouponService(IRepository<Coupon> couponRepository, ILogger<Coupon> logger, IRepository<Promotion> promotionRepository, IMapper mapper)
         {
             _couponRepository = couponRepository;
+            _logger = logger;
             _promotionRepository = promotionRepository;
             _mapper = mapper;
         }
 
-        public async Task<CouponAdminDTO> CreateCouponAsync(CouponAdminDTO dto, string couponType, string userId)
+        public async Task<CouponAdminDTO> CreateCouponAsync(CouponAdminDTO dto, string userId)
         {
             // Check userId empty
             ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), AdminCoupon.UserIdEmpty);
-
-            couponType = couponType.ToLower();
             
             // Check coupon code type
-            ConditionCheck.CheckCondition(couponType == AdminCoupon.CouponCodeAuto 
-                                                     || couponType == AdminCoupon.CouponCodeManual, 
+            ConditionCheck.CheckCondition(dto.CouponType == CouponType.Manual 
+                                                     || dto.CouponType == CouponType.AutoGenerate, 
                                                         AdminCoupon.CheckCouponCodeType);
             
             // Type 'auto' => Generate unique code
-            string couponCode = couponType == AdminCoupon.CouponCodeAuto ? await GenerateUniqueCouponCodeAsync()
+            string couponCode = dto.CouponType == CouponType.AutoGenerate ? await GenerateUniqueCouponCodeAsync()
                                                                          : dto.Code?.Trim() ?? "";
             
             // Check manual code empty
-            ConditionCheck.CheckCondition(couponType != AdminCoupon.CouponCodeManual 
+            ConditionCheck.CheckCondition(dto.CouponType != CouponType.AutoGenerate 
                                                      || !string.IsNullOrWhiteSpace(couponCode), 
                                                         AdminCoupon.CheckCouponCodeForManual);
 
@@ -51,11 +54,24 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(!existing, AdminCoupon.CheckCreateUniqueCode);
 
             // Check dates
-            ConditionCheck.CheckCondition(dto.StartDate <= dto.EndDate, AdminCoupon.CheckCreateDate);
+            ConditionCheck.CheckCondition(dto.StartDate < dto.EndDate, AdminCoupon.CheckCreateDate);
 
             // Map DTO to entity
             var newCoupon = _mapper.Map<Coupon>(dto);
             newCoupon.Id = Guid.NewGuid();
+            
+            newCoupon.MinimumItemQuantity = dto.SetCouponConditionRequest.ConditionType switch
+            {
+                CouponConditionType.MinItemsQuantity => dto.SetCouponConditionRequest.Value,
+                _ => null
+            };
+
+            newCoupon.MinimumOrderAmount = dto.SetCouponConditionRequest.ConditionType switch
+            {
+                CouponConditionType.MinOrderAmount => dto.SetCouponConditionRequest.Value,
+                _ => null
+            };
+            
             newCoupon.Code = couponCode;
             newCoupon.IsDeleted = false;
             newCoupon.CreatedAt = DateTime.UtcNow;
@@ -65,6 +81,33 @@ namespace FOCS.Application.Services
             await _couponRepository.SaveChangesAsync();
 
             return _mapper.Map<CouponAdminDTO>(newCoupon);
+        }
+
+        public async Task SetCouponConditionAsync(Guid couponId, SetCouponConditionRequest setCouponConditionRequest)
+        {
+            var coupon = await _couponRepository.GetByIdAsync(couponId);
+            ConditionCheck.CheckCondition(coupon != null, FOCS.Common.Exceptions.Errors.Common.NotFound);
+
+            try
+            {
+                coupon.MinimumItemQuantity = setCouponConditionRequest.ConditionType switch
+                {
+                    CouponConditionType.MinItemsQuantity => setCouponConditionRequest.Value,
+                    _ => null
+                };
+
+                coupon.MinimumOrderAmount = setCouponConditionRequest.ConditionType switch
+                {
+                    CouponConditionType.MinOrderAmount => setCouponConditionRequest.Value,
+                    _ => null
+                };
+
+                _couponRepository.Update(coupon);
+                await _couponRepository.SaveChangesAsync();
+            } catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+            }
         }
 
         private async Task<string> GenerateUniqueCouponCodeAsync()
@@ -88,12 +131,13 @@ namespace FOCS.Application.Services
             return newCode;
         }
 
-        public async Task<PagedResult<CouponAdminDTO>> GetAllCouponsAsync(UrlQueryParameters query, string userId)
+        public async Task<PagedResult<CouponAdminDTO>> GetAllCouponsAsync(UrlQueryParameters query, string storeId, string userId)
         {
             // Check userId is valid
             ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), AdminCoupon.UserIdEmpty);
+            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(storeId), Errors.Common.StoreNotFound);
 
-            var couponQuery = _couponRepository.AsQueryable().Include(x => x.Store).Where(c => !c.IsDeleted && c.Store.CreatedBy.Equals(userId));
+            var couponQuery = _couponRepository.AsQueryable().Where(c => !c.IsDeleted && c.StoreId == Guid.Parse(storeId));
 
             // Search
             if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))
