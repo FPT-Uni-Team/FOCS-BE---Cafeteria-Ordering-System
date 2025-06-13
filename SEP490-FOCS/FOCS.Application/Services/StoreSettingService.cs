@@ -19,11 +19,14 @@ namespace FOCS.Application.Services
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
 
-        public StoreSettingService(IRepository<StoreSetting> storeSettingRepository, UserManager<User> userManager, IMapper mapper)
+        private readonly IRepository<UserStore> _userStoreRepository;
+
+        public StoreSettingService(IRepository<StoreSetting> storeSettingRepository, IRepository<UserStore> userStoreRepo, UserManager<User> userManager, IMapper mapper)
         {
             _storeSettingRepository = storeSettingRepository;
             _userManager = userManager;
             _mapper = mapper;
+            _userStoreRepository = userStoreRepo;
         }
 
         public async Task<StoreSettingDTO> GetStoreSettingAsync(Guid storeId, string userId)
@@ -97,8 +100,11 @@ namespace FOCS.Application.Services
         private async Task ValidateUser(string userId, Guid storeId)
         {
             var user = await _userManager.FindByIdAsync(userId);
+
+            var storesOfUser = (await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(userId))).Distinct().ToList();
+
             ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
-            ConditionCheck.CheckCondition(user.StoreId == storeId, Errors.AuthError.UserUnauthor);
+            ConditionCheck.CheckCondition(storesOfUser.Select(x => x.StoreId).Contains(storeId), Errors.AuthError.UserUnauthor);
         }
 
         #endregion

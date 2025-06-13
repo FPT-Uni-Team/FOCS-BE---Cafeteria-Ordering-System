@@ -21,6 +21,7 @@ using Microsoft.Extensions.Logging;
 using FOCS.Common.Utils;
 using Newtonsoft.Json.Linq;
 using FOCS.Order.Infrastucture.Entities;
+using System.Net.Http.Headers;
 
 namespace FOCS.Application.Services
 {
@@ -36,9 +37,11 @@ namespace FOCS.Application.Services
         private readonly IRepository<Store> _storeRepository;
         private readonly ILogger<AuthService> _logger;
 
+        private readonly IRepository<UserStore> _userStoreRepository;
+
         public AuthService(UserManager<User> userManager, SignInManager<User> signInManager,
             IConfiguration config, IMapper mapper, IEmailService emailService, ITokenService tokenService,
-            IRepository<UserRefreshToken> userRepo, IRepository<Store> storeRepository, ILogger<AuthService> logger)
+            IRepository<UserRefreshToken> userRepo, IRepository<Store> storeRepository, ILogger<AuthService> logger, IRepository<UserStore> userStoreRepository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -49,6 +52,7 @@ namespace FOCS.Application.Services
             _userRefreshTokenRepository = userRepo;
             _storeRepository = storeRepository;
             _logger = logger;
+            _userStoreRepository = userStoreRepository;
         }
 
         public async Task<bool> ConfirmEmailAsync(string email, string token)
@@ -74,7 +78,7 @@ namespace FOCS.Application.Services
             return await _emailService.SendPasswordResetLinkAsync(email, resetToken);
         }
 
-        public async Task<AuthResult> LoginAsync(LoginRequest request)
+        public async Task<AuthResult> LoginAsync(LoginRequest request, Guid storeId)
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
 
@@ -107,6 +111,28 @@ namespace FOCS.Application.Services
                     IsSuccess = false,
                     Errors = new List<string>() { Errors.AuthError.NotVerifyAccount }
                 };
+            }
+
+            var userStores = await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(user.Id));
+            if(!userStores.Any(x => x.UserId == Guid.Parse(user.Id) && x.StoreId == storeId))
+            {
+                var newUserStore = new UserStoreDTO
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = Guid.Parse(user.Id),
+                    StoreId = storeId,
+                    BlockReason = null,
+                    JoinDate = DateTime.UtcNow,
+                    Status = Common.Enums.UserStoreStatus.Active
+                };
+                try
+                {
+                    await _userStoreRepository.AddAsync(_mapper.Map<UserStore>(newUserStore));
+                    await _userStoreRepository.SaveChangesAsync();
+                } catch(Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
             }
 
             return await GenerateAuthResult(user);
@@ -166,8 +192,7 @@ namespace FOCS.Application.Services
                 FirstName = request.Firstname,
                 LastName = request.Lastname,
                 UserName = request.Email,
-                PhoneNumber = request.Phone,
-                StoreId = Guid.Parse(request.StoreId)
+                PhoneNumber = request.Phone
             };
 
             var result = await _userManager.CreateAsync(user, request.Password);
@@ -219,15 +244,16 @@ namespace FOCS.Application.Services
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
 
             var roles = await _userManager.GetRolesAsync(user);
-            var role = roles.FirstOrDefault() ?? "User";
 
-            var claims = new List<Claim>
+            var userStore = (await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(user.Id))).Distinct().ToList();
+
+            var claims = new List<Claim>();
+
+            claims.AddRange(new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, role),
-                new Claim("StoreId", user.StoreId.ToString()),
-            };
+                new Claim(ClaimTypes.Email, user.Email)
+            }.Concat(roles.Select(role => new Claim(ClaimTypes.Role, role))).Concat(userStore.Select(store => new Claim("StoreId", store.StoreId.ToString()))));
 
             var accessToken = _tokenService.GenerateAccessToken(claims);
             var refreshToken = _tokenService.GenerateRefreshToken();

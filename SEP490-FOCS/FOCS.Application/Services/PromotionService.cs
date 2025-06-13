@@ -18,6 +18,8 @@ namespace FOCS.Application.Services
         private readonly IRepository<Promotion> _promotionRepository;
         private readonly IRepository<Coupon> _couponRepository;
 
+        private readonly IRepository<UserStore> _userStoreRepository;
+
         private readonly IRepository<CouponUsage> _couponUsageRepository;
         private readonly IRepository<PromotionItemCondition> _promotionItemConditionRepository;
         private readonly IRepository<Store> _storeRepository;
@@ -32,7 +34,8 @@ namespace FOCS.Application.Services
             IRepository<Coupon> couponRepository,
             IRepository<CouponUsage> couponUsageRepository,
             UserManager<User> userManager,
-            IMapper mapper)
+            IMapper mapper,
+            IRepository<UserStore> userStoreRepository)
         {
             _promotionRepository = promotionRepository;
             _promotionItemConditionRepository = promotionItemConditionRepository;
@@ -42,6 +45,7 @@ namespace FOCS.Application.Services
             _couponUsageRepository = couponUsageRepository;
             _userManager = userManager;
             _mapper = mapper;
+            _userStoreRepository = userStoreRepository;
         }
 
         public async Task<PromotionDTO> CreatePromotionAsync(PromotionDTO dto, string userId)
@@ -203,8 +207,11 @@ namespace FOCS.Application.Services
         private async Task ValidateUser(string userId, Guid storeId)
         {
             var user = await _userManager.FindByIdAsync(userId);
+
+            var storesOfUser = (await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(userId))).Distinct().ToList();
+
             ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
-            ConditionCheck.CheckCondition(user.StoreId == storeId, Errors.AuthError.UserUnauthor);
+            ConditionCheck.CheckCondition(storesOfUser.Select(x => x.StoreId).Contains(storeId), Errors.AuthError.UserUnauthor);
         }
 
         private async Task ValidatePromotionDto(PromotionDTO dto)
