@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FOCS.Application.DTOs;
 using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Identity.Model;
@@ -35,6 +36,9 @@ namespace FOCS.Application.Mappings
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
             // Admin Mappings for Store
             CreateMap<Coupon, CouponAdminDTO>().ReverseMap()
+                .ForMember(dest => dest.Id, opt => opt.Ignore());
+            // Mappings for Table
+            CreateMap<Table, TableDTO>().ReverseMap()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
 
             CreateMap<Brand, CreateAdminBrandRequest>().ReverseMap()
