@@ -17,5 +17,7 @@ namespace FOCS.Infrastructure.Identity.Identity.Model
         public DateTime? UpdatedAt { get; set; }
         public string? UpdatedBy { get; set; }
 
+        public bool IsDeleted { get; set; }
+        public bool IsActive { get; set; }
     }
 }

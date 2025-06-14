@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FOCS.Application.DTOs;
 using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Identity.Model;
@@ -51,6 +52,8 @@ namespace FOCS.Application.Mappings
             CreateMap<MenuCategory, UpdateCategoryRequest>().ReverseMap();
 
             CreateMap<UserStore, UserStoreDTO>().ReverseMap();
+
+            CreateMap<User, UserProfileDTO>().ReverseMap();
 
         }
     }
