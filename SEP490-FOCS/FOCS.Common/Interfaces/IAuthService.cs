@@ -12,7 +12,7 @@ namespace FOCS.Common.Interfaces
     {
         Task<bool> RegisterAsync(RegisterRequest request);
         Task<AuthResult> LoginAsync(LoginRequest request, Guid StoreId);
-        Task<AuthResult> RefreshTokenAsync(string refreshToken);
+        Task<AuthResult> RefreshTokenAsync(string refreshToken, Guid storeId);
         Task LogoutAsync(string userId);
         Task<bool> ConfirmEmailAsync(string email, string token);
         Task<bool> ForgotPasswordAsync(string email);
