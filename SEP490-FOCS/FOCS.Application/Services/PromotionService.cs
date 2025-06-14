@@ -71,7 +71,7 @@ namespace FOCS.Application.Services
         public async Task<PagedResult<PromotionDTO>> GetPromotionsByStoreAsync(UrlQueryParameters query, Guid storeId, string userId)
         {
             await ValidateUser(userId, storeId);
-            var promotionQuery = _promotionRepository.AsQueryable()
+            var promotionQuery = _promotionRepository.AsQueryable().Include(x => x.PromotionItemConditions)
                 .Where(p => p.StoreId == storeId && !p.IsDeleted);
 
             promotionQuery = ApplyFilters(promotionQuery, query);

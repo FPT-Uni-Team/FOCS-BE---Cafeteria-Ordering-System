@@ -135,7 +135,7 @@ namespace FOCS.Application.Services
                 }
             }
 
-            return await GenerateAuthResult(user);
+            return await GenerateAuthResult(user, storeId);
 
         }
 
@@ -151,7 +151,7 @@ namespace FOCS.Application.Services
             await _userRefreshTokenRepository.SaveChangesAsync();
         }
 
-        public async Task<AuthResult> RefreshTokenAsync(string refreshToken)
+        public async Task<AuthResult> RefreshTokenAsync(string refreshToken, Guid storeId)
         {
             var tokenEntity = (await _userRefreshTokenRepository.FindAsync(x => x.Token == refreshToken && !x.IsRevoked)).FirstOrDefault();
 
@@ -178,7 +178,7 @@ namespace FOCS.Application.Services
             tokenEntity.IsRevoked = true;
             await _userRefreshTokenRepository.SaveChangesAsync();
 
-            return await GenerateAuthResult(user);
+            return await GenerateAuthResult(user, storeId);
         }
 
         public async Task<bool> RegisterAsync(RegisterRequest request)
@@ -238,22 +238,21 @@ namespace FOCS.Application.Services
         }
 
         #region private method
-        private async Task<AuthResult> GenerateAuthResult(User user)
+        private async Task<AuthResult> GenerateAuthResult(User user, Guid storeId)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            var userStore = (await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(user.Id))).Distinct().ToList();
-
             var claims = new List<Claim>();
 
             claims.AddRange(new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email)
-            }.Concat(roles.Select(role => new Claim(ClaimTypes.Role, role))).Concat(userStore.Select(store => new Claim("StoreId", store.StoreId.ToString()))));
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("StoreId", storeId.ToString())
+            }.Concat(roles.Select(role => new Claim(ClaimTypes.Role, role))));
 
             var accessToken = _tokenService.GenerateAccessToken(claims);
             var refreshToken = _tokenService.GenerateRefreshToken();

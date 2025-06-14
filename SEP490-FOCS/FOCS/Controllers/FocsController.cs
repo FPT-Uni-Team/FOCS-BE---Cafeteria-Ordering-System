@@ -27,7 +27,8 @@ namespace FOCS.Controllers
                 if (string.IsNullOrWhiteSpace(storeId))
                 {
                     // Optional: Log the issue here or throw a custom exception
-                    throw new InvalidOperationException("StoreId header is missing.");
+                    //throw new InvalidOperationException("StoreId header is missing.");
+                    Console.WriteLine("StoreId header is missing");
                 }
                 return storeId;
             }

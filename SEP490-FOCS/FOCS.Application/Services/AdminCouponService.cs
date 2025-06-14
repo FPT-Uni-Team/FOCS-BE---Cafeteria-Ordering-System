@@ -131,13 +131,13 @@ namespace FOCS.Application.Services
             return newCode;
         }
 
-        public async Task<PagedResult<CouponAdminDTO>> GetAllCouponsAsync(UrlQueryParameters query, string storeId, string userId)
+        public async Task<PagedResult<CouponAdminDTO>> GetAllCouponsAsync(UrlQueryParameters query, Guid storeId, string userId)
         {
             // Check userId is valid
             ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), AdminCoupon.UserIdEmpty);
-            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(storeId), Errors.Common.StoreNotFound);
+            ConditionCheck.CheckCondition(storeId != null, Errors.Common.StoreNotFound);
 
-            var couponQuery = _couponRepository.AsQueryable().Where(c => !c.IsDeleted && c.StoreId == Guid.Parse(storeId));
+            var couponQuery = _couponRepository.AsQueryable().Where(c => !c.IsDeleted && c.StoreId == storeId);
 
             // Search
             if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))
