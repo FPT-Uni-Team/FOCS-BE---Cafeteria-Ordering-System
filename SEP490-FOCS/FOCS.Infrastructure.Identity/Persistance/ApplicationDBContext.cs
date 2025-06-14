@@ -21,7 +21,9 @@ namespace FOCS.Infrastructure.Identity.Persistance
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>().ToTable("Users");
+            modelBuilder.Entity<User>().ToTable("Users")
+                        .HasQueryFilter(u => !u.IsDeleted)
+                        .HasIndex("NormalizedUserName").IsUnique(false);
             modelBuilder.Entity<IdentityRole>().ToTable("Roles");
             modelBuilder.Entity<IdentityRoleClaim<string>>().ToTable("RoleClaims");
             modelBuilder.Entity<IdentityUserClaim<string>>().ToTable("UserClaims");
