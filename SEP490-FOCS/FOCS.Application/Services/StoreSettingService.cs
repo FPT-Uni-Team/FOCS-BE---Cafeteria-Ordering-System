@@ -31,7 +31,7 @@ namespace FOCS.Application.Services
 
         public async Task<StoreSettingDTO> GetStoreSettingAsync(Guid storeId, string userId)
         {
-            await ValidateUser(userId, storeId);
+            //await ValidateUser(userId, storeId);
             var storeSetting = await _storeSettingRepository.AsQueryable()
                 .Where(s => s.StoreId.Equals(storeId) && s.IsDeleted == false).FirstOrDefaultAsync();
             ConditionCheck.CheckCondition(storeSetting != null, Errors.StoreSetting.StoreSettingNotFound);
@@ -41,7 +41,7 @@ namespace FOCS.Application.Services
 
         public async Task<StoreSettingDTO> CreateStoreSettingAsync(Guid storeId, StoreSettingDTO dto, string userId)
         {
-            await ValidateUser(userId, storeId);
+            //await ValidateUser(userId, storeId);
             var storeSetting = await _storeSettingRepository.AsQueryable()
                 .Where(s => s.StoreId.Equals(storeId) && s.IsDeleted == false).FirstOrDefaultAsync();
             ConditionCheck.CheckCondition(storeSetting == null, Errors.StoreSetting.SettingExist);
@@ -60,7 +60,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> UpdateStoreSettingAsync(Guid storeId, StoreSettingDTO dto, string userId)
         {
-            await ValidateUser(userId, storeId);
+            //await ValidateUser(userId, storeId);
             var storeSetting = await _storeSettingRepository.AsQueryable()
                 .Where(s => s.StoreId.Equals(storeId) && s.IsDeleted == false).FirstOrDefaultAsync();
             if (storeSetting == null || storeSetting.IsDeleted)

@@ -15,6 +15,8 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public string OrderCode { get; set; } = null!;
 
+        public Guid? UserId { get; set; }
+
         public OrderStatus OrderStatus { get; set; }
 
         public OrderType OrderType {  get; set; }
@@ -28,9 +30,9 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public string CustomerNote { get; set; }
 
-        public DateTime? CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; } = DateTime.Now;
         public string? CreatedBy { get; set; }
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; } = DateTime.Now;
         public string? UpdatedBy { get; set; }
 
         //Store

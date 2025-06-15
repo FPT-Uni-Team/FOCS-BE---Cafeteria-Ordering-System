@@ -58,6 +58,10 @@ namespace FOCS.Application.Mappings
 
             CreateMap<User, UserProfileDTO>().ReverseMap();
 
+
+            // Order mapping
+            CreateMap<OrderDTO, Order.Infrastucture.Entities.Order>().ReverseMap();
+            CreateMap<OrderDetailDTO, OrderDetail>().ReverseMap();
         }
     }
 }

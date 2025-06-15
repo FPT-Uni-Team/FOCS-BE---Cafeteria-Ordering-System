@@ -24,10 +24,12 @@ namespace FOCS.Controllers
             _orderService = orderService;
         }
 
-        [HttpPost("order/guest")]
-        public async Task<DiscountResultDTO> CreateOrderAsGuest([FromBody] CreateOrderRequest request)
+        [HttpPost("order")]
+        public async Task<DiscountResultDTO> CreateOrderAsync([FromBody] CreateOrderRequest request)
         {
-            return await _orderService.CreateOrderAsGuestAsync(request, UserId);
+            var test = Email;
+            var user = User;
+            return await _orderService.CreateOrderAsync(request, UserId);
         }
     }
 }

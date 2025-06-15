@@ -1,5 +1,7 @@
-﻿using Azure.Core;
+﻿using AutoMapper;
+using Azure.Core;
 using FOCS.Application.Services.Interface;
+using FOCS.Common.Constants;
 using FOCS.Common.Enums;
 using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
@@ -7,6 +9,8 @@ using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Crypto.Modes.Gcm;
 using Org.BouncyCastle.Utilities.Collections;
@@ -36,6 +40,7 @@ namespace FOCS.Application.Services
         private readonly IStoreSettingService _storeSettingService;
 
         private readonly ILogger<string> _logger;
+        private readonly IMapper _mapper;
 
         public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository, 
                             ILogger<string> logger, 
@@ -48,7 +53,8 @@ namespace FOCS.Application.Services
                             IRepository<Store> storeRepository, 
                             IRepository<MenuItem> menuRepository, 
                             IRepository<MenuItemVariant> variantRepository, 
-                            IPromotionService promotionService)
+                            IPromotionService promotionService,
+                            IMapper mapper)
         {
             _orderRepository = orderRepository;
             _logger = logger;
@@ -62,9 +68,10 @@ namespace FOCS.Application.Services
             _variantRepository = variantRepository;
             _promotionService = promotionService;
             _tableRepository = tableRepo;
+            _mapper = mapper;
         }
 
-        public async Task<DiscountResultDTO> CreateOrderAsGuestAsync(CreateOrderRequest order, string userId)
+        public async Task<DiscountResultDTO> CreateOrderAsync(CreateOrderRequest order, string userId)
         {
             var store = await _storeRepository.GetByIdAsync(order.StoreId);
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
@@ -82,7 +89,7 @@ namespace FOCS.Application.Services
             await _promotionService.IsValidPromotionCouponAsync(order.CouponCode, userId, order.StoreId);
 
             // Pricing
-            ConditionCheck.CheckCondition(storeSettings.DiscountStrategy.Equals(null), Errors.StoreSetting.DiscountStrategyNotConfig);
+            ConditionCheck.CheckCondition(!storeSettings!.DiscountStrategy.Equals(null), Errors.StoreSetting.DiscountStrategyNotConfig);
             var discountResult = await _discountContext.CalculateDiscountAsync(order, order.CouponCode, (DiscountStrategy)storeSettings.DiscountStrategy);
             
             //save order and order detail
@@ -91,43 +98,28 @@ namespace FOCS.Application.Services
             return discountResult;
         }
 
-        public Task<DiscountResultDTO> ApplyCouponAsync(Guid userId, string couponCode, Guid storeId)
+        public async Task<OrderDTO> GetOrderByCodeAsync(string orderCode)
+        {
+            var orderByCode = await _orderRepository.AsQueryable().Include(x => x.OrderDetails).FirstOrDefaultAsync(x => x.OrderCode == orderCode);
+
+            return orderCode == null ? new OrderDTO { } : _mapper.Map<OrderDTO>(orderByCode);
+        }
+
+        public Task<List<OrderDTO>> GetPendingOrdersAsync()
         {
             throw new NotImplementedException();
         }
 
-        public Task<OrderResultDTO> CreateOrderAsync(Guid userId, CreateOrderDTO dto)
+        public async Task<OrderDTO> GetUserOrderDetailAsync(Guid userId, Guid orderId)
         {
-            throw new NotImplementedException();
-        }
+            var orderByUser = await _orderRepository.AsQueryable().Include(x => x.OrderDetails).FirstOrDefaultAsync(x => x.UserId == userId && x.Id == orderId);
 
-        public Task<OrderDetailDTO> GetOrderByCodeAsync(string orderCode)
-        {
-            throw new NotImplementedException();
-        }
+            ConditionCheck.CheckCondition(orderByUser != null, Errors.Common.NotFound);
 
-        public async Task<List<OrderDTO>> GetPendingOrdersAsync()
-        {
-            //var ordersPending = await _orderRepository.FindAsync(x => x.OrderStatus == Common.Enums.OrderStatus.Pending)
-            return null;
-        }
-
-        public Task<OrderDetailDTO> GetUserOrderDetailAsync(Guid userId, Guid orderId)
-        {
-            throw new NotImplementedException();
+            return _mapper.Map<OrderDTO>(orderByUser);
         }
 
         public Task<IEnumerable<OrderSummaryDTO>> GetUserOrdersAsync(Guid userId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task SubmitFeedbackAsGuestAsync(OrderFeedbackDTO dto)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task SubmitFeedbackAsync(Guid userId, OrderFeedbackDTO dto)
         {
             throw new NotImplementedException();
         }
@@ -161,6 +153,7 @@ namespace FOCS.Application.Services
                 {
                     Id = Guid.NewGuid(),
                     OrderCode = "ORD" + randomNum.Next(1000, 9999),
+                    UserId = string.IsNullOrEmpty(userId) ? null : Guid.Parse(userId),
                     OrderStatus = OrderStatus.Pending,
                     OrderType = order.OrderType,
                     SubTotalAmout = (double)(discountResult.TotalPrice + discountResult.TotalDiscount),
@@ -179,25 +172,36 @@ namespace FOCS.Application.Services
                 };
 
                 var ordersDetailCreate = new List<OrderDetail>();
-                foreach (var item in discountResult.ItemDiscountDetails)
+                if(discountResult.ItemDiscountDetails != null)
                 {
-                    var itemCodes = item.ItemCode.Split("_");
-                    var productId = Guid.Parse(itemCodes[0]);
-                    var variantId = Guid.Parse(itemCodes[1]);
-
-                    var price = await _pricingService.GetPriceByProduct(productId, variantId, order.StoreId);
-                    var unitPrice = (double)(price.ProductPrice + price.VariantPrice);
-
-                    ordersDetailCreate.Add(new OrderDetail
+                    foreach (var item in discountResult.ItemDiscountDetails)
                     {
-                        Id = Guid.NewGuid(),
-                        Quantity = item.Quantity,
-                        UnitPrice = unitPrice,
-                        TotalPrice = unitPrice - (double)item.DiscountAmount,
-                        Note = "",
-                        Variants = item.ItemCode,
-                        OrderId = orderCreate.Id
-                    });
+                        var itemCodes = item.ItemCode?.Split("_");
+                        if (itemCodes == null || itemCodes.Length == 0)
+                            continue;
+
+                        var productId = Guid.Parse(itemCodes[0]);
+
+                        Guid? variantId = null;
+                        if (itemCodes.Length > 1 && Guid.TryParse(itemCodes[1], out var parsedVariantId))
+                        {
+                            variantId = parsedVariantId;
+                        }
+
+                        var price = await _pricingService.GetPriceByProduct(productId, variantId, order.StoreId);
+                        var unitPrice = (double)(price.ProductPrice + price.VariantPrice);
+
+                        ordersDetailCreate.Add(new OrderDetail
+                        {
+                            Id = Guid.NewGuid(),
+                            Quantity = item.Quantity,
+                            UnitPrice = unitPrice,
+                            TotalPrice = unitPrice - (double)item.DiscountAmount,
+                            Note = "",
+                            Variants = item.ItemCode,
+                            OrderId = orderCreate.Id
+                        });
+                    }
                 }
 
                 await _orderRepository.AddAsync(orderCreate);

@@ -175,16 +175,17 @@ namespace FOCS.Application.Services
             //Check coupon eligible
             ConditionCheck.CheckCondition(!string.IsNullOrWhiteSpace(couponCode), Errors.Common.Empty);
 
-            var couponList = await _couponRepository.FindAsync(x => x.Code == couponCode && x.StoreId == storeId);
-            ConditionCheck.CheckCondition(couponList.Any(), Errors.PromotionError.CouponNotFound);
-
-            var coupon = couponList.First();
+            var coupon = await _couponRepository.AsQueryable().FirstOrDefaultAsync(x => x.Code == couponCode && x.StoreId == storeId);
+            ConditionCheck.CheckCondition(coupon != null, Errors.PromotionError.CouponNotFound);
 
             ConditionCheck.CheckCondition(coupon.CountUsed < coupon.MaxUsage, Errors.PromotionError.CouponMaxUsed);
 
             //Validate max use per user
-            //var couponUsageTime = await _couponUsageRepository.FindAsync(x => x.UserId == Guid.Parse(userId) && x.CouponId == Guid.Parse(couponCode));
-            //ConditionCheck.CheckCondition(couponUsageTime.Count() <= coupon.MaxUsagePerUser, Errors.PromotionError.CouponMaxUsed);
+            if (!string.IsNullOrWhiteSpace(userId))
+            {
+                var couponUsageTime = await _couponUsageRepository.FindAsync(x => x.UserId == Guid.Parse(userId) && x.CouponId == coupon.Id);
+                ConditionCheck.CheckCondition(couponUsageTime.Count() <= coupon.MaxUsagePerUser, Errors.PromotionError.CouponMaxUsed);
+            }
 
             var currentDate = DateTime.Now;
             ConditionCheck.CheckCondition(currentDate >= coupon.StartDate && currentDate <= coupon.EndDate, Errors.PromotionError.InvalidPeriodDatetime);

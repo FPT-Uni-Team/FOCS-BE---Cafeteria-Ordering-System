@@ -13,26 +13,19 @@ namespace FOCS.Common.Interfaces
 
         #region guest
 
-        Task<DiscountResultDTO> CreateOrderAsGuestAsync(CreateOrderRequest dto, string userId);
+        Task<DiscountResultDTO> CreateOrderAsync(CreateOrderRequest dto, string userId);
 
-        Task<OrderDetailDTO> GetOrderByCodeAsync(string orderCode);
+        Task<OrderDTO> GetOrderByCodeAsync(string orderCode);
 
         Task<DiscountResultDTO> VerifyCouponAsGuestAsync(string couponCode, Guid storeId);
-
-        Task SubmitFeedbackAsGuestAsync(OrderFeedbackDTO dto);
 
         #endregion
 
         #region user
-        Task<OrderResultDTO> CreateOrderAsync(Guid userId, CreateOrderDTO dto);
 
         Task<IEnumerable<OrderSummaryDTO>> GetUserOrdersAsync(Guid userId);
 
-        Task<OrderDetailDTO> GetUserOrderDetailAsync(Guid userId, Guid orderId);
-
-        Task<DiscountResultDTO> ApplyCouponAsync(Guid userId, string couponCode, Guid storeId);
-
-        Task SubmitFeedbackAsync(Guid userId, OrderFeedbackDTO dto);
+        Task<OrderDTO> GetUserOrderDetailAsync(Guid userId, Guid orderId);
 
         #endregion
     }

@@ -1,4 +1,5 @@
 ﻿using FOCS.Application.Services.Interface;
+using FOCS.Common.Constants;
 using FOCS.Common.Enums;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
@@ -73,14 +74,21 @@ namespace FOCS.Application.Services.ApplyStrategy
                 result.TotalDiscount = (decimal)discountAmount;
                 result.TotalPrice -= result.TotalDiscount;
 
-                result.ItemDiscountDetails.Add(new DiscountItemDetail
+                foreach (var item in order.Items)
                 {
-                    DiscountAmount = (decimal)discountAmount,
-                    ItemCode = coupon.Id.ToString(),
-                    ItemName = "Entire Order",
-                    Quantity = 1,
-                    Source = "Coupon_OrderLevel"
-                });
+                    var itemCode = item.VariantId != null
+                        ? $"{item.MenuItemId}_{item.VariantId}"
+                        : $"{item.MenuItemId}";
+
+                    result.ItemDiscountDetails.Add(new DiscountItemDetail
+                    {
+                        DiscountAmount = 0,
+                        ItemCode = itemCode,
+                        ItemName = $"{item.MenuItemId}", 
+                        Quantity = item.Quantity,
+                        Source = CouponConstants.Coupon_MinimumOrderAmount.ToString()
+                    });
+                }
 
                 return result;
             }

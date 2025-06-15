@@ -48,6 +48,10 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         [JsonPropertyName("is_active")]
         public bool IsActive { get; set; }
 
+        [JsonPropertyName("store_id")]
+        [JsonIgnore]
+        public string? StoreId { get; set; }
+
         [JsonPropertyName("promotion_id")]
         public Guid? PromotionId { get; set; }
     }
