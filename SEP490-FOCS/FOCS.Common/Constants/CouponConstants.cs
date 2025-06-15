@@ -9,5 +9,6 @@ namespace FOCS.Common.Constants
     public static class CouponConstants
     {
         public static string Coupon_MinimumOrderAmount = "Coupon_MinimumOrderAmount";
+        public static string PromotionOnly_NotEligible = "PromotionOnly_NotEligible";
     }
 }

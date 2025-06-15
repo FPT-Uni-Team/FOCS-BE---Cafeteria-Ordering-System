@@ -1,4 +1,5 @@
 ﻿using FOCS.Application.Services.Interface;
+using FOCS.Common.Constants;
 using FOCS.Common.Enums;
 using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
@@ -40,7 +41,40 @@ namespace FOCS.Application.Services.ApplyStrategy
                 .Include(x => x.Coupons)
                 .FirstOrDefaultAsync(x => x.Coupons.Any(c => c.Code == couponCode));
 
-            ConditionCheck.CheckCondition(promotion != null, Errors.PromotionError.PromotionNotFound);
+            //ConditionCheck.CheckCondition(promotion != null, Errors.PromotionError.PromotionNotFound);
+            if (promotion == null)
+            {
+                var resultNotApply = new DiscountResultDTO
+                {
+                    AppliedCouponCode = null,
+                    AppliedPromotions = null,
+                    Messages = null,
+                    TotalDiscount = 0,
+                    TotalPrice = 0,
+                    ItemDiscountDetails = new List<DiscountItemDetail>()
+                };
+
+                foreach (var item in order.Items)
+                {
+                    var pricing = await _pricingService.GetPriceByProduct(item.MenuItemId, item.VariantId, order.StoreId);
+                    double itemPrice = (double)(pricing.ProductPrice) + (double)(pricing.VariantPrice ?? 0);
+                    double totalItemPrice = itemPrice * item.Quantity;
+
+                    resultNotApply.TotalPrice += (decimal)totalItemPrice;
+
+                    resultNotApply.ItemDiscountDetails.Add(new DiscountItemDetail
+                    {
+                        ItemCode = $"{item.MenuItemId}_{item.VariantId}",
+                        ItemName = $"{item.MenuItemId}",
+                        DiscountAmount = 0,
+                        Quantity = item.Quantity,
+                        Source = CouponConstants.PromotionOnly_NotEligible
+                    });
+                }
+
+                return resultNotApply;
+            }
+
 
             var result = new DiscountResultDTO
             {
@@ -51,6 +85,18 @@ namespace FOCS.Application.Services.ApplyStrategy
             var acceptItemIds = promotion.AcceptForItems;
 
             double totalDiscount = 0;
+
+            result.TotalPrice = 0;
+
+            foreach (var item in order.Items)
+            {
+                var pricing = await _pricingService.GetPriceByProduct(item.MenuItemId, item.VariantId, order.StoreId);
+                double itemPrice = (double)(pricing.ProductPrice) + (double)(pricing.VariantPrice ?? 0);
+                double totalItemPrice = itemPrice * item.Quantity;
+
+                result.TotalPrice += (decimal)totalItemPrice;
+            }
+
 
             foreach (var itemOrder in order.Items)
             {
