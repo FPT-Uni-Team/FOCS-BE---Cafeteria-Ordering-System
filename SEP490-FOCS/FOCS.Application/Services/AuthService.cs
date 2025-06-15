@@ -241,7 +241,7 @@ namespace FOCS.Application.Services
         private async Task<AuthResult> GenerateAuthResult(User user, Guid storeId)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]!);
 
             var roles = await _userManager.GetRolesAsync(user);
 

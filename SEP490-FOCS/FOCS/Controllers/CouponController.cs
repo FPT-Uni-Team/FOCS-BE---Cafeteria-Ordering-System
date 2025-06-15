@@ -31,7 +31,7 @@ namespace FOCS.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-
+            dto.StoreId = StoreId;
             var created = await _adminCouponService.CreateCouponAsync(dto, UserId);
             return Ok(created);
         }

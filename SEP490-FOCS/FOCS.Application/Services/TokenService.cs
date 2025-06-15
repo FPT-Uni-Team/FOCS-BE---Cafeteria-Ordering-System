@@ -35,7 +35,6 @@ namespace FOCS.Application.Services
                 );
 
             return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
-
         }
 
         public string GenerateRefreshToken()
