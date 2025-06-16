@@ -82,6 +82,8 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<PromotionOnlyStrategy>()
                 .AddScoped<IDiscountStrategyService, CouponOnlyStrategy>()
                 .AddScoped<IDiscountStrategyService, PromotionOnlyStrategy>()
+                .AddScoped<ICartService, CartService>()
+                .AddScoped<IRepository<CartItem>, Repository<CartItem, OrderDbContext>>()
                 .AddScoped<IRepository<CouponUsage>, Repository<CouponUsage, OrderDbContext>>()
                 .AddScoped<IRepository<Coupon>, Repository<Coupon, OrderDbContext>>()
                 .AddScoped<IRepository<Promotion>, Repository<Promotion, OrderDbContext>>()
@@ -90,6 +92,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddSingleton<IRedisCacheService>(sp => new RedisCacheService("localhost:6379"));
 ;
 //builder.Services.AddHostedService<OrderBatchingService>();
+//builder.Services.AddHostedService<CartFlushBackgroundService>();
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(
@@ -217,6 +220,7 @@ app.UseCors("AllowFrontend");
 
 //SignalR
 app.MapHub<OrderHub>("/orderHubs");
+app.MapHub<CartHub>("/cartHubs");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

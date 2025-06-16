@@ -19,6 +19,16 @@ namespace FOCS.Application.Services
             _database = redis.GetDatabase();
         }
 
+        public async Task<List<string>> GetKeysByPatternAsync(string pattern)
+        {
+            var endpoints = _database.Multiplexer.GetEndPoints();
+            var server = _database.Multiplexer.GetServer(endpoints.First());
+
+            var keys = server.Keys(pattern: pattern).ToList();
+            return keys.Select(k => k.ToString()).ToList();
+        }
+
+
         public async Task<bool> ExistsAsync(string key)
         {
             return await _database.KeyExistsAsync(key);

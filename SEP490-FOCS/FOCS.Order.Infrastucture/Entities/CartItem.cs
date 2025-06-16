@@ -12,16 +12,19 @@ namespace FOCS.Order.Infrastucture.Entities
     {
         public int Id { get; set; }
         
+        public Guid? UserId { get; set; }
+        public Guid? GuestId { get; set; }
+
         public Guid MenuItemId { get; set; }
         public MenuItem MenuItem { get; set; }
 
-        public CartStatus CartStatus { get; set; }
+        public CartStatus CartStatus { get; set; } = CartStatus.Pending;
 
-        public Guid MenuItemVariantId { get; set; }
-        public MenuItemVariant Variant { get; set; }
+        public Guid? VariantId { get; set; }
+        public MenuItemVariant? Variant { get; set; }
 
-        public Guid TableId { get; set; }
-        public Table Table { get; set; }
+        public Guid? TableId { get; set; }
+        public Table? Table { get; set; }
         
         public int Quantity { get; set; }
 

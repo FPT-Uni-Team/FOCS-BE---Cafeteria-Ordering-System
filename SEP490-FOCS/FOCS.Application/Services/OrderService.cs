@@ -198,7 +198,8 @@ namespace FOCS.Application.Services
                             UnitPrice = unitPrice,
                             TotalPrice = unitPrice - (double)item.DiscountAmount,
                             Note = "",
-                            Variants = item.ItemCode,
+                            MenuItemId = productId,
+                            VariantId = variantId,
                             OrderId = orderCreate.Id
                         });
                     }

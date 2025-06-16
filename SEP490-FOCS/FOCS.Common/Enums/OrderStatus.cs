@@ -8,6 +8,8 @@ namespace FOCS.Common.Enums
 {
     public enum OrderStatus
     {
+
+        CartSaved,
         /// <summary>
         /// Đơn hàng được tạo nhưng chưa xác nhận.
         /// </summary>

@@ -47,6 +47,10 @@ namespace FOCS.Order.Infrastucture.Entities
         public Guid? OrderWrapId { get; set; }
         public OrderWrap OrderWrap { get; set; }
 
+        //Table
+        public Guid? TableId { get; set; }
+        public Table? Table { get; set; }
+
         //Order details
         public ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
