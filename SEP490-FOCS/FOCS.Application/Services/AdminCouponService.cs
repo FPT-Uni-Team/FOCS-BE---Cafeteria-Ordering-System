@@ -32,12 +32,12 @@ namespace FOCS.Application.Services
         public async Task<CouponAdminDTO> CreateCouponAsync(CouponAdminDTO dto, string userId)
         {
             // Check userId empty
-            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), AdminCoupon.UserIdEmpty);
+            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), AdminCouponConstants.UserIdEmpty);
             
             // Check coupon code type
             ConditionCheck.CheckCondition(dto.CouponType == CouponType.Manual 
                                                      || dto.CouponType == CouponType.AutoGenerate, 
-                                                        AdminCoupon.CheckCouponCodeType);
+                                                        AdminCouponConstants.CheckCouponCodeType);
             
             // Type 'auto' => Generate unique code
             string couponCode = dto.CouponType == CouponType.AutoGenerate ? await GenerateUniqueCouponCodeAsync()
@@ -46,15 +46,15 @@ namespace FOCS.Application.Services
             // Check manual code empty
             ConditionCheck.CheckCondition(dto.CouponType != CouponType.AutoGenerate 
                                                      || !string.IsNullOrWhiteSpace(couponCode), 
-                                                        AdminCoupon.CheckCouponCodeForManual);
+                                                        AdminCouponConstants.CheckCouponCodeForManual);
 
             // Check unique code
             var existing = await _couponRepository.AsQueryable()
                                                   .AnyAsync(c => c.Code == couponCode && !c.IsDeleted);
-            ConditionCheck.CheckCondition(!existing, AdminCoupon.CheckCreateUniqueCode);
+            ConditionCheck.CheckCondition(!existing, AdminCouponConstants.CheckCreateUniqueCode);
 
             // Check dates
-            ConditionCheck.CheckCondition(dto.StartDate < dto.EndDate, AdminCoupon.CheckCreateDate);
+            ConditionCheck.CheckCondition(dto.StartDate < dto.EndDate, AdminCouponConstants.CheckCreateDate);
 
             // Map DTO to entity
             var newCoupon = _mapper.Map<Coupon>(dto);
@@ -112,7 +112,7 @@ namespace FOCS.Application.Services
 
         private async Task<string> GenerateUniqueCouponCodeAsync()
         {
-            const string chars = AdminCoupon.GenerateUniqueCouponCode;
+            const string chars = AdminCouponConstants.GenerateUniqueCouponCode;
             var random = new Random();
 
             string newCode;
@@ -134,7 +134,7 @@ namespace FOCS.Application.Services
         public async Task<PagedResult<CouponAdminDTO>> GetAllCouponsAsync(UrlQueryParameters query, Guid storeId, string userId)
         {
             // Check userId is valid
-            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), AdminCoupon.UserIdEmpty);
+            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), AdminCouponConstants.UserIdEmpty);
             ConditionCheck.CheckCondition(storeId != null, Errors.Common.StoreNotFound);
 
             var couponQuery = _couponRepository.AsQueryable().Where(c => !c.IsDeleted && c.StoreId == storeId);
@@ -145,13 +145,13 @@ namespace FOCS.Application.Services
                 var value = query.SearchValue.ToLower();
                 switch (query.SearchBy.ToLower())
                 {
-                    case AdminCoupon.SearchByCode:
+                    case "code":
                         couponQuery = couponQuery.Where(c => c.Code.ToLower().Contains(value));
                         break;
-                    case AdminCoupon.SearchByDescription:
+                    case "description":
                         couponQuery = couponQuery.Where(c => c.Description.ToLower().Contains(value));
                         break;
-                    case AdminCoupon.SearchByDiscountType:
+                    case "discounttype":
                         if (Enum.TryParse<DiscountType>(query.SearchValue, true, out var type))
                             couponQuery = couponQuery.Where(c => c.DiscountType == type);
                         break;
@@ -161,14 +161,14 @@ namespace FOCS.Application.Services
             // Sort
             if (!string.IsNullOrEmpty(query.SortBy))
             {
-                bool desc = query.SortOrder?.ToLower() == AdminCoupon.SortOrder;
+                bool desc = query.SortOrder?.ToLower() == "desc";
                 couponQuery = query.SortBy.ToLower() switch
                 {
-                    AdminCoupon.SortByCode => desc ? couponQuery.OrderByDescending(c => c.Code) : couponQuery.OrderBy(c => c.Code),
-                    AdminCoupon.SortByValue => desc ? couponQuery.OrderByDescending(c => c.Value) : couponQuery.OrderBy(c => c.Value),
-                    AdminCoupon.SortByStartDate => desc ? couponQuery.OrderByDescending(c => c.StartDate) : couponQuery.OrderBy(c => c.StartDate),
-                    AdminCoupon.SortByEndDate => desc ? couponQuery.OrderByDescending(c => c.EndDate) : couponQuery.OrderBy(c => c.EndDate),
-                    AdminCoupon.SortByIsActive => desc ? couponQuery.OrderByDescending(c => c.IsActive) : couponQuery.OrderBy(c => c.IsActive),
+                    "code" => desc ? couponQuery.OrderByDescending(c => c.Code) : couponQuery.OrderBy(c => c.Code),
+                    "value" => desc ? couponQuery.OrderByDescending(c => c.Value) : couponQuery.OrderBy(c => c.Value),
+                    "startdate" => desc ? couponQuery.OrderByDescending(c => c.StartDate) : couponQuery.OrderBy(c => c.StartDate),
+                    "enddate" => desc ? couponQuery.OrderByDescending(c => c.EndDate) : couponQuery.OrderBy(c => c.EndDate),
+                    "isactive" => desc ? couponQuery.OrderByDescending(c => c.IsActive) : couponQuery.OrderBy(c => c.IsActive),
                     _ => couponQuery
                 };
             }
@@ -184,6 +184,18 @@ namespace FOCS.Application.Services
             return new PagedResult<CouponAdminDTO>(mapped, total, query.Page, query.PageSize);
         }
 
+        public async Task<CouponAdminDTO> GetCouponByIdAsync(Guid couponId, string userId)
+        {
+            var coupon = await _couponRepository
+                                .AsQueryable()
+                                .FirstOrDefaultAsync(c => c.Id == couponId && !c.IsDeleted);
+
+            if (coupon == null)
+                return null;
+
+            return _mapper.Map<CouponAdminDTO>(coupon);
+        }
+
         public async Task<bool> UpdateCouponAsync(Guid id, CouponAdminDTO dto, string userId)
         {
             var coupon = await _couponRepository.GetByIdAsync(id);
@@ -193,10 +205,10 @@ namespace FOCS.Application.Services
             // Check unique code (exclude current coupon)
             var existing = await _couponRepository.AsQueryable()
                                                   .AnyAsync(c => c.Id != id && c.Code == dto.Code && !c.IsDeleted);
-            ConditionCheck.CheckCondition(!existing, AdminCoupon.CheckUpdateUniqueCode);
+            ConditionCheck.CheckCondition(!existing, AdminCouponConstants.CheckUpdateUniqueCode);
 
             // Check dates
-            ConditionCheck.CheckCondition(dto.StartDate <= dto.EndDate, AdminCoupon.CheckUpdateDate);
+            ConditionCheck.CheckCondition(dto.StartDate <= dto.EndDate, AdminCouponConstants.CheckUpdateDate);
 
             _mapper.Map(dto, coupon);
             coupon.UpdatedAt = DateTime.UtcNow;
@@ -255,7 +267,7 @@ namespace FOCS.Application.Services
         {
             // Get promotion
             var promotion = await _promotionRepository.GetByIdAsync(promotionId);
-            ConditionCheck.CheckCondition(promotion != null && !promotion.IsDeleted, AdminCoupon.CheckPromotion);
+            ConditionCheck.CheckCondition(promotion != null && !promotion.IsDeleted, AdminCouponConstants.CheckPromotion);
 
             // Get coupons
             var coupons = await _couponRepository.FindAsync(c => couponIds.Contains(c.Id) && !c.IsDeleted);
@@ -270,7 +282,7 @@ namespace FOCS.Application.Services
                                            && coupon.EndDate <= promotion.EndDate,
                                               $"Coupon {coupon.Code} must be within the promotion period.");
 
-                // Gán PromotionId
+                // Apply PromotionId
                 coupon.PromotionId = promotionId;
                 coupon.UpdatedAt = DateTime.UtcNow;
                 coupon.UpdatedBy = userId.ToString();

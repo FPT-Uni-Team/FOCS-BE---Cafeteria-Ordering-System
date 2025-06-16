@@ -53,6 +53,16 @@ namespace FOCS.Controllers
             return Ok(pagedResult);
         }
 
+        [HttpGet("coupon/{id}")]
+        public async Task<IActionResult> GetCoupon(Guid id)
+        {
+            var coupon = await _adminCouponService.GetCouponByIdAsync(id, UserId);
+            if (coupon == null)
+                return NotFound();
+
+            return Ok(coupon);
+        }
+
         [HttpPut("coupon/{id}")]
         public async Task<IActionResult> UpdateCoupon(Guid id, [FromBody] CouponAdminDTO dto)
         {
@@ -61,9 +71,9 @@ namespace FOCS.Controllers
 
             var updated = await _adminCouponService.UpdateCouponAsync(id, dto, UserId);
             if (!updated)
-                return NotFound(AdminCoupon.UpdateNotFound);
+                return NotFound(AdminCouponConstants.UpdateNotFound);
 
-            return Ok(AdminCoupon.UpdateOk);
+            return Ok(AdminCouponConstants.UpdateOk);
         }
 
         [HttpDelete("coupon/{id}")]
@@ -71,9 +81,9 @@ namespace FOCS.Controllers
         {
             var deleted = await _adminCouponService.DeleteCouponAsync(id, UserId);
             if (!deleted)
-                return NotFound(AdminCoupon.DeleteNotFound);
+                return NotFound(AdminCouponConstants.DeleteNotFound);
 
-            return Ok(AdminCoupon.DeleteOk);
+            return Ok(AdminCouponConstants.DeleteOk);
         }
 
         [HttpPost("coupon/{id}/track-usage")]
@@ -81,7 +91,7 @@ namespace FOCS.Controllers
         {
             var result = await _adminCouponService.TrackCouponUsageAsync(id);
             if (result <= 0)
-                return NotFound(AdminCoupon.TrackNotFound);
+                return NotFound(AdminCouponConstants.TrackNotFound);
 
             return Ok(result);
         }
@@ -91,9 +101,9 @@ namespace FOCS.Controllers
         {
             var result = await _adminCouponService.SetCouponStatusAsync(id, isActive, UserId);
             if (!result)
-                return NotFound(AdminCoupon.CouponStatusNotFound);
+                return NotFound(AdminCouponConstants.CouponStatusNotFound);
 
-            return Ok(string.Format(AdminCoupon.CouponStatusOk, isActive ? "enabled" : "disabled"));
+            return Ok(string.Format(AdminCouponConstants.CouponStatusOk, isActive ? "enabled" : "disabled"));
         }
 
         [HttpPut("coupon/{storeId}/assign-promotion")]
@@ -103,9 +113,9 @@ namespace FOCS.Controllers
                 request.CouponIds, request.PromotionId, UserId, storeId);
 
             if (!result)
-                return NotFound(AdminCoupon.CouponsToPromotionNotFound);
+                return NotFound(AdminCouponConstants.CouponsToPromotionNotFound);
 
-            return Ok(AdminCoupon.CouponsToPromotionOk);
+            return Ok(AdminCouponConstants.CouponsToPromotionOk);
         }
     }
 }
