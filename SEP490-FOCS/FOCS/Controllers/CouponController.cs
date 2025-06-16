@@ -33,7 +33,7 @@ namespace FOCS.Controllers
                 return BadRequest(ModelState);
             dto.StoreId = StoreId;
             var created = await _adminCouponService.CreateCouponAsync(dto, UserId);
-            return Ok(created);
+            return Ok(created); 
         }
 
         [HttpPost("{couponId}/set-condition")]
@@ -46,7 +46,7 @@ namespace FOCS.Controllers
             return Ok();
         }
 
-        [HttpPost("{storeId}/coupons")]
+        [HttpPost("coupons/{storeId}")]
         public async Task<IActionResult> GetAllCoupons([FromBody] UrlQueryParameters query, Guid storeId)
         {
             var pagedResult = await _adminCouponService.GetAllCouponsAsync(query, storeId, UserId);

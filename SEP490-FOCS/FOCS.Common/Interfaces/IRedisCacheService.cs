@@ -12,5 +12,7 @@ namespace FOCS.Common.Interfaces
         Task<T?> GetAsync<T>(string key);
         Task<bool> RemoveAsync(string key);
         Task<bool> ExistsAsync(string key);
+
+        Task<List<string>> GetKeysByPatternAsync(string pattern);
     }
 }

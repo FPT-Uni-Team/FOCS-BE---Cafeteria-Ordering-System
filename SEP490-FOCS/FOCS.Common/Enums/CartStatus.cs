@@ -11,6 +11,7 @@ namespace FOCS.Common.Enums
         Pending, 
         Confirm, 
         Cancelled,
-        Served
+        Served,
+        CartSaved
     }
 }

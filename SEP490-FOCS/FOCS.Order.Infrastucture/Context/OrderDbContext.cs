@@ -82,7 +82,7 @@ namespace FOCS.Order.Infrastucture.Context
             modelBuilder.Entity<CartItem>()
                 .HasOne(c => c.Variant)
                 .WithMany()
-                .HasForeignKey(c => c.MenuItemVariantId)
+                .HasForeignKey(c => c.VariantId)
                 .OnDelete(DeleteBehavior.Restrict); 
 
             modelBuilder.Entity<CartItem>()
