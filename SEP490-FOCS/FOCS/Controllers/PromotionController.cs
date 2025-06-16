@@ -21,7 +21,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("{promotionId}")]
-        public async Task<IActionResult> GetPromotion(Guid promotionId)
+        public async Task<IActionResult> GetPromotionDetails(Guid promotionId)
         {
             var result = await _promotionService.GetPromotionAsync(promotionId, UserId);
             return Ok(result);
@@ -51,20 +51,6 @@ namespace FOCS.Controllers
                 return BadRequest(ModelState);
 
             var success = await _promotionService.UpdatePromotionAsync(promotionId, dto, UserId);
-            return success ? Ok() : NotFound();
-        }
-
-        [HttpPatch("active/{promotionId}")]
-        public async Task<IActionResult> ActivePromotion(Guid promotionId)
-        {
-            var success = await _promotionService.ActivatePromotionAsync(promotionId, UserId);
-            return success ? Ok() : NotFound();
-        }
-
-        [HttpPatch("deactive/{promotionId}")]
-        public async Task<IActionResult> DeactivePromotion(Guid promotionId)
-        {
-            var success = await _promotionService.DeactivatePromotionAsync(promotionId, UserId);
             return success ? Ok() : NotFound();
         }
 
