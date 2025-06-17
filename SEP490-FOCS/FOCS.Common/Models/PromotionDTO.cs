@@ -16,10 +16,10 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         public string? Description { get; set; }
 
         [JsonPropertyName("start_date")]
-        public DateTime StartDate { get; set; } = DateTime.UtcNow;
+        public DateTime StartDate { get; set; }
 
         [JsonPropertyName("end_date")]
-        public DateTime EndDate { get; set; } = DateTime.UtcNow;
+        public DateTime EndDate { get; set; }
 
         [JsonPropertyName("promotion_type")]
         public PromotionType PromotionType { get; set; }
@@ -27,9 +27,6 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         [JsonPropertyName("discount_value")]
         [Range(0.01, double.MaxValue, ErrorMessage = "Discount Value must be greater than 0")]
         public double? DiscountValue { get; set; }
-
-        [JsonPropertyName("is_active")]
-        public bool? IsActive { get; set; }
 
         [JsonPropertyName("accept_for_items")]
         public List<Guid>? AcceptForItems { get; set; }
@@ -63,15 +60,15 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
             if (PromotionType.Equals(PromotionType.Percentage) && DiscountValue > 100)
             {
                 results.Add(new ValidationResult(
-                    "Discount Value cannot exceed 100% for percentage discount type",
+                    "Discount Value cannot exceed 100% for Percentage discount type",
                     new[] { nameof(DiscountValue) }));
             }
 
-            if (PromotionType == PromotionType.FixedAmount && DiscountValue <= 0)
+            if (PromotionType == PromotionType.BuyXGetY && PromotionItemConditionDTO == null)
             {
                 results.Add(new ValidationResult(
-                    "Valid Discount Value is required for Discount promotion type",
-                    new[] { nameof(DiscountValue) }));
+                    "Condition is required for Buy X Get Y promotion type",
+                    new[] { nameof(PromotionItemConditionDTO) }));
             }
 
             return results;

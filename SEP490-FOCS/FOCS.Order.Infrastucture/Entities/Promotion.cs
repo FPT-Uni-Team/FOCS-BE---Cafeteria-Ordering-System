@@ -25,8 +25,8 @@ namespace FOCS.Order.Infrastucture.Entities
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-        public bool IsDeleted { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsDeleted { get; set; } = false;
+        public bool IsActive { get; set; } = true;
 
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
