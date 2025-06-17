@@ -38,6 +38,17 @@ namespace FOCS.Controllers
             return Ok(result);
         }
 
+        [HttpGet("table/{id}")]
+        public async Task<IActionResult> GetTable(Guid id)
+        {
+            var table = await _tableService.GetTableByIdAsync(id, UserId);
+
+            if (table == null)
+                return NotFound();
+
+            return Ok(table);
+        }
+
         [HttpPut("table/{id}")]
         public async Task<IActionResult> UpdateTable(Guid id, [FromBody] TableDTO dto)
         {

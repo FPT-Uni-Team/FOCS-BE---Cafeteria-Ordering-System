@@ -57,7 +57,7 @@ namespace FOCS.Application.Services
             // Search
             if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))
             {
-                if (query.SearchBy.Equals(TableConstants.SearchBy, StringComparison.OrdinalIgnoreCase)
+                if (query.SearchBy.Equals("table_number", StringComparison.OrdinalIgnoreCase)
                     && int.TryParse(query.SearchValue, out int tableNumber))
                 {
                     tableQuery = tableQuery.Where(t => t.TableNumber == tableNumber);
@@ -67,11 +67,11 @@ namespace FOCS.Application.Services
             // Sort
             if (!string.IsNullOrEmpty(query.SortBy))
             {
-                bool desc = query.SortOrder?.ToLower() == TableConstants.SortOrder;
+                bool desc = query.SortOrder?.ToLower() == "desc";
                 tableQuery = query.SortBy.ToLower() switch
                 {
-                    TableConstants.SortByTableNumber => desc ? tableQuery.OrderByDescending(t => t.TableNumber) : tableQuery.OrderBy(t => t.TableNumber),
-                    TableConstants.SortByStatus => desc ? tableQuery.OrderByDescending(t => t.Status) : tableQuery.OrderBy(t => t.Status),
+                    "table_number" => desc ? tableQuery.OrderByDescending(t => t.TableNumber) : tableQuery.OrderBy(t => t.TableNumber),
+                    "status" => desc ? tableQuery.OrderByDescending(t => t.Status) : tableQuery.OrderBy(t => t.Status),
                     _ => tableQuery
                 };
             }
@@ -84,6 +84,17 @@ namespace FOCS.Application.Services
 
             var mapped = _mapper.Map<List<TableDTO>>(items);
             return new PagedResult<TableDTO>(mapped, total, query.Page, query.PageSize);
+        }
+
+        public async Task<TableDTO?> GetTableByIdAsync(Guid id, string userId)
+        {
+            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), TableConstants.UserIdEmpty);
+
+            var table = await _tableRepository.GetByIdAsync(id);
+            if (table == null || table.IsDeleted)
+                return null;
+
+            return _mapper.Map<TableDTO>(table);
         }
 
         public async Task<bool> UpdateTableAsync(Guid id, TableDTO dto, string userId)

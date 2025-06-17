@@ -9,6 +9,7 @@ namespace FOCS.Application.Services.Interface
         Task<bool> UpdateCouponAsync(Guid id, CouponAdminDTO dto, string updatedBy);
         Task<bool> DeleteCouponAsync(Guid id, string deletedBy);
         Task<PagedResult<CouponAdminDTO>> GetAllCouponsAsync(UrlQueryParameters query, Guid storeId, string userId);
+        Task<CouponAdminDTO> GetCouponByIdAsync(Guid couponId, string userId);
         Task<int> TrackCouponUsageAsync(Guid couponId);
         Task<bool> SetCouponStatusAsync(Guid couponId, bool isActive, string userId);
         Task<bool> AssignCouponsToPromotionAsync(List<Guid> couponIds, Guid promotionId, string userId, Guid storeId);

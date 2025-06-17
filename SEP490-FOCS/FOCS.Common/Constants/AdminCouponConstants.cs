@@ -1,6 +1,6 @@
 ﻿namespace FOCS.Common.Constants
 {
-    public class AdminCoupon
+    public class AdminCouponConstants
     {
         // Create service
         public const string UserIdEmpty = "User ID cannot be null or empty.";
@@ -11,17 +11,6 @@
         public const string CheckCreateUniqueCode = "Coupon code already exists";
         public const string CheckCreateDate = "Start date must be before end date.";
         public const string GenerateUniqueCouponCode = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-        // GetAll service
-        public const string SearchByCode = "code";
-        public const string SearchByDescription = "description";
-        public const string SearchByDiscountType = "discounttype";
-        public const string SortOrder = "desc";
-        public const string SortByCode = "code";
-        public const string SortByValue = "value";
-        public const string SortByStartDate = "startdate";
-        public const string SortByEndDate = "enddate";
-        public const string SortByIsActive = "isactive";
 
         // Update controller
         public const string UpdateNotFound = "Update unsuccessfully";
