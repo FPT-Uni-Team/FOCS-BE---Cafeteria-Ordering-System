@@ -54,6 +54,20 @@ namespace FOCS.Controllers
             return success ? Ok() : NotFound();
         }
 
+        [HttpPatch("active/{promotionId}")]
+        public async Task<IActionResult> ActivePromotion(Guid promotionId)
+        {
+            var success = await _promotionService.ActivatePromotionAsync(promotionId, UserId);
+            return success ? Ok() : NotFound();
+        }
+
+        [HttpPatch("deactive/{promotionId}")]
+        public async Task<IActionResult> DeactivePromotion(Guid promotionId)
+        {
+            var success = await _promotionService.DeactivatePromotionAsync(promotionId, UserId);
+            return success ? Ok() : NotFound();
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePromotion(Guid id)
         {
