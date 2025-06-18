@@ -20,6 +20,17 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
 
         [JsonPropertyName("end_date")]
         public DateTime EndDate { get; set; }
+        [JsonPropertyName("status")]
+        public PromotionStatus Status
+        {
+            get
+            {
+                var now = DateTime.UtcNow;
+                if (StartDate > now) return PromotionStatus.NotStarted;
+                if (EndDate < now) return PromotionStatus.Expired;
+                return PromotionStatus.Ongoing;
+            }
+        }
 
         [JsonPropertyName("promotion_type")]
         public PromotionType PromotionType { get; set; }

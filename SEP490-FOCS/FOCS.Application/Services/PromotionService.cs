@@ -308,6 +308,16 @@ namespace FOCS.Application.Services
                 {
                     "promotion_type" when Enum.TryParse<PromotionType>(value, true, out var promotionType) =>
                         query.Where(p => p.PromotionType == promotionType),
+                    "start_date" => query.Where(p => p.StartDate >= DateTime.Parse(value)),
+                    "end_date" => query.Where(p => p.EndDate <= DateTime.Parse(value)),
+                    "status" when Enum.TryParse<PromotionStatus>(value, true, out var status) =>
+                    status switch
+                    {
+                        PromotionStatus.NotStarted => query.Where(p => p.StartDate > DateTime.UtcNow),
+                        PromotionStatus.Ongoing => query.Where(p => p.StartDate <= DateTime.UtcNow && p.EndDate >= DateTime.UtcNow),
+                        PromotionStatus.Expired => query.Where(p => p.EndDate < DateTime.UtcNow),
+                        _ => query
+                    },
                     _ => query
                 };
             }
