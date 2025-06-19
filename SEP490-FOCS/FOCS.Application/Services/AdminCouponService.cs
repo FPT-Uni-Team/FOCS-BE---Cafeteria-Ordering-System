@@ -33,19 +33,19 @@ namespace FOCS.Application.Services
         {
             // Check userId empty
             ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), AdminCouponConstants.UserIdEmpty);
-            
+
             // Check coupon code type
-            ConditionCheck.CheckCondition(dto.CouponType == CouponType.Manual 
-                                                     || dto.CouponType == CouponType.AutoGenerate, 
+            ConditionCheck.CheckCondition(dto.CouponType == CouponType.Manual
+                                                     || dto.CouponType == CouponType.AutoGenerate,
                                                         AdminCouponConstants.CheckCouponCodeType);
-            
+
             // Type 'auto' => Generate unique code
             string couponCode = dto.CouponType == CouponType.AutoGenerate ? await GenerateUniqueCouponCodeAsync()
                                                                          : dto.Code?.Trim() ?? "";
-            
+
             // Check manual code empty
-            ConditionCheck.CheckCondition(dto.CouponType != CouponType.AutoGenerate 
-                                                     || !string.IsNullOrWhiteSpace(couponCode), 
+            ConditionCheck.CheckCondition(dto.CouponType != CouponType.AutoGenerate
+                                                     || !string.IsNullOrWhiteSpace(couponCode),
                                                         AdminCouponConstants.CheckCouponCodeForManual);
 
             // Check unique code
@@ -59,7 +59,7 @@ namespace FOCS.Application.Services
             // Map DTO to entity
             var newCoupon = _mapper.Map<Coupon>(dto);
             newCoupon.Id = Guid.NewGuid();
-            
+
             newCoupon.MinimumItemQuantity = dto.SetCouponConditionRequest.ConditionType switch
             {
                 CouponConditionType.MinItemsQuantity => dto.SetCouponConditionRequest.Value,
@@ -71,7 +71,7 @@ namespace FOCS.Application.Services
                 CouponConditionType.MinOrderAmount => dto.SetCouponConditionRequest.Value,
                 _ => null
             };
-            
+
             newCoupon.Code = couponCode;
             newCoupon.IsDeleted = false;
             newCoupon.CreatedAt = DateTime.UtcNow;
@@ -104,7 +104,8 @@ namespace FOCS.Application.Services
 
                 _couponRepository.Update(coupon);
                 await _couponRepository.SaveChangesAsync();
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
             }
@@ -155,6 +156,48 @@ namespace FOCS.Application.Services
                         if (Enum.TryParse<DiscountType>(query.SearchValue, true, out var type))
                             couponQuery = couponQuery.Where(c => c.DiscountType == type);
                         break;
+                }
+            }
+
+            // Filters
+            if (query.Filters != null)
+            {
+                foreach (var filter in query.Filters)
+                {
+                    var key = filter.Key.ToLowerInvariant();
+                    var value = filter.Value;
+                    switch (key)
+                    {
+                        case "discount_type":
+                            if (Enum.TryParse<DiscountType>(value, true, out var discountType))
+                                couponQuery = couponQuery.Where(c => c.DiscountType == discountType);
+                            break;
+                        case "is_active":
+                            if (bool.TryParse(value, out var isActive))
+                                couponQuery = couponQuery.Where(c => c.IsActive == isActive);
+                            break;
+                        case "start_date":
+                            if (DateTime.TryParse(value, out var startDate))
+                                couponQuery = couponQuery.Where(c => c.StartDate >= startDate);
+                            break;
+                        case "end_date":
+                            if (DateTime.TryParse(value, out var endDate))
+                                couponQuery = couponQuery.Where(c => c.EndDate <= endDate);
+                            break;
+                        case "status":
+                            if (Enum.TryParse<CouponStatus>(value, true, out var couponStatus))
+                            {
+                                var now = DateTime.UtcNow;
+                                couponQuery = couponStatus switch
+                                {
+                                    CouponStatus.NotStarted => couponQuery.Where(c => c.StartDate > now),
+                                    CouponStatus.Ongoing => couponQuery.Where(c => c.StartDate <= now && c.EndDate >= now && c.IsActive),
+                                    CouponStatus.Expired => couponQuery.Where(c => c.EndDate < now || !c.IsActive),
+                                    _ => couponQuery
+                                };
+                            }
+                            break;
+                    }
                 }
             }
 
@@ -278,7 +321,7 @@ namespace FOCS.Application.Services
                 ConditionCheck.CheckCondition(coupon.StoreId == storeId, $"Coupon {coupon.Code} does not belong to this store.");
 
                 // Check coupon dates within promotion dates
-                ConditionCheck.CheckCondition(coupon.StartDate >= promotion.StartDate 
+                ConditionCheck.CheckCondition(coupon.StartDate >= promotion.StartDate
                                            && coupon.EndDate <= promotion.EndDate,
                                               $"Coupon {coupon.Code} must be within the promotion period.");
 

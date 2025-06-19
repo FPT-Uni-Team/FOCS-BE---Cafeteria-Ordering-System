@@ -68,7 +68,7 @@ namespace FOCS.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-
+            dto.StoreId = StoreId;
             var updated = await _adminCouponService.UpdateCouponAsync(id, dto, UserId);
             if (!updated)
                 return NotFound(AdminCouponConstants.UpdateNotFound);
