@@ -36,7 +36,7 @@ namespace FOCS.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> CreateUserProfileAsync()
+        public async Task<IActionResult> DeleteUserProfileAsync()
         {
             var isDeleted = await _userProfileService.DeleteUserProfileAsync(UserId);
             if (!isDeleted)

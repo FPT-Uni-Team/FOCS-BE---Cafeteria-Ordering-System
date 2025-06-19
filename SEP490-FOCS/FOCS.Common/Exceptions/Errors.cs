@@ -42,6 +42,11 @@ namespace FOCS.Common.Exceptions
             public const string UserUnauthor = "You don't have permission to access";
         }
 
+        public static class StaffError
+        {
+            public const string InvalidRole = "You can't update invalid role";
+        }
+
         public static class Pricing
         {
             public const string InvalidPrice = "Prduct price is not set";
