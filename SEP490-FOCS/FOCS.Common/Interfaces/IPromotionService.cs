@@ -19,6 +19,6 @@ namespace FOCS.Common.Interfaces
         Task<bool> DeletePromotionAsync(Guid promotionId, string userId);
 
         Task IsValidPromotionCouponAsync(string couponCode, string userId, Guid storeId);
-
+        Task<DiscountResultDTO> ApplyEligiblePromotions(DiscountResultDTO discountStrategyResult);
     }
 }

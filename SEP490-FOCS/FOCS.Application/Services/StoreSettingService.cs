@@ -29,7 +29,7 @@ namespace FOCS.Application.Services
             _userStoreRepository = userStoreRepo;
         }
 
-        public async Task<StoreSettingDTO> GetStoreSettingAsync(Guid storeId, string userId)
+        public async Task<StoreSettingDTO> GetStoreSettingAsync(Guid storeId, string? userId = null)
         {
             //await ValidateUser(userId, storeId);
             var storeSetting = await _storeSettingRepository.AsQueryable()

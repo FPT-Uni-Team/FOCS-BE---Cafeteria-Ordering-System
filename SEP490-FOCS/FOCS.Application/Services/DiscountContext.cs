@@ -1,6 +1,7 @@
 ﻿using FOCS.Application.Services.ApplyStrategy;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Enums;
+using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,9 +17,13 @@ namespace FOCS.Application.Services
     {
         private readonly IServiceProvider _serviceProvider;
 
-        public DiscountContext(IServiceProvider serviceProvider)
+        private readonly IStoreSettingService _storeSettingService;
+        private readonly IPromotionService _promotionService;
+        public DiscountContext(IServiceProvider serviceProvider, IStoreSettingService storeSettingService, IPromotionService promotionService)
         {
             _serviceProvider = serviceProvider;
+            _storeSettingService = storeSettingService;
+            _promotionService = promotionService;
         }
 
         public async Task<DiscountResultDTO> CalculateDiscountAsync(CreateOrderRequest order, string? couponCode, DiscountStrategy discountStrategy)
@@ -31,6 +36,14 @@ namespace FOCS.Application.Services
                 DiscountStrategy.MaxDiscountOnly => _serviceProvider.GetRequiredService<MaxDiscountOnlyStrategy>(),
                 _ => throw new NotImplementedException()
             };
+
+            var storeSetting = await _storeSettingService.GetStoreSettingAsync(order.StoreId);
+
+            if (storeSetting.AllowCombinePromotionAndCoupon)
+            {
+                var discountStrategyResult = await strategyInstance.ApplyDiscountAsync(order, couponCode);
+                return await _promotionService.ApplyEligiblePromotions(discountStrategyResult);
+            }
 
             return await strategyInstance.ApplyDiscountAsync(order, couponCode);
         }

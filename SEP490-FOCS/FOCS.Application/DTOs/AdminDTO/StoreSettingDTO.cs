@@ -29,5 +29,9 @@ namespace FOCS.Common.Models
 
         [JsonPropertyName("discount_strategy")]
         public DiscountStrategy DiscountStrategy { get; set; }
+
+        [JsonPropertyName("allow_combine_promotion_coupon")]
+        public bool AllowCombinePromotionAndCoupon { get; set; } = true;
+
     }
 }

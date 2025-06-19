@@ -25,6 +25,12 @@ namespace FOCS.Order.Infrastucture.Entities
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
+        public PromotionScope PromotionScope { get; set; } = PromotionScope.Order;
+
+        public double MaxDiscountValue { get; set; } 
+
+        public bool? CanApplyCombine { get; set; } = true;
+
         public bool IsDeleted { get; set; } = false;
         public bool IsActive { get; set; } = true;
 
