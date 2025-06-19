@@ -4,6 +4,7 @@ using System.Formats.Asn1;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using System.Security.Claims;
+using MimeKit.Cryptography;
 
 namespace FOCS.Controllers
 {
@@ -78,6 +79,12 @@ namespace FOCS.Controllers
         public async Task<bool> ChangePassword(ChangePasswordRequest request, string email)
         {
             return await _authService.ChangePassword(request, Email);
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<AuthResult> RefreshToken(string refreshToken)
+        {
+            return await _authService.RefreshTokenAsync(refreshToken, Guid.Parse(StoreId));
         }
     }
 }
