@@ -189,7 +189,7 @@ namespace FOCS.Application.Services
                         }
 
                         var price = await _pricingService.GetPriceByProduct(productId, variantId, order.StoreId);
-                        var unitPrice = (double)(price.ProductPrice + price.VariantPrice);
+                        var unitPrice = (double)(price.ProductPrice + price.VariantPrice)!;
 
                         ordersDetailCreate.Add(new OrderDetail
                         {

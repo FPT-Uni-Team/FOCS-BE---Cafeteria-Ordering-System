@@ -97,50 +97,63 @@ namespace FOCS.Application.Services.ApplyStrategy
                 result.TotalPrice += (decimal)totalItemPrice;
             }
 
-
-            foreach (var itemOrder in order.Items)
+            if(promotion.PromotionScope == PromotionScope.Item)
             {
-                bool isAccepted = acceptItemIds == null || acceptItemIds.Contains(itemOrder.MenuItemId);
-                if (!isAccepted) continue;
-
-                var pricing = await _pricingService.GetPriceByProduct(itemOrder.MenuItemId, itemOrder.VariantId, order.StoreId);
-                double itemPrice = (double)pricing.ProductPrice + (double)pricing.VariantPrice;
-
-                double itemDiscount = 0;
-
-                switch (promotion.PromotionType)
+                foreach (var itemOrder in order.Items)
                 {
-                    case PromotionType.Percentage:
-                        itemDiscount = ApplyPercentageDiscount(itemPrice, promotion.DiscountValue);
-                        break;
-                    case PromotionType.FixedAmount:
-                        itemDiscount = ApplyFixedAmountDiscount(itemPrice, promotion.DiscountValue);
-                        break;
-                    case PromotionType.BuyXGetY:
-                        var buyXGetYDiscounts = await ApplyBuyXGetYDiscount(order, promotion);
-                        result.ItemDiscountDetails.AddRange(buyXGetYDiscounts);
-                        itemDiscount = buyXGetYDiscounts.Sum(d => (double)d.DiscountAmount);
-                        break;
-                    default:
-                        itemDiscount = 0;
-                        break;
-                }
+                    bool isAccepted = acceptItemIds.Any() || !acceptItemIds.Contains(itemOrder.MenuItemId);
+                    if (!isAccepted) continue;
 
+                    var pricing = await _pricingService.GetPriceByProduct(itemOrder.MenuItemId, itemOrder.VariantId, order.StoreId);
+                    double itemPrice = (double)pricing.ProductPrice + (double)pricing.VariantPrice;
 
-                if (itemDiscount > 0)
-                {
-                    totalDiscount += itemDiscount;
+                    double itemDiscount = 0;
 
-                    result.ItemDiscountDetails.Add(new DiscountItemDetail
+                    switch (promotion.PromotionType)
                     {
-                        DiscountAmount = (decimal)itemDiscount,
-                        ItemCode = $"{itemOrder.MenuItemId}_{itemOrder.VariantId}",
-                        ItemName = itemOrder.MenuItemId.ToString(),
-                        Quantity = itemOrder.Quantity,
-                        Source = $"Promotion_{promotion.PromotionType}_{promotion.Title}"
-                    });
+                        case PromotionType.Percentage:
+                            itemDiscount = ApplyPercentageDiscount(itemPrice, promotion.DiscountValue);
+                            break;
+                        case PromotionType.FixedAmount:
+                            itemDiscount = ApplyFixedAmountDiscount(itemPrice, promotion.DiscountValue);
+                            break;
+                        case PromotionType.BuyXGetY:
+                            var buyXGetYDiscounts = await ApplyBuyXGetYDiscount(order, promotion);
+                            result.ItemDiscountDetails.AddRange(buyXGetYDiscounts);
+                            itemDiscount = buyXGetYDiscounts.Sum(d => (double)d.DiscountAmount);
+                            break;
+                        default:
+                            itemDiscount = 0;
+                            break;
+                    }
+
+
+                    if (itemDiscount > 0)
+                    {
+                        totalDiscount += itemDiscount;
+
+                        result.ItemDiscountDetails.Add(new DiscountItemDetail
+                        {
+                            DiscountAmount = (decimal)itemDiscount,
+                            ItemCode = $"{itemOrder.MenuItemId}_{itemOrder.VariantId}",
+                            ItemName = itemOrder.MenuItemId.ToString(),
+                            Quantity = itemOrder.Quantity,
+                            Source = $"Promotion_{promotion.PromotionType}_{promotion.Title}"
+                        });
+                    }
                 }
+            } 
+
+            if(promotion.PromotionScope == PromotionScope.Order)
+            {
+                totalDiscount = promotion.PromotionType switch
+                {
+                    PromotionType.Percentage => (double)result.TotalPrice * (double)(promotion.DiscountValue / 100),
+                    PromotionType.FixedAmount => (double)promotion.DiscountValue,
+                    _ => (double)promotion.DiscountValue
+                };
             }
+
 
             result.TotalDiscount = (decimal)totalDiscount;
             return result;
@@ -149,7 +162,7 @@ namespace FOCS.Application.Services.ApplyStrategy
         private double ApplyPercentageDiscount(double itemPrice, double? discountValue)
         {
             if (discountValue == null) return 0;
-            return Math.Round(itemPrice * (double)discountValue, 2);
+            return Math.Round(itemPrice * (double)(discountValue / 100), 2);
         }
 
         private double ApplyFixedAmountDiscount(double itemPrice, double? discountValue)

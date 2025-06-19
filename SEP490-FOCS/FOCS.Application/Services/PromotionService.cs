@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Common.Enums;
 using FOCS.Common.Exceptions;
@@ -10,6 +10,8 @@ using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MimeKit.Cryptography;
+using StackExchange.Redis;
 using System.ComponentModel.DataAnnotations;
 namespace FOCS.Application.Services
 {
@@ -26,6 +28,8 @@ namespace FOCS.Application.Services
         private readonly IRepository<MenuItem> _menuItemRepository;
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
+
+        private readonly IPricingService _pricingService;
         public PromotionService(
             IRepository<Promotion> promotionRepository,
             IRepository<PromotionItemCondition> promotionItemConditionRepository,
@@ -35,7 +39,8 @@ namespace FOCS.Application.Services
             IRepository<CouponUsage> couponUsageRepository,
             UserManager<User> userManager,
             IMapper mapper,
-            IRepository<UserStore> userStoreRepository)
+            IRepository<UserStore> userStoreRepository, 
+            IPricingService pricingService)
         {
             _promotionRepository = promotionRepository;
             _promotionItemConditionRepository = promotionItemConditionRepository;
@@ -46,6 +51,7 @@ namespace FOCS.Application.Services
             _userManager = userManager;
             _mapper = mapper;
             _userStoreRepository = userStoreRepository;
+            _pricingService = pricingService;
         }
 
         public async Task<PromotionDTO> CreatePromotionAsync(PromotionDTO dto, string userId)
@@ -208,8 +214,104 @@ namespace FOCS.Application.Services
             }
         }
 
+        public async Task<DiscountResultDTO> ApplyEligiblePromotions(DiscountResultDTO discountResult)
+        {
+            var now = DateTime.UtcNow;
+
+            var promotionsQuery = _promotionRepository.AsQueryable()
+                .Include(x => x.Coupons)
+                .Where(x => x.StartDate <= now && x.EndDate >= now && !x.IsDeleted && x.IsActive && (x.Coupons == null || !x.Coupons.Any()) && x.CanApplyCombine == true);
+
+            var promotionFixed = await promotionsQuery
+                .Where(x => x.PromotionType == PromotionType.FixedAmount)
+                .OrderByDescending(x => x.DiscountValue)
+                .FirstOrDefaultAsync();
+
+            var promotionPercent = await promotionsQuery
+                .Where(x => x.PromotionType == PromotionType.Percentage)
+                .OrderByDescending(x => x.DiscountValue)
+                .FirstOrDefaultAsync();
+
+            decimal totalBeforeDiscount = discountResult.TotalPrice;
+            decimal fixedDiscountAmount = (decimal)promotionFixed?.DiscountValue!;
+            decimal percentDiscountAmount = promotionPercent != null
+                ? totalBeforeDiscount * ((decimal)promotionPercent.DiscountValue! / 100)
+                : 0;
+
+            if (fixedDiscountAmount == 0 && percentDiscountAmount == 0)
+                return discountResult;
+
+            if (percentDiscountAmount > fixedDiscountAmount)
+            {
+                discountResult.TotalPrice -= await ApplyPromotion(promotionPercent, percentDiscountAmount);
+                discountResult.AppliedPromotions.Add(promotionPercent!.Title);
+            }
+            else
+            {
+                discountResult.TotalPrice -= await ApplyPromotion(promotionFixed, fixedDiscountAmount, discountResult);
+                discountResult.AppliedPromotions.Add(promotionFixed!.Title);
+            }
+
+            return discountResult;
+        }
+
 
         #region Private Helper Methods
+
+        private async Task<decimal> ApplyPromotion(Promotion? promotion, decimal decreaseAmount, DiscountResultDTO? discountResultDTO = null)
+        {
+            return promotion.PromotionScope switch
+            {
+                PromotionScope.Order => decreaseAmount,
+                PromotionScope.Item => await CalculateDiscountForEachItem(promotion, decreaseAmount, discountResultDTO)
+            };
+        }
+
+        private async Task<decimal> CalculateDiscountForEachItem(Promotion promotion, decimal maxDecreaseAmount, DiscountResultDTO? discountResultDTO)
+        {
+            if (discountResultDTO?.ItemDiscountDetails == null || !discountResultDTO.ItemDiscountDetails.Any())
+                return 0;
+
+            decimal totalDiscount = 0;
+
+            foreach (var item in discountResultDTO.ItemDiscountDetails)
+            {
+                bool isEligible = promotion.AcceptForItems == null ||
+                                  !promotion.AcceptForItems.Any() ||
+                                  promotion.AcceptForItems.Contains(Guid.Parse(item.ItemCode));
+
+                if (!isEligible)
+                    continue;
+
+                var parts = item.ItemCode.Split('_');
+                var menuItemId = Guid.Parse(parts[0]);
+                Guid? variantId = parts.Length > 1 ? Guid.Parse(parts[1]) : null;
+
+                var price = await _pricingService.GetPriceByProduct(menuItemId, variantId, promotion.StoreId);
+
+                double itemUnitPrice = price.ProductPrice + (price.VariantPrice ?? 0);
+                double itemTotalPrice = itemUnitPrice * item.Quantity;
+
+                decimal itemDiscount = 0;
+
+                switch (promotion.PromotionType)
+                {
+                    case PromotionType.FixedAmount:
+                        itemDiscount = (decimal)(promotion.DiscountValue ?? 0) * item.Quantity;
+                        break;
+
+                    case PromotionType.Percentage:
+                        itemDiscount = (decimal)itemTotalPrice * ((decimal)promotion.DiscountValue!.Value / 100);
+                        break; 
+                }
+
+                totalDiscount += itemDiscount;
+            }
+
+            return promotion.MaxDiscountValue == null
+                ? Math.Min((decimal)totalDiscount, (decimal)promotion.MaxDiscountValue)
+                : totalDiscount;
+        }
 
 
 

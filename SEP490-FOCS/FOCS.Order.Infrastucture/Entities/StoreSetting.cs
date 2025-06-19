@@ -26,6 +26,8 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public DiscountStrategy discountStrategy { get; set; }
 
+        public bool AllowCombinePromotionAndCoupon { get; set; } = true;
+
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }
