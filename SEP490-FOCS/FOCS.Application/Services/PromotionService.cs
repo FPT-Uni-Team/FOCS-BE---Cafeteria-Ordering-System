@@ -101,12 +101,21 @@ namespace FOCS.Application.Services
 
         public async Task<bool> UpdatePromotionAsync(Guid promotionId, PromotionDTO dto, string userId)
         {
+            ConditionCheck.CheckCondition(promotionId == dto.Id, Errors.Common.NotFound);
             var promotion = await GetAvailablePromotionById(promotionId);
             if (promotion == null) return false;
 
             await ValidateUser(userId, promotion.StoreId);
+            await ValidatePromotionDto(dto);
+            await ValidatePromotionUniqueness(dto);
+            await ValidateStoreExists(dto.StoreId);
             _mapper.Map(dto, promotion);
             UpdateAuditFields(promotion, userId);
+
+            if (promotion.PromotionType == PromotionType.BuyXGetY)
+            {
+                await CreatePromotionItemCondition(dto, promotion.Id);
+            }
 
             await _promotionRepository.SaveChangesAsync();
             return true;
@@ -152,7 +161,6 @@ namespace FOCS.Application.Services
 
             await ValidateUser(userId, promotion.StoreId);
             ConditionCheck.CheckCondition(!promotion.IsActive, Errors.PromotionError.PromotionActive);
-            promotion.IsActive = false;
             promotion.IsDeleted = true;
             UpdateAuditFields(promotion, userId);
             await _promotionRepository.SaveChangesAsync();

@@ -28,6 +28,9 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         [Range(0.01, double.MaxValue, ErrorMessage = "Discount Value must be greater than 0")]
         public double? DiscountValue { get; set; }
 
+        [JsonPropertyName("is_active")]
+        public bool? IsActive { get; set; }
+
         [JsonPropertyName("accept_for_items")]
         public List<Guid>? AcceptForItems { get; set; }
 
