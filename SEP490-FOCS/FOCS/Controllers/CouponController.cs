@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
+    [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
     [Route("api/admin")]
     [ApiController]
     public class CouponController : FocsController
@@ -31,8 +32,7 @@ namespace FOCS.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            dto.StoreId = StoreId;
-            var created = await _adminCouponService.CreateCouponAsync(dto, UserId);
+            var created = await _adminCouponService.CreateCouponAsync(dto, UserId, StoreId);
             return Ok(created); 
         }
 
@@ -68,8 +68,7 @@ namespace FOCS.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            dto.StoreId = StoreId;
-            var updated = await _adminCouponService.UpdateCouponAsync(id, dto, UserId);
+            var updated = await _adminCouponService.UpdateCouponAsync(id, dto, UserId, StoreId);
             if (!updated)
                 return NotFound(AdminCouponConstants.UpdateNotFound);
 

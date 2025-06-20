@@ -29,17 +29,23 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
 
         [JsonPropertyName("end-date")]
         public DateTime EndDate { get; set; }
+
         [JsonPropertyName("status")]
         public CouponStatus Status
         {
             get
             {
                 var now = DateTime.UtcNow;
-                if (StartDate > now) return CouponStatus.NotStarted;
-                if (EndDate < now || !IsActive) return CouponStatus.Expired;
-                return CouponStatus.Ongoing;
+                if (!IsActive || CountUsed >= MaxUsage)
+                    return CouponStatus.UnAvailable;
+                if (now < StartDate)
+                    return CouponStatus.Incomming;
+                if (now > EndDate)
+                    return CouponStatus.Expired;
+                return CouponStatus.On_going;
             }
         }
+
         [JsonPropertyName("max_usage")]
         public int MaxUsage { get; set; }
 

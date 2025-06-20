@@ -2,8 +2,9 @@
 {
     public enum CouponStatus
     {
-        NotStarted = 0,
-        Ongoing = 1,
-        Expired = 2,
+        UnAvailable = 0, // is_active == false || CountUsed > MaxUsage
+        Incomming = 1, // Now < StartDate
+        On_going = 2, // (StartDate <= Now <= EndDate)
+        Expired = 3, // EndDate < Now
     }
 }
