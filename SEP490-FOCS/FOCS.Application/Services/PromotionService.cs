@@ -110,7 +110,15 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(promotionId == dto.Id, Errors.Common.NotFound);
             var promotion = await GetAvailablePromotionById(promotionId);
             if (promotion == null) return false;
-
+            if (promotion.StartDate <= DateTime.UtcNow && promotion.EndDate >= DateTime.UtcNow)
+            {
+                ConditionCheck.CheckCondition(promotion.PromotionScope != dto.PromotionScope,
+                             Errors.PromotionError.CannotChangeScopeWhilePromotionIsOngoing);
+                ConditionCheck.CheckCondition(promotion.PromotionType != dto.PromotionType,
+                                             Errors.PromotionError.CannotChangeTypeWhilePromotionIsOngoing);
+                ConditionCheck.CheckCondition(promotion.DiscountValue != dto.DiscountValue,
+                                             Errors.PromotionError.CannotChangeDiscountValueWhilePromotionIsOngoing);
+            }
             await ValidateUser(userId, promotion.StoreId);
             await ValidatePromotionDto(dto);
             await ValidatePromotionUniqueness(dto);
@@ -313,8 +321,6 @@ namespace FOCS.Application.Services
                 : totalDiscount;
         }
 
-
-
         private async Task ValidateUser(string userId, Guid storeId)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -370,6 +376,7 @@ namespace FOCS.Application.Services
         private Promotion CreatePromotionEntity(PromotionDTO dto, string userId)
         {
             var promotion = _mapper.Map<Promotion>(dto);
+            promotion.CountUsed = 0;
             promotion.Id = Guid.NewGuid();
             promotion.IsDeleted = false;
             promotion.CreatedAt = DateTime.UtcNow;
@@ -421,13 +428,14 @@ namespace FOCS.Application.Services
                     "start_date" => query.Where(p => p.StartDate >= DateTime.Parse(value)),
                     "end_date" => query.Where(p => p.EndDate <= DateTime.Parse(value)),
                     "status" when Enum.TryParse<PromotionStatus>(value, true, out var status) =>
-                    status switch
-                    {
-                        PromotionStatus.NotStarted => query.Where(p => p.StartDate > DateTime.UtcNow),
-                        PromotionStatus.Ongoing => query.Where(p => p.StartDate <= DateTime.UtcNow && p.EndDate >= DateTime.UtcNow),
-                        PromotionStatus.Expired => query.Where(p => p.EndDate < DateTime.UtcNow),
-                        _ => query
-                    },
+                        status switch
+                        {
+                            PromotionStatus.Incomming => query.Where(p => p.StartDate > DateTime.UtcNow),
+                            PromotionStatus.OnGoing => query.Where(p => p.StartDate <= DateTime.UtcNow && p.EndDate >= DateTime.UtcNow),
+                            PromotionStatus.Expired => query.Where(p => p.EndDate < DateTime.UtcNow),
+                            PromotionStatus.UnAvailable => query.Where(p => p.IsActive == false),
+                            _ => query
+                        },
                     _ => query
                 };
             }

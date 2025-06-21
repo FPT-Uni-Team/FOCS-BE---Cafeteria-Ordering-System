@@ -47,7 +47,11 @@ namespace FOCS.Application.Mappings
             CreateMap<StoreSetting, StoreSettingDTO>().ReverseMap()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
 
-            CreateMap<Promotion, PromotionDTO>().ReverseMap();
+            CreateMap<Promotion, PromotionDTO>().ReverseMap()
+                .ForMember(dest => dest.AcceptForItems, 
+                    opt => opt.MapFrom(src => src.AcceptForItems != null ?
+                                           src.AcceptForItems.Distinct().ToList() :
+                                           null)); ;
 
             CreateMap<PromotionItemCondition, PromotionItemConditionDTO>().ReverseMap();
 
