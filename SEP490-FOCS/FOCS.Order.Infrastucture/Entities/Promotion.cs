@@ -23,7 +23,7 @@ namespace FOCS.Order.Infrastucture.Entities
         public List<Guid>? AcceptForItems {  get; set; }
 
         public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateTime? EndDate { get; set; }
 
         public PromotionScope PromotionScope { get; set; } = PromotionScope.Order;
 

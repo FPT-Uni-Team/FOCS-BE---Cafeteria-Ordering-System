@@ -61,7 +61,13 @@ namespace FOCS.Application.Services
             await ValidatePromotionUniqueness(dto);
             await ValidateStoreExists(dto.StoreId);
 
-            var newPromotion = CreatePromotionEntity(dto, userId);
+            var coupons = _couponRepository.AsQueryable()
+                            .Where(c => c.StoreId == dto.StoreId &&
+                                        c.PromotionId == null &&
+                                        dto.CouponIds.Contains(c.Id))
+                            .ToList();
+
+            var newPromotion = CreatePromotionEntity(dto, userId, coupons);
 
             await _promotionRepository.AddAsync(newPromotion);
             await _promotionRepository.SaveChangesAsync();
@@ -77,7 +83,8 @@ namespace FOCS.Application.Services
         public async Task<PagedResult<PromotionDTO>> GetPromotionsByStoreAsync(UrlQueryParameters query, Guid storeId, string userId)
         {
             await ValidateUser(userId, storeId);
-            var promotionQuery = _promotionRepository.AsQueryable().Include(x => x.PromotionItemConditions)
+            var promotionQuery = _promotionRepository.AsQueryable().Include(p => p.PromotionItemConditions)
+                .Include(p => p.Coupons)
                 .Where(p => p.StoreId == storeId && !p.IsDeleted);
 
             promotionQuery = ApplyFilters(promotionQuery, query);
@@ -110,20 +117,21 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(promotionId == dto.Id, Errors.Common.NotFound);
             var promotion = await GetAvailablePromotionById(promotionId);
             if (promotion == null) return false;
-            if (promotion.StartDate <= DateTime.UtcNow && promotion.EndDate >= DateTime.UtcNow)
-            {
-                ConditionCheck.CheckCondition(promotion.PromotionScope != dto.PromotionScope,
-                             Errors.PromotionError.CannotChangeScopeWhilePromotionIsOngoing);
-                ConditionCheck.CheckCondition(promotion.PromotionType != dto.PromotionType,
-                                             Errors.PromotionError.CannotChangeTypeWhilePromotionIsOngoing);
-                ConditionCheck.CheckCondition(promotion.DiscountValue != dto.DiscountValue,
-                                             Errors.PromotionError.CannotChangeDiscountValueWhilePromotionIsOngoing);
-            }
             await ValidateUser(userId, promotion.StoreId);
             await ValidatePromotionDto(dto);
             await ValidatePromotionUniqueness(dto);
             await ValidateStoreExists(dto.StoreId);
-            _mapper.Map(dto, promotion);
+
+            if (promotion.IsActive &&
+                promotion.StartDate <= DateTime.UtcNow &&
+                (promotion.EndDate == null || promotion.EndDate >= DateTime.UtcNow))
+            {
+                promotion.EndDate = dto.EndDate;
+            }
+            else
+            {
+                _mapper.Map(dto, promotion);
+            }
             UpdateAuditFields(promotion, userId);
 
             if (promotion.PromotionType == PromotionType.BuyXGetY)
@@ -142,9 +150,10 @@ namespace FOCS.Application.Services
 
             await ValidateUser(userId, promotion.StoreId);
             ConditionCheck.CheckCondition(!promotion.IsActive, Errors.PromotionError.PromotionActive);
-            ConditionCheck.CheckCondition(promotion.StartDate.Date <= DateTime.Now.Date
-                                                        && promotion.EndDate.Date >= DateTime.Now.Date,
-                                                        Errors.PromotionError.PromotionInvalidDateToActive);
+            ConditionCheck.CheckCondition(promotion.StartDate.Date <= DateTime.Now.Date && 
+                                           (promotion.EndDate == null || 
+                                           promotion.EndDate.Value.Date >= DateTime.Now.Date),
+                                           Errors.PromotionError.PromotionInvalidDateToActive);
 
             promotion.IsActive = true;
             UpdateAuditFields(promotion, userId);
@@ -373,7 +382,7 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
         }
 
-        private Promotion CreatePromotionEntity(PromotionDTO dto, string userId)
+        private Promotion CreatePromotionEntity(PromotionDTO dto, string userId, ICollection<Coupon>? coupons = null)
         {
             var promotion = _mapper.Map<Promotion>(dto);
             promotion.CountUsed = 0;
@@ -381,6 +390,7 @@ namespace FOCS.Application.Services
             promotion.IsDeleted = false;
             promotion.CreatedAt = DateTime.UtcNow;
             promotion.CreatedBy = userId;
+            promotion.Coupons = coupons;
             return promotion;
         }
 
