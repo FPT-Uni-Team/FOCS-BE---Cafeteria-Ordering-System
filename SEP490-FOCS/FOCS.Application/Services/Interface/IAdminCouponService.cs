@@ -5,8 +5,8 @@ namespace FOCS.Application.Services.Interface
 {
     public interface IAdminCouponService
     {
-        Task<CouponAdminDTO> CreateCouponAsync(CouponAdminDTO dto, string userId);
-        Task<bool> UpdateCouponAsync(Guid id, CouponAdminDTO dto, string updatedBy);
+        Task<CouponAdminDTO> CreateCouponAsync(CouponAdminDTO dto, string userId, string storeId);
+        Task<bool> UpdateCouponAsync(Guid id, CouponAdminDTO dto, string updatedBy, string storeId);
         Task<bool> DeleteCouponAsync(Guid id, string deletedBy);
         Task<PagedResult<CouponAdminDTO>> GetAllCouponsAsync(UrlQueryParameters query, Guid storeId, string userId);
         Task<CouponAdminDTO> GetCouponByIdAsync(Guid couponId, string userId);

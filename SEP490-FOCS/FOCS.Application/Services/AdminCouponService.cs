@@ -29,7 +29,7 @@ namespace FOCS.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<CouponAdminDTO> CreateCouponAsync(CouponAdminDTO dto, string userId)
+        public async Task<CouponAdminDTO> CreateCouponAsync(CouponAdminDTO dto, string userId, string storeId)
         {
             // Check userId empty
             ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), AdminCouponConstants.UserIdEmpty);
@@ -56,6 +56,14 @@ namespace FOCS.Application.Services
             // Check dates
             ConditionCheck.CheckCondition(dto.StartDate < dto.EndDate, AdminCouponConstants.CheckCreateDate);
 
+            // Check promotion Id
+            if (dto.PromotionId.HasValue)
+            {
+                var existingPromotion = await _promotionRepository.AsQueryable()
+                                                  .AnyAsync(c => c.Id == dto.PromotionId && !c.IsDeleted);
+                ConditionCheck.CheckCondition(existingPromotion, AdminCouponConstants.CheckPromotion);
+            }
+
             // Map DTO to entity
             var newCoupon = _mapper.Map<Coupon>(dto);
             newCoupon.Id = Guid.NewGuid();
@@ -73,6 +81,7 @@ namespace FOCS.Application.Services
             };
 
             newCoupon.Code = couponCode;
+            newCoupon.StoreId = Guid.Parse(storeId);
             newCoupon.IsDeleted = false;
             newCoupon.CreatedAt = DateTime.UtcNow;
             newCoupon.CreatedBy = userId;
@@ -138,7 +147,7 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), AdminCouponConstants.UserIdEmpty);
             ConditionCheck.CheckCondition(storeId != null, Errors.Common.StoreNotFound);
 
-            var couponQuery = _couponRepository.AsQueryable().Where(c => !c.IsDeleted && c.StoreId == storeId);
+            var couponQuery = _couponRepository.AsQueryable().Include(c => c.Promotion).Where(c => !c.IsDeleted && c.StoreId == storeId);
 
             // Search
             if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))
@@ -190,9 +199,29 @@ namespace FOCS.Application.Services
                                 var now = DateTime.UtcNow;
                                 couponQuery = couponStatus switch
                                 {
-                                    CouponStatus.NotStarted => couponQuery.Where(c => c.StartDate > now),
-                                    CouponStatus.Ongoing => couponQuery.Where(c => c.StartDate <= now && c.EndDate >= now && c.IsActive),
-                                    CouponStatus.Expired => couponQuery.Where(c => c.EndDate < now || !c.IsActive),
+                                    CouponStatus.UnAvailable => couponQuery.Where(c => !c.IsActive || c.CountUsed >= c.MaxUsage),
+                                    CouponStatus.Incomming => couponQuery.Where(c => c.IsActive && c.CountUsed < c.MaxUsage && c.StartDate > now),
+                                    CouponStatus.On_going => couponQuery.Where(c => c.IsActive && c.CountUsed < c.MaxUsage && c.StartDate <= now && c.EndDate >= now),
+                                    CouponStatus.Expired => couponQuery.Where(c => c.IsActive && c.EndDate < now),
+                                    _ => couponQuery
+                                };
+                            }
+                            break;
+                        case "promotion_id":
+                            if (Guid.TryParse(value, out var promoId))
+                                couponQuery = couponQuery.Where(c => c.PromotionId == promoId);
+                            break;
+                        case "promotion_status":
+                            if (Enum.TryParse<CouponByPromotionStatus>(value, true, out var promoStatus))
+                            {
+                                couponQuery = promoStatus switch
+                                {
+                                    CouponByPromotionStatus.UnAvailable => couponQuery
+                                        .Where(c => c.Promotion != null && (!c.Promotion.IsActive || c.Promotion.IsDeleted)),
+                                    CouponByPromotionStatus.InPromotionDuration => couponQuery
+                                        .Where(c => c.Promotion != null && c.Promotion.IsActive && !c.Promotion.IsDeleted &&
+                                                    c.Promotion.StartDate <= c.StartDate &&
+                                                    c.EndDate <= c.Promotion.EndDate),
                                     _ => couponQuery
                                 };
                             }
@@ -239,7 +268,7 @@ namespace FOCS.Application.Services
             return _mapper.Map<CouponAdminDTO>(coupon);
         }
 
-        public async Task<bool> UpdateCouponAsync(Guid id, CouponAdminDTO dto, string userId)
+        public async Task<bool> UpdateCouponAsync(Guid id, CouponAdminDTO dto, string userId, string storeId)
         {
             var coupon = await _couponRepository.GetByIdAsync(id);
             if (coupon == null || coupon.IsDeleted)
@@ -254,6 +283,7 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(dto.StartDate <= dto.EndDate, AdminCouponConstants.CheckUpdateDate);
 
             _mapper.Map(dto, coupon);
+            coupon.StoreId = Guid.Parse(storeId);
             coupon.UpdatedAt = DateTime.UtcNow;
             coupon.UpdatedBy = userId;
 
