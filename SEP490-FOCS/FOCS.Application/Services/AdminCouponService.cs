@@ -147,7 +147,7 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), AdminCouponConstants.UserIdEmpty);
             ConditionCheck.CheckCondition(storeId != null, Errors.Common.StoreNotFound);
 
-            var couponQuery = _couponRepository.AsQueryable().Where(c => !c.IsDeleted && c.StoreId == storeId);
+            var couponQuery = _couponRepository.AsQueryable().Include(c => c.Promotion).Where(c => !c.IsDeleted && c.StoreId == storeId);
 
             // Search
             if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))
@@ -203,6 +203,25 @@ namespace FOCS.Application.Services
                                     CouponStatus.Incomming => couponQuery.Where(c => c.IsActive && c.CountUsed < c.MaxUsage && c.StartDate > now),
                                     CouponStatus.On_going => couponQuery.Where(c => c.IsActive && c.CountUsed < c.MaxUsage && c.StartDate <= now && c.EndDate >= now),
                                     CouponStatus.Expired => couponQuery.Where(c => c.IsActive && c.EndDate < now),
+                                    _ => couponQuery
+                                };
+                            }
+                            break;
+                        case "promotion_id":
+                            if (Guid.TryParse(value, out var promoId))
+                                couponQuery = couponQuery.Where(c => c.PromotionId == promoId);
+                            break;
+                        case "promotion_status":
+                            if (Enum.TryParse<CouponByPromotionStatus>(value, true, out var promoStatus))
+                            {
+                                couponQuery = promoStatus switch
+                                {
+                                    CouponByPromotionStatus.UnAvailable => couponQuery
+                                        .Where(c => c.Promotion != null && (!c.Promotion.IsActive || c.Promotion.IsDeleted)),
+                                    CouponByPromotionStatus.InPromotionDuration => couponQuery
+                                        .Where(c => c.Promotion != null && c.Promotion.IsActive && !c.Promotion.IsDeleted &&
+                                                    c.Promotion.StartDate <= c.StartDate &&
+                                                    c.EndDate <= c.Promotion.EndDate),
                                     _ => couponQuery
                                 };
                             }
