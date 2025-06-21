@@ -70,6 +70,9 @@ namespace FOCS.Common.Exceptions
             public const string PromotionTitleExist = "Promotion with this title exists";
             public const string PromotionOverLapping = "A promotion of this type exists in the specified date range.";
             public const string PromotionInvalidDateToActive = "Invalid date to active promotion";
+            public const string CannotChangeScopeWhilePromotionIsOngoing = "Cannot change scope while promotion is ongoing";
+            public const string CannotChangeTypeWhilePromotionIsOngoing = "Cannot change type while promotion is ongoing";
+            public const string CannotChangeDiscountValueWhilePromotionIsOngoing = "Cannot change discount value while promotion is ongoing";
         }
     }
 }

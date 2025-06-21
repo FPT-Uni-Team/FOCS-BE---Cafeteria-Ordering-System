@@ -2,8 +2,9 @@
 {
     public enum PromotionStatus
     {
-        NotStarted = 0,
-        Ongoing = 1,
-        Expired = 2,
+        UnAvailable = 0,
+        Incomming = 1,
+        OnGoing = 2,
+        Expired = 3,
     }
 }
