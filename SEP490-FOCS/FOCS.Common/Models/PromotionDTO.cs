@@ -39,7 +39,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         public PromotionScope PromotionScope { get; set; } = PromotionScope.Order;
 
         [JsonPropertyName("max_discount_value")]
-        public double MaxDiscountValue { get; set; }
+        public double? MaxDiscountValue { get; set; }
 
         [JsonPropertyName("max_usage")]
         public int? MaxUsage { get; set; }

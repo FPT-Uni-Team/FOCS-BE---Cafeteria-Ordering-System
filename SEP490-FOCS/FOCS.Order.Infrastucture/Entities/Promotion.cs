@@ -27,7 +27,7 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public PromotionScope PromotionScope { get; set; } = PromotionScope.Order;
 
-        public double MaxDiscountValue { get; set; }
+        public double? MaxDiscountValue { get; set; }
 
         public int? MaxUsage { get; set; }
         public int? CountUsed { get; set; }
