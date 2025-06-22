@@ -47,11 +47,13 @@ namespace FOCS.Application.Mappings
             CreateMap<StoreSetting, StoreSettingDTO>().ReverseMap()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
 
-            CreateMap<Promotion, PromotionDTO>().ReverseMap()
+            CreateMap<PromotionDTO, Promotion>().ReverseMap()
                 .ForMember(dest => dest.AcceptForItems, 
                     opt => opt.MapFrom(src => src.AcceptForItems != null ?
-                                           src.AcceptForItems.Distinct().ToList() :
-                                           null)); ;
+                                           src.AcceptForItems.Distinct().ToList() : null))
+                .ForMember(dest => dest.CouponIds, 
+                    opt => opt.MapFrom(src => src.Coupons != null ? 
+                                            src.Coupons.Select(c => c.Id) : null));
 
             CreateMap<PromotionItemCondition, PromotionItemConditionDTO>().ReverseMap();
 
