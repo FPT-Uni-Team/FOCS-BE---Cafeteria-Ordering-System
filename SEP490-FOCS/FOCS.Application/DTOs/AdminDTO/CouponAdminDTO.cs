@@ -27,7 +27,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         [JsonPropertyName("start_date")]
         public DateTime StartDate { get; set; }
 
-        [JsonPropertyName("end-date")]
+        [JsonPropertyName("end_date")]
         public DateTime EndDate { get; set; }
 
         [JsonPropertyName("status")]
