@@ -19,7 +19,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         public DateTime StartDate { get; set; }
 
         [JsonPropertyName("end_date")]
-        public DateTime EndDate { get; set; }
+        public DateTime? EndDate { get; set; }
 
         [JsonPropertyName("status")]
         public PromotionStatus Status
@@ -30,7 +30,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
                 var now = DateTime.UtcNow;
                 if (StartDate > now) return PromotionStatus.Incomming;
                 if (EndDate < now) return PromotionStatus.Expired;
-                return PromotionStatus.Incomming;
+                return PromotionStatus.OnGoing;
             }
         }
 
@@ -74,6 +74,9 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         [JsonPropertyName("promotion_item_condition")]
         public PromotionItemConditionDTO? PromotionItemConditionDTO { get; set; }
 
+        [JsonPropertyName("coupon_ids")]
+        public List<Guid>? CouponIds { get; set; }
+
         [JsonPropertyName("store_id")]
         public Guid StoreId { get; set; }
 
@@ -89,7 +92,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
             }
 
             // Validate Start Date must be before End Date
-            if (StartDate > EndDate)
+            if (EndDate != null && StartDate > EndDate)
             {
                 results.Add(new ValidationResult(
                     "Start Date must be before End Date",
