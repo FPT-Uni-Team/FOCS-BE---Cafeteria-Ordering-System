@@ -5,6 +5,9 @@ using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using System.Security.Claims;
 using MimeKit.Cryptography;
+using FOCS.Common.Exceptions;
+using FOCS.Common.Utils;
+using FOCS.Order.Infrastucture.Entities;
 
 namespace FOCS.Controllers
 {
@@ -22,13 +25,15 @@ namespace FOCS.Controllers
         [HttpPost("login")]
         public async Task<AuthResult> LoginAsync(LoginRequest loginRequest)
         {
-            return await _authService.LoginAsync(loginRequest, Guid.Parse(StoreId));
+            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidFormat);
+            return await _authService.LoginAsync(loginRequest, storeIdGuid);
         }
 
         [HttpPost("register")]
         public async Task<bool> RegisterAsync(RegisterRequest registerRequest)
         {
-            return await _authService.RegisterAsync(registerRequest, Guid.Parse(StoreId));
+            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidFormat);
+            return await _authService.RegisterAsync(registerRequest, storeIdGuid);
         }
 
         [HttpPost("logout")]
@@ -84,7 +89,8 @@ namespace FOCS.Controllers
         [HttpPost("refresh-token")]
         public async Task<AuthResult> RefreshToken(string refreshToken)
         {
-            return await _authService.RefreshTokenAsync(refreshToken, Guid.Parse(StoreId));
+            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidFormat);
+            return await _authService.RefreshTokenAsync(refreshToken, storeIdGuid);
         }
     }
 }

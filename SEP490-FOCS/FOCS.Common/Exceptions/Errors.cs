@@ -20,6 +20,7 @@ namespace FOCS.Common.Exceptions
             public const string UserNotFound = "User Not found";
             public const string Empty = "Empty";
             public const string IsExist = "Exist in system";
+            public const string InvalidGuidFormat = "Invalid Guid format";
         }
 
         public static class Category
