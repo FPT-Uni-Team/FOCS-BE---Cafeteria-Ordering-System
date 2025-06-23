@@ -1,13 +1,14 @@
 ﻿using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
+using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
-    [Authorize(Roles = Roles.Admin)]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
     [Route("api/admin")]
     [ApiController]
     public class AdminMenuItemController : FocsController

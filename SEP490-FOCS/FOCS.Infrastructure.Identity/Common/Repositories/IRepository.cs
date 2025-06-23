@@ -13,6 +13,8 @@ namespace FOCS.Infrastructure.Identity.Common.Repositories
         Task AddRangeAsync(IEnumerable<TEntity> entities);
         void Update(TEntity entity);
         void Remove(TEntity entity);
+        void RemoveRange(List<TEntity> entity);
+
         Task<int> SaveChangesAsync();
         IQueryable<TEntity> AsQueryable();
         Task<IQueryable<TEntity>> IncludeAsync(Func<IQueryable<TEntity>, IQueryable<TEntity>> include, bool asNoTracking = false);

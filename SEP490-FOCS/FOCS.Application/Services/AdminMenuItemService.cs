@@ -1,22 +1,27 @@
 ﻿using AutoMapper;
 using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
+using FOCS.Common.Exceptions;
+using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
+using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Security;
 
 namespace FOCS.Application.Services
 {
     public class AdminMenuItemService : IAdminMenuItemService
     {
         private readonly IRepository<MenuItem> _menuRepository;
+        private readonly IRepository<Category> _menuCategory;
         private readonly IMapper _mapper;
-
-        public AdminMenuItemService(IRepository<MenuItem> menuRepository, IMapper mapper)
+        public AdminMenuItemService(IRepository<MenuItem> menuRepository, IMapper mapper, IRepository<Category> menuCategory)
         {
             _menuRepository = menuRepository;
             _mapper = mapper;
+            _menuCategory = menuCategory;
         }
 
         public async Task<MenuItemAdminDTO> CreateMenuAsync(MenuItemAdminDTO dto, string userId)
@@ -38,7 +43,6 @@ namespace FOCS.Application.Services
         public async Task<PagedResult<MenuItemAdminDTO>> GetAllMenuItemAsync(UrlQueryParameters query, Guid storeId)
         {
             var menuQuery = _menuRepository.AsQueryable()
-                .Include(m => m.MenuCategory)
                 .Where(m => !m.IsDeleted && m.StoreId == storeId);
 
             // search
@@ -63,10 +67,6 @@ namespace FOCS.Application.Services
                     {
                         menuQuery = menuQuery.Where(m => m.BasePrice > price);
                     }
-                    else if (filter.Key.Equals("category", StringComparison.OrdinalIgnoreCase))
-                    {
-                        menuQuery = menuQuery.Where(m => m.MenuCategory.Name == filter.Value);
-                    }
                 }
             }
 
@@ -78,7 +78,6 @@ namespace FOCS.Application.Services
                 {
                     "name" => descending ? menuQuery.OrderByDescending(m => m.Name) : menuQuery.OrderBy(m => m.Name),
                     "base_price" => descending ? menuQuery.OrderByDescending(m => m.BasePrice) : menuQuery.OrderBy(m => m.BasePrice),
-                    "category" => descending ? menuQuery.OrderByDescending(m => m.MenuCategory.Name) : menuQuery.OrderBy(m => m.MenuCategory.Name),
                     _ => menuQuery
                 };
             }
@@ -137,7 +136,6 @@ namespace FOCS.Application.Services
         {
             var menuItems = await _menuRepository.IncludeAsync(source => source
                                                                .Where(m => m.StoreId == Guid.Parse(storeId) && m.Id == menuItemId)
-                                                               .Include(m => m.MenuCategory)
                                                                .Include(m => m.VariantGroups)
                                                                .ThenInclude(v => v.Variants));
 

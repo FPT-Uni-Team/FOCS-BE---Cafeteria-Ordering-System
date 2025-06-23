@@ -49,5 +49,15 @@ namespace FOCS.Controllers
             return await _categoryService.ListCategoriesAsync(urlQueryParameters, StoreId);
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var cate = await _categoryService.GetById(id, Guid.Parse(StoreId));
+            
+            if(cate == null) return NotFound();
+
+            return Ok(cate);
+        }
+        
     }
 }

@@ -22,7 +22,8 @@ namespace FOCS.Order.Infrastucture.Context
 
         public DbSet<Feedback> Feedbacks { get; set; }
 
-        public DbSet<MenuCategory> MenuCategories { get; set; }
+        public DbSet<Category> MenuCategories { get; set; }
+        public DbSet<MenuItemCategories> MenuItemCategories { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<MenuItemVariant> MenuItemVariants { get; set; }
         public DbSet<VariantGroup> VariantGroups { get; set; }

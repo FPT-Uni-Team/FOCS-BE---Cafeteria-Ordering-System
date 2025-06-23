@@ -19,7 +19,7 @@ namespace FOCS.Application.Mappings
                 .ForMember(dest => dest.User, opt => opt.Ignore())
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
             // Menu Mappings
-            CreateMap<MenuCategory, MenuCategoryDTO>().ReverseMap();
+            CreateMap<Category, MenuCategoryDTO>().ReverseMap();
             CreateMap<MenuItem, MenuItemDTO>().ReverseMap();
 
             CreateMap<MenuItem, MenuItemDetailAdminDTO>().ReverseMap();
@@ -57,8 +57,8 @@ namespace FOCS.Application.Mappings
 
             CreateMap<PromotionItemCondition, PromotionItemConditionDTO>().ReverseMap();
 
-            CreateMap<MenuCategory, CreateCategoryRequest>().ReverseMap();
-            CreateMap<MenuCategory, UpdateCategoryRequest>().ReverseMap();
+            CreateMap<Category, CreateCategoryRequest>().ReverseMap();
+            CreateMap<Category, UpdateCategoryRequest>().ReverseMap();
 
             CreateMap<UserStore, UserStoreDTO>().ReverseMap();
 
@@ -66,7 +66,7 @@ namespace FOCS.Application.Mappings
 
 
             // Order mapping
-            CreateMap<OrderDTO, Order.Infrastucture.Entities.Order>().ReverseMap();
+            CreateMap<OrderDTO, Order.Infrastucture.Entities.Order>().ReverseMap(); 
             CreateMap<OrderDetailDTO, OrderDetail>().ReverseMap();
         }
     }
