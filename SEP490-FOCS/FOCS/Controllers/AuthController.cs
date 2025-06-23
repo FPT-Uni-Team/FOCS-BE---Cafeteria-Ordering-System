@@ -20,15 +20,15 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<AuthResult> LoginAsync(LoginRequest loginRequest, [FromHeader] Guid storeId)
+        public async Task<AuthResult> LoginAsync(LoginRequest loginRequest)
         {
-            return await _authService.LoginAsync(loginRequest, storeId);
+            return await _authService.LoginAsync(loginRequest, Guid.Parse(StoreId));
         }
 
         [HttpPost("register")]
         public async Task<bool> RegisterAsync(RegisterRequest registerRequest)
         {
-            return await _authService.RegisterAsync(registerRequest);
+            return await _authService.RegisterAsync(registerRequest, Guid.Parse(StoreId));
         }
 
         [HttpPost("logout")]
@@ -76,7 +76,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("change-password")]
-        public async Task<bool> ChangePassword(ChangePasswordRequest request, string email)
+        public async Task<bool> ChangePassword(ChangePasswordRequest request)
         {
             return await _authService.ChangePassword(request, Email);
         }
