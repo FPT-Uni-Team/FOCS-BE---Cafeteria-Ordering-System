@@ -22,25 +22,34 @@ namespace FOCS.Application.Services
 {
     public class CategoryService : ICategoryService
     {
-        private readonly IRepository<MenuCategory> _categoryRepository;
+        private readonly IRepository<Category> _categoryRepository;
+        private readonly IRepository<MenuItem> _menuItemRepository;
+
         private readonly IMapper _mapper;
 
-        public CategoryService(IRepository<MenuCategory> repository, IMapper mapper)
+        public CategoryService(IRepository<Category> repository, IMapper mapper, IRepository<MenuItem> menuItemRepository)
         {
             _categoryRepository = repository;
             _mapper = mapper;
+            _menuItemRepository = menuItemRepository;
         }
 
         public async Task<MenuCategoryDTO> CreateCategoryAsync(CreateCategoryRequest request, string? storeId)
         {
-            var isExistName = await _categoryRepository.FindAsync(x => x.Name == request.Name && x.StoreId == Guid.Parse(storeId));
-            ConditionCheck.CheckCondition(isExistName.Count() == 0, Errors.Category.CategoryIsExist);
+            if (string.IsNullOrWhiteSpace(storeId) || !Guid.TryParse(storeId, out var parsedStoreId))
+            {
+                throw new ArgumentException("Invalid storeId");
+            }
 
-            var cate = _mapper.Map<MenuCategory>(request);
+            var isExistName = await _categoryRepository.FindAsync(x => x.Name == request.Name && x.StoreId == parsedStoreId);
+            ConditionCheck.CheckCondition(!isExistName.Any(), Errors.Category.CategoryIsExist);
+
+            var cate = _mapper.Map<Category>(request);
             cate.Id = Guid.NewGuid();
-            cate.StoreId = Guid.Parse(storeId);
+            cate.StoreId = parsedStoreId;
 
             await _categoryRepository.AddAsync(cate);
+
             await _categoryRepository.SaveChangesAsync();
 
             return _mapper.Map<MenuCategoryDTO>(cate);
@@ -54,6 +63,7 @@ namespace FOCS.Application.Services
             categoryQuery = ApplyFilters(categoryQuery, query);
             categoryQuery = ApplySearch(categoryQuery, query);
             categoryQuery = ApplySort(categoryQuery, query);
+
             var total = await categoryQuery.CountAsync();
             var items = await categoryQuery
                 .Skip((query.Page - 1) * query.PageSize)
@@ -115,7 +125,7 @@ namespace FOCS.Application.Services
         }
 
         #region private method
-        private static IQueryable<MenuCategory> ApplyFilters(IQueryable<MenuCategory> query, UrlQueryParameters parameters)
+        private static IQueryable<Category> ApplyFilters(IQueryable<Category> query, UrlQueryParameters parameters)
         {
             if (parameters.Filters?.Any() != true) return query;
 
@@ -132,7 +142,14 @@ namespace FOCS.Application.Services
             return query;
         }
 
-        private static IQueryable<MenuCategory> ApplySearch(IQueryable<MenuCategory> query, UrlQueryParameters parameters)
+        public async Task<MenuCategoryDTO> GetById(Guid id, Guid storeId)
+        {
+            var cate = await _categoryRepository.AsQueryable().FirstOrDefaultAsync(x => x.Id == id && x.StoreId == storeId);
+
+            return _mapper.Map<MenuCategoryDTO>(cate);
+        }
+
+        private static IQueryable<Category> ApplySearch(IQueryable<Category> query, UrlQueryParameters parameters)
         {
             if (string.IsNullOrWhiteSpace(parameters.SearchBy) || string.IsNullOrWhiteSpace(parameters.SearchValue))
                 return query;
@@ -147,7 +164,7 @@ namespace FOCS.Application.Services
             };
         }
 
-        private static IQueryable<MenuCategory> ApplySort(IQueryable<MenuCategory> query, UrlQueryParameters parameters)
+        private static IQueryable<Category> ApplySort(IQueryable<Category> query, UrlQueryParameters parameters)
         {
             if (string.IsNullOrWhiteSpace(parameters.SortBy)) return query;
 

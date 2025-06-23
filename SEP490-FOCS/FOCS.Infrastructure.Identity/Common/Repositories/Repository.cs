@@ -53,6 +53,11 @@ namespace FOCS.Infrastructure.Identity.Common.Repositories
             _dbSet.Remove(entity);
         }
 
+        public void RemoveRange(List<TEntity> entities)
+        {
+            _dbSet.RemoveRange(entities);
+        }
+
         public async Task<int> SaveChangesAsync()
         {
             return await _context.SaveChangesAsync();

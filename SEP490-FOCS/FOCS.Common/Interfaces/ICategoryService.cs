@@ -14,5 +14,6 @@ namespace FOCS.Common.Interfaces
         Task<bool> DisableCategory(Guid categoryId, string? storeId);
         Task<bool> EnableCategory(Guid categoryId, string? storeId);
         Task<PagedResult<MenuCategoryDTO>> ListCategoriesAsync(UrlQueryParameters queryParameters, string? storeId);
+        Task<MenuCategoryDTO> GetById(Guid Id, Guid StoreId);
     }
 }

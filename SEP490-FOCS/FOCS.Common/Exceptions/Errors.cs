@@ -19,6 +19,7 @@ namespace FOCS.Common.Exceptions
             public const string StoreNotFound = "Store Not found";
             public const string UserNotFound = "User Not found";
             public const string Empty = "Empty";
+            public const string IsExist = "Exist in system";
         }
 
         public static class Category
