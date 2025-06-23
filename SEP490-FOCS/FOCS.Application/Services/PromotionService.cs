@@ -123,8 +123,7 @@ namespace FOCS.Application.Services
             await ValidateStoreExists(dto.StoreId);
 
             if (promotion.IsActive &&
-                promotion.StartDate <= DateTime.UtcNow &&
-                (promotion.EndDate == null || promotion.EndDate >= DateTime.UtcNow))
+                    promotion.StartDate <= DateTime.UtcNow && promotion.EndDate >= DateTime.UtcNow)
             {
                 promotion.EndDate = dto.EndDate;
             }
@@ -151,8 +150,7 @@ namespace FOCS.Application.Services
             await ValidateUser(userId, promotion.StoreId);
             ConditionCheck.CheckCondition(!promotion.IsActive, Errors.PromotionError.PromotionActive);
             ConditionCheck.CheckCondition(promotion.StartDate.Date <= DateTime.Now.Date && 
-                                           (promotion.EndDate == null || 
-                                           promotion.EndDate.Value.Date >= DateTime.Now.Date),
+                                           promotion.EndDate.Date >= DateTime.Now.Date,
                                            Errors.PromotionError.PromotionInvalidDateToActive);
 
             promotion.IsActive = true;
