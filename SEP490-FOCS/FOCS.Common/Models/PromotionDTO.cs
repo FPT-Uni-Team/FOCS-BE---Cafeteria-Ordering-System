@@ -102,18 +102,16 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
             // Validate Discount Value for Percentage type
             if (PromotionType.Equals(PromotionType.Percentage) && DiscountValue > 100)
             {
-                if (DiscountValue > 100)
-                {
-                    results.Add(new ValidationResult(
-                        "Discount Value cannot exceed 100% for Percentage discount type",
-                        new[] { nameof(DiscountValue) }));
-                }
-                if (DiscountValue > MaxDiscountValue)
-                {
-                    results.Add(new ValidationResult(
-                        "Discount Value cannot exceed Max Discount Value",
-                        new[] { nameof(DiscountValue), nameof(MaxDiscountValue) }));
-                }
+                results.Add(new ValidationResult(
+                    "Discount Value cannot exceed 100% for Percentage discount type",
+                    new[] { nameof(DiscountValue) }));
+            }
+
+            if (DiscountValue.HasValue && MaxDiscountValue.HasValue && DiscountValue > MaxDiscountValue)
+            {
+                results.Add(new ValidationResult(
+                    "Discount Value cannot exceed Max Discount Value",
+                    new[] { nameof(DiscountValue), nameof(MaxDiscountValue) }));
             }
 
             if (PromotionType == PromotionType.BuyXGetY && PromotionItemConditionDTO == null)
