@@ -10,7 +10,7 @@ namespace FOCS.Common.Interfaces
 {
     public interface IAuthService
     {
-        Task<bool> RegisterAsync(RegisterRequest request);
+        Task<bool> RegisterAsync(RegisterRequest request, Guid StoreId);
         Task<AuthResult> LoginAsync(LoginRequest request, Guid StoreId);
         Task<AuthResult> RefreshTokenAsync(string refreshToken, Guid storeId);
         Task LogoutAsync(string userId);

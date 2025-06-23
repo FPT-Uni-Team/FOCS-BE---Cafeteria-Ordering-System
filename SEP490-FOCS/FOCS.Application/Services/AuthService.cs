@@ -71,7 +71,6 @@ namespace FOCS.Application.Services
             var user = await _userManager.FindByEmailAsync(email);
 
             ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
-
             // generate reset token
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
@@ -80,6 +79,16 @@ namespace FOCS.Application.Services
 
         public async Task<AuthResult> LoginAsync(LoginRequest request, Guid storeId)
         {
+            var store = await _storeRepository.GetByIdAsync(storeId);
+            if (store == null)
+            {
+                return new AuthResult
+                {
+                    IsSuccess = false,
+                    Errors = new List<string>() { Errors.Common.StoreNotFound }
+                };
+            }
+
             var user = await _userManager.FindByEmailAsync(request.Email);
 
             if (user == null)
@@ -181,16 +190,16 @@ namespace FOCS.Application.Services
             return await GenerateAuthResult(user, storeId);
         }
 
-        public async Task<bool> RegisterAsync(RegisterRequest request)
+        public async Task<bool> RegisterAsync(RegisterRequest request, Guid StoreId)
         {
-            var store = _storeRepository.GetByIdAsync(request.StoreId);
+            var store = _storeRepository.GetByIdAsync(StoreId);
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
 
             var user = new User
             {
                 Email = request.Email,
-                FirstName = request.Firstname,
-                LastName = request.Lastname,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
                 UserName = request.Email,
                 PhoneNumber = request.Phone
             };
@@ -200,6 +209,19 @@ namespace FOCS.Application.Services
                     string.Join("; ", result.Errors.Select(e => e.Description)));
 
             await _userManager.AddToRoleAsync(user, Roles.User);
+
+            var newUserStore = new UserStoreDTO
+            {
+                Id = Guid.NewGuid(),
+                UserId = Guid.Parse(user.Id),
+                StoreId = StoreId,
+                BlockReason = null,
+                JoinDate = DateTime.UtcNow,
+                Status = Common.Enums.UserStoreStatus.Active
+            };
+
+            await _userStoreRepository.AddAsync(_mapper.Map<UserStore>(newUserStore));
+            await _userStoreRepository.SaveChangesAsync();
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
