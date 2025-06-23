@@ -1,4 +1,5 @@
-﻿using FOCS.Application.DTOs.AdminServiceDTO;
+﻿using FOCS.Application.DTOs.AdminDTO;
+using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Common.Models;
 
 namespace FOCS.Application.Services.Interface
@@ -10,7 +11,7 @@ namespace FOCS.Application.Services.Interface
         Task<bool> DeleteCouponAsync(Guid id, string deletedBy);
         Task<PagedResult<CouponAdminDTO>> GetAllCouponsAsync(UrlQueryParameters query, Guid storeId, string userId);
         Task<CouponAdminDTO> GetCouponByIdAsync(Guid couponId, string userId);
-        Task<int> TrackCouponUsageAsync(Guid couponId);
+        Task<TrackCouponUsageDTO?> TrackCouponUsageAsync(Guid couponId, Guid? userId);
         Task<bool> SetCouponStatusAsync(Guid couponId, bool isActive, string userId);
         Task<bool> AssignCouponsToPromotionAsync(List<Guid> couponIds, Guid promotionId, string userId, Guid storeId);
         Task SetCouponConditionAsync(Guid couponId, SetCouponConditionRequest setCouponConditionRequest);

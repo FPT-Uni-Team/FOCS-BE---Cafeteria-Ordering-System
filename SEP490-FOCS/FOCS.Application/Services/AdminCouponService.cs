@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FOCS.Application.DTOs.AdminDTO;
 using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
@@ -16,14 +17,16 @@ namespace FOCS.Application.Services
     public class AdminCouponService : IAdminCouponService
     {
         private readonly IRepository<Coupon> _couponRepository;
+        private readonly IRepository<CouponUsage> _couponUsageRepository;
         private readonly IRepository<Promotion> _promotionRepository;
         private readonly IMapper _mapper;
 
         private readonly ILogger<Coupon> _logger;
 
-        public AdminCouponService(IRepository<Coupon> couponRepository, ILogger<Coupon> logger, IRepository<Promotion> promotionRepository, IMapper mapper)
+        public AdminCouponService(IRepository<Coupon> couponRepository, IRepository<CouponUsage> couponUsageRepository, ILogger<Coupon> logger, IRepository<Promotion> promotionRepository, IMapper mapper)
         {
             _couponRepository = couponRepository;
+            _couponUsageRepository = couponUsageRepository;
             _logger = logger;
             _promotionRepository = promotionRepository;
             _mapper = mapper;
@@ -305,22 +308,38 @@ namespace FOCS.Application.Services
             return true;
         }
 
-        public async Task<int> TrackCouponUsageAsync(Guid couponId)
+        public async Task<TrackCouponUsageDTO?> TrackCouponUsageAsync(Guid couponId, Guid? userId)
         {
             var coupon = await _couponRepository.GetByIdAsync(couponId);
-            if (coupon == null || coupon.IsDeleted || !coupon.IsActive)
-                return -1;
+            // If coupon unavailable
+            if (coupon == null || coupon.IsDeleted || !coupon.IsActive) return null;
 
             var now = DateTime.UtcNow;
-            if (now <= coupon.StartDate || now >= coupon.EndDate)
-                return -1;
+            // If coupon not in date range
+            if (now < coupon.StartDate || now > coupon.EndDate) return null;
 
-            if (coupon.CountUsed >= coupon.MaxUsage)
-                return -1;
+            var usageCount = await _couponUsageRepository.AsQueryable().CountAsync(u => u.CouponId == couponId);
+            // If coupon usage exceeded
+            if (usageCount >= coupon.MaxUsage) return null;
 
-            return coupon.MaxUsage - coupon.CountUsed;
+            int? leftPerUser = null;
+            if (userId.HasValue && coupon.MaxUsagePerUser.HasValue)
+            {
+                var userUsage = await _couponUsageRepository.AsQueryable()
+                            .CountAsync(u => u.CouponId == couponId && u.UserId == userId.Value);
+
+                if (userUsage >= coupon.MaxUsagePerUser.Value)
+                    leftPerUser = 0;
+                else
+                    leftPerUser = coupon.MaxUsagePerUser.Value - userUsage;
+            }
+
+            return new TrackCouponUsageDTO
+            {
+                TotalLeft = coupon.MaxUsage - usageCount,
+                LeftPerUser = leftPerUser
+            };
         }
-
 
         public async Task<bool> SetCouponStatusAsync(Guid couponId, bool isActive, string userId)
         {
