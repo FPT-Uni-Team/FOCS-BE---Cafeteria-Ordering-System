@@ -1,8 +1,10 @@
 ﻿using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
+using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
+using FOCS.Common.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,9 +30,10 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("{storeId}")]
-        public async Task<IActionResult> GetPromotions([FromBody] UrlQueryParameters query, Guid storeId)
+        public async Task<IActionResult> GetPromotions([FromBody] UrlQueryParameters query)
         {
-            var result = await _promotionService.GetPromotionsByStoreAsync(query, storeId, UserId);
+            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidFormat);
+            var result = await _promotionService.GetPromotionsByStoreAsync(query, storeIdGuid, UserId);
             return Ok(result);
         }
 

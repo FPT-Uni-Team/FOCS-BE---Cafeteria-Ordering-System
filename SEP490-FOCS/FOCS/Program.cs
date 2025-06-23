@@ -243,7 +243,6 @@ else
         c.RoutePrefix = "swagger";
     });
 
-    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
