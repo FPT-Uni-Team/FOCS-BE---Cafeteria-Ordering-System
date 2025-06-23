@@ -25,14 +25,14 @@ namespace FOCS.Controllers
         [HttpPost("login")]
         public async Task<AuthResult> LoginAsync(LoginRequest loginRequest)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidFormat);
+            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
             return await _authService.LoginAsync(loginRequest, storeIdGuid);
         }
 
         [HttpPost("register")]
         public async Task<bool> RegisterAsync(RegisterRequest registerRequest)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidFormat);
+            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
             return await _authService.RegisterAsync(registerRequest, storeIdGuid);
         }
 
@@ -89,7 +89,7 @@ namespace FOCS.Controllers
         [HttpPost("refresh-token")]
         public async Task<AuthResult> RefreshToken(string refreshToken)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidFormat);
+            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
             return await _authService.RefreshTokenAsync(refreshToken, storeIdGuid);
         }
     }

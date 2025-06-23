@@ -32,7 +32,7 @@ namespace FOCS.Controllers
         [HttpPost("{storeId}")]
         public async Task<IActionResult> GetPromotions([FromBody] UrlQueryParameters query)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidFormat);
+            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
             var result = await _promotionService.GetPromotionsByStoreAsync(query, storeIdGuid, UserId);
             return Ok(result);
         }
