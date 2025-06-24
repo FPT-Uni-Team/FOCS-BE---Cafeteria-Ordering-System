@@ -4,6 +4,7 @@ using FOCS.Order.Infrastucture.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FOCS.Order.Infrastucture.Migrations
 {
     [DbContext(typeof(OrderDbContext))]
-    partial class OrderDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250623032615_update_variant_group")]
+    partial class update_variant_group
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -418,12 +421,7 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("VariantGroupId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("VariantGroupId");
 
                     b.ToTable("MenuItemVariants");
                 });
@@ -595,7 +593,7 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Property<double?>("DiscountValue")
                         .HasColumnType("float");
 
-                    b.Property<DateTime>("EndDate")
+                    b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
@@ -863,7 +861,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.VariantGroup", b =>
                 {
-                    b.Property<Guid>("id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
@@ -873,17 +871,15 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsRequired")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("MaxSelect")
-                        .HasColumnType("int");
-
                     b.Property<Guid>("MenuItemId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("MinSelect")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MenuItemVariantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -891,13 +887,11 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("id");
+                    b.HasKey("Id");
 
                     b.HasIndex("MenuItemId");
+
+                    b.HasIndex("MenuItemVariantId");
 
                     b.ToTable("VariantGroups");
                 });
@@ -1005,15 +999,6 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("MenuItem");
-                });
-
-            modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.MenuItemVariant", b =>
-                {
-                    b.HasOne("FOCS.Order.Infrastucture.Entities.VariantGroup", "VariantGroup")
-                        .WithMany("Variants")
-                        .HasForeignKey("VariantGroupId");
-
-                    b.Navigation("VariantGroup");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Order", b =>
@@ -1169,7 +1154,15 @@ namespace FOCS.Order.Infrastucture.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("FOCS.Order.Infrastucture.Entities.MenuItemVariant", "MenuItemVariant")
+                        .WithMany()
+                        .HasForeignKey("MenuItemVariantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("MenuItem");
+
+                    b.Navigation("MenuItemVariant");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Brand", b =>
@@ -1204,11 +1197,6 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Navigation("MenuItems");
 
                     b.Navigation("UserStores");
-                });
-
-            modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.VariantGroup", b =>
-                {
-                    b.Navigation("Variants");
                 });
 #pragma warning restore 612, 618
         }

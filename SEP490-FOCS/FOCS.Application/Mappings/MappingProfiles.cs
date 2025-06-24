@@ -68,6 +68,8 @@ namespace FOCS.Application.Mappings
             // Order mapping
             CreateMap<OrderDTO, Order.Infrastucture.Entities.Order>().ReverseMap(); 
             CreateMap<OrderDetailDTO, OrderDetail>().ReverseMap();
+
+            CreateMap<VariantOptionDTO, MenuItemVariant>().ReverseMap();
         }
     }
 }

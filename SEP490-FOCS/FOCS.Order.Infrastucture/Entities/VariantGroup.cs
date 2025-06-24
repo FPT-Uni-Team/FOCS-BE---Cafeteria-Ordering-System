@@ -11,7 +11,11 @@ namespace FOCS.Order.Infrastucture.Entities
     {
         public Guid id {  get; set; }
 
-        public string name { get; set; } // siZe, topping, ...
+        public string name { get; set; } // size, topping, ...
+
+        public bool IsRequired { get; set; }
+        public int MinSelect { get; set; }
+        public int MaxSelect { get; set; }
 
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
@@ -21,6 +25,6 @@ namespace FOCS.Order.Infrastucture.Entities
         public Guid MenuItemId { get; set; }
         public MenuItem MenuItem { get; set; }
         
-        public ICollection<MenuItemVariant> Variants { get; set; }
+        public ICollection<MenuItemVariant>? Variants { get; set; }
     }
 }

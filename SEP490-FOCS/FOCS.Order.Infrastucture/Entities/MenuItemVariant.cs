@@ -28,7 +28,7 @@ namespace FOCS.Order.Infrastucture.Entities
         public string? UpdatedBy { get; set; }
 
         //Foreign key: variant group
-        public Guid VariantGroupId { get; set; }
-        public VariantGroup VariantGroup { get; set; }
+        public Guid? VariantGroupId { get; set; }
+        public VariantGroup? VariantGroup { get; set; }
     }
 }
