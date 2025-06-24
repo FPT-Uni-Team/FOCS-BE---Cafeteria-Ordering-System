@@ -29,7 +29,7 @@ namespace FOCS.Controllers
             return Ok(result);
         }
 
-        [HttpPost("{storeId}")]
+        [HttpPost]
         public async Task<IActionResult> GetPromotions([FromBody] UrlQueryParameters query)
         {
             ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
