@@ -12,6 +12,7 @@ namespace FOCS.Infrastructure.Identity.Common.Repositories
 
         Task AddRangeAsync(IEnumerable<TEntity> entities);
         void Update(TEntity entity);
+        void UpdateRange(IEnumerable<TEntity> entities);
         void Remove(TEntity entity);
         void RemoveRange(List<TEntity> entity);
 

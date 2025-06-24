@@ -29,8 +29,8 @@ namespace FOCS.Application.Services
                 _logger.LogInformation("Fetching menu for store {StoreId}", storeId);
                 var menuItems = await _menuItemRepository.IncludeAsync(source => source
                                                                 .Where(m => m.StoreId == storeId)
-                                                                .Include(m => m.VariantGroups)
-                                                                .ThenInclude(v => v.Variants));
+                                                                .Include(m => m.VariantGroups));
+                                                                //.ThenInclude(v => v.Variants));
 
                 if (!string.IsNullOrWhiteSpace(urlQueryParameters.SearchValue))
                 {
@@ -100,8 +100,8 @@ namespace FOCS.Application.Services
                 _logger.LogInformation("Fetching detail info for item {ItemId}", itemId);
                 var menuItems = await _menuItemRepository.IncludeAsync(source => source
                                                                 .Where(m => m.Id == itemId)
-                                                                .Include(m => m.VariantGroups)
-                                                                .ThenInclude(v => v.Variants));
+                                                                .Include(m => m.VariantGroups));
+                                                              //  .ThenInclude(v => v.Variants));
                 var data = _mapper.Map<MenuItemDTO>(menuItems.FirstOrDefault());
                 return data;
             }
