@@ -1,7 +1,9 @@
 ﻿using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
+using FOCS.Common.Exceptions;
 using FOCS.Common.Models;
+using FOCS.Common.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -50,6 +52,14 @@ namespace FOCS.Controllers
         public async Task<IActionResult> GetAllCoupons([FromBody] UrlQueryParameters query, Guid storeId)
         {
             var pagedResult = await _adminCouponService.GetAllCouponsAsync(query, storeId, UserId);
+            return Ok(pagedResult);
+        }
+
+        [HttpPost("coupons/available")]
+        public async Task<IActionResult> GetAvailableCoupons([FromBody] UrlQueryParameters query)
+        {
+            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
+            var pagedResult = await _adminCouponService.GetAvailableCouponsAsync(query, storeIdGuid, UserId);
             return Ok(pagedResult);
         }
 
