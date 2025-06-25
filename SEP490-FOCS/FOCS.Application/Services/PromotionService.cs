@@ -54,15 +54,15 @@ namespace FOCS.Application.Services
             _pricingService = pricingService;
         }
 
-        public async Task<PromotionDTO> CreatePromotionAsync(PromotionDTO dto, string userId)
+        public async Task<PromotionDTO> CreatePromotionAsync(PromotionDTO dto, Guid storeId ,string userId)
         {
-            await ValidateUser(userId, dto.StoreId);
+            await ValidateUser(userId, storeId);
             await ValidatePromotionDto(dto);
-            await ValidatePromotionUniqueness(dto);
-            await ValidateStoreExists(dto.StoreId);
+            await ValidatePromotionUniqueness(dto, storeId);
+            await ValidateStoreExists(storeId);
 
             var coupons = _couponRepository.AsQueryable()
-                            .Where(c => c.StoreId == dto.StoreId &&
+                            .Where(c => c.StoreId == storeId &&
                                         c.PromotionId == null &&
                                         dto.CouponIds.Contains(c.Id))
                             .ToList();
@@ -112,15 +112,15 @@ namespace FOCS.Application.Services
             return _mapper.Map<PromotionDTO>(promotion);
         }
 
-        public async Task<bool> UpdatePromotionAsync(Guid promotionId, PromotionDTO dto, string userId)
+        public async Task<bool> UpdatePromotionAsync(Guid promotionId, PromotionDTO dto, Guid storeId, string userId)
         {
             ConditionCheck.CheckCondition(promotionId == dto.Id, Errors.Common.NotFound);
             var promotion = await GetAvailablePromotionById(promotionId);
             if (promotion == null) return false;
             await ValidateUser(userId, promotion.StoreId);
             await ValidatePromotionDto(dto);
-            await ValidatePromotionUniqueness(dto);
-            await ValidateStoreExists(dto.StoreId);
+            await ValidatePromotionUniqueness(dto, storeId);
+            await ValidateStoreExists(storeId);
 
             if (promotion.IsActive &&
                     promotion.StartDate <= DateTime.UtcNow && promotion.EndDate >= DateTime.UtcNow)
@@ -346,7 +346,7 @@ namespace FOCS.Application.Services
                 string.Join("; ", validationResults.Select(r => r.ErrorMessage)));
         }
 
-        private async Task ValidatePromotionUniqueness(PromotionDTO dto)
+        private async Task ValidatePromotionUniqueness(PromotionDTO dto, Guid storeId)
         {
             var existingPromotionTitle = await _promotionRepository
                 .AsQueryable()
@@ -357,7 +357,7 @@ namespace FOCS.Application.Services
             var overlappingPromotion = await _promotionRepository
                 .AsQueryable()
                 .FirstOrDefaultAsync(p => p.PromotionType == dto.PromotionType
-                                        && p.StoreId == dto.StoreId
+                                        && p.StoreId == storeId
                                         && ((dto.StartDate >= p.StartDate && dto.StartDate <= p.EndDate)
                                             || (dto.EndDate >= p.StartDate && dto.EndDate <= p.EndDate)
                                             || (dto.StartDate <= p.StartDate && dto.EndDate >= p.EndDate))
