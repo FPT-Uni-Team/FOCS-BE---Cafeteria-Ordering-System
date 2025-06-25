@@ -43,7 +43,7 @@ namespace FOCS.Controllers
             return await _categoryService.UpdateCategoryAsync(updateCategoryRequest, id, StoreId);
         }
 
-        [HttpPost("list")]
+        [HttpPost("categories")]
         public async Task<PagedResult<MenuCategoryDTO>> ListCategories([FromBody] UrlQueryParameters urlQueryParameters)
         {
             return await _categoryService.ListCategoriesAsync(urlQueryParameters, StoreId);

@@ -33,8 +33,13 @@ namespace FOCS.Middlewares
 
             context.Response.ContentType = "application/json";
             int statusCode = StatusCodes.Status500InternalServerError;
-            string message = exception.Message;
-
+            string[] messages = exception.Message.Split("@");
+            string message = messages[0];
+            string fieldName = string.Empty;
+            if(messages.Count() > 1)
+            {
+                fieldName = messages[1] ?? string.Empty;
+            }
             //Check the error and res correct error
             if (exception is ValidationException)
             {
@@ -57,7 +62,8 @@ namespace FOCS.Middlewares
             var response = new
             {
                 StatusCode = statusCode,
-                Message = message
+                Message = message,
+                FieldName = fieldName
             };
 
             await context.Response.WriteAsJsonAsync(response);

@@ -75,4 +75,17 @@ namespace FOCS.Common.Models
         [JsonPropertyName("is_available")]
         public bool IsAvailable { get; set; }
     }
+
+    public class AddVariantsToMenuItem
+    {
+        [JsonPropertyName("menu_item_id")]
+        public Guid MenuItemId { get; set; }
+
+        [JsonPropertyName("variant_group_ids")]
+        public List<Guid> VariantGroupIds { get; set; }
+
+        [JsonPropertyName("variant_ids")]
+        public List<Guid> VariantIds { get; set; }
+
+    }
 }

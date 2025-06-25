@@ -27,6 +27,8 @@ namespace FOCS.Order.Infrastucture.Context
         public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<MenuItemVariant> MenuItemVariants { get; set; }
         public DbSet<VariantGroup> VariantGroups { get; set; }
+        public DbSet<MenuItemVariantGroup> MenuItemVariantGroups { get; set; }
+        public DbSet<MenuItemVariantGroupItem> MenuItemVariantGroupItems { get; set; }
 
         public DbSet<Table> Tables { get; set; }
         public DbSet<CartItem> CartItems { get; set; }

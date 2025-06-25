@@ -16,6 +16,7 @@ namespace FOCS.Application.Services
     {
         private readonly IRepository<MenuItem> _menuRepository;
         private readonly IRepository<Category> _menuCategory;
+
         private readonly IMapper _mapper;
         public AdminMenuItemService(IRepository<MenuItem> menuRepository, IMapper mapper, IRepository<Category> menuCategory)
         {
@@ -24,17 +25,22 @@ namespace FOCS.Application.Services
             _menuCategory = menuCategory;
         }
 
-        public async Task<MenuItemAdminDTO> CreateMenuAsync(MenuItemAdminDTO dto, string userId)
+        public async Task<MenuItemAdminDTO> CreateMenuAsync(MenuItemAdminDTO dto, string storeId)
         {
+            var isExist = await _menuRepository.AsQueryable().AnyAsync(x => x.Name == dto.Name);
+
+            ConditionCheck.CheckCondition(!isExist, Errors.Common.IsExist, "name");
+
             var newItem = _mapper.Map<MenuItem>(dto);
 
             // Ensure the new item has required properties set
             newItem.Id = Guid.NewGuid();
             newItem.IsDeleted = false;
             newItem.CreatedAt = DateTime.UtcNow;
-            newItem.CreatedBy = userId;
+            newItem.CreatedBy = storeId;
 
             await _menuRepository.AddAsync(newItem);
+
             await _menuRepository.SaveChangesAsync();
 
             return _mapper.Map<MenuItemAdminDTO>(newItem);

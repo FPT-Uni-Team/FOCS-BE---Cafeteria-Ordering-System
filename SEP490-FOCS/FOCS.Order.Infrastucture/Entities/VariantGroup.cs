@@ -9,21 +9,14 @@ namespace FOCS.Order.Infrastucture.Entities
 {
     public class VariantGroup : IAuditable
     {
-        public Guid id {  get; set; }
+        public Guid Id {  get; set; }
 
-        public string name { get; set; } // size, topping, ...
-
-        public bool IsRequired { get; set; }
-        public int MinSelect { get; set; }
-        public int MaxSelect { get; set; }
-
+        public string Name { get; set; } // size, topping, ...
+       
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string? UpdatedBy { get; set; }
-
-        public Guid MenuItemId { get; set; }
-        public MenuItem MenuItem { get; set; }
         
         public ICollection<MenuItemVariant>? Variants { get; set; }
     }

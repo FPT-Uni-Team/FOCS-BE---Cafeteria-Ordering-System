@@ -70,6 +70,8 @@ namespace FOCS.Application.Mappings
             CreateMap<OrderDetailDTO, OrderDetail>().ReverseMap();
 
             CreateMap<VariantOptionDTO, MenuItemVariant>().ReverseMap();
+
+            CreateMap<MenuItemVariantGroup, CreateMenuItemVariantGroupRequest>().ReverseMap();
         }
     }
 }
