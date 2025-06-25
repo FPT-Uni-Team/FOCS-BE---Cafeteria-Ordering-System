@@ -43,7 +43,8 @@ namespace FOCS.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var created = await _promotionService.CreatePromotionAsync(dto, UserId);
+            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
+            var created = await _promotionService.CreatePromotionAsync(dto, storeIdGuid, UserId);
             return Ok(created);
         }
 
@@ -53,7 +54,8 @@ namespace FOCS.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var success = await _promotionService.UpdatePromotionAsync(promotionId, dto, UserId);
+            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
+            var success = await _promotionService.UpdatePromotionAsync(promotionId, dto, storeIdGuid, UserId);
             return success ? Ok() : NotFound();
         }
 
