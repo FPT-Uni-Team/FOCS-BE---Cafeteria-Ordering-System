@@ -27,15 +27,13 @@ namespace FOCS.Application.Services
         private readonly IRepository<MenuItemCategories> _menuItemCategoryRepository;
 
         private readonly ICategoryService _categoryService;
-        private readonly IAdminMenuItemService _adminMenuItemService;
 
         private IMapper _mapper;
-        public MenuItemCategoryService(IRepository<MenuItemCategories> menuItemCategoryRepository, IMapper mapper, ICategoryService categoryService, IAdminMenuItemService adminMenuItemService)
+        public MenuItemCategoryService(IRepository<MenuItemCategories> menuItemCategoryRepository, IMapper mapper, ICategoryService categoryService)
         {
             _menuItemCategoryRepository = menuItemCategoryRepository;
             _mapper = mapper;
             _categoryService = categoryService;
-            _adminMenuItemService = adminMenuItemService;
         }
 
         public async Task AssignCategoriesToMenuItem(List<Guid> categoryIds, Guid menuItemId, string userId)
@@ -62,6 +60,19 @@ namespace FOCS.Application.Services
             {
                 throw;
             }
+        }
+
+        public async Task<List<MenuCategoryDTO>> ListCategoriesWithMenuItem(Guid menuItemId, string storeId)
+        {
+            var categories = await _menuItemCategoryRepository.AsQueryable().Include(x => x.Category).Include(x => x.MenuItem).Where(x => x.MenuItemId == menuItemId && x.CreatedBy == storeId).ToListAsync();
+
+            return categories.Select(x => new MenuCategoryDTO
+            {
+                Id = x.CategoryId,
+                Name = x.Category.Name,
+                Description = x.Category.Description,
+                IsActive = x.Category.IsActive
+            }).ToList();
         }
 
         public async Task<bool> AssignMenuItemsToCategory(Guid cateId, List<Guid> menuItemIds, Guid storeId)

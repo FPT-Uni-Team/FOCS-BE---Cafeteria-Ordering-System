@@ -22,6 +22,7 @@ namespace FOCS.Common.Interfaces
 
         #region menu item
         Task AssignCategoriesToMenuItem(List<Guid> categoryIds, Guid menuItemId, string StoreId);
+        Task<List<MenuCategoryDTO>> ListCategoriesWithMenuItem(Guid menuItemId, string storeId);
 
         #endregion
     }

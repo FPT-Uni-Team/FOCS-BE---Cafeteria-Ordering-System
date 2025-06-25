@@ -26,15 +26,15 @@ namespace FOCS.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var created = await _adminMenuItemService.CreateMenuAsync(dto, UserId);
+            var created = await _adminMenuItemService.CreateMenuAsync(dto, StoreId);
 
             return Ok(created);
         }
 
         [HttpPost("menu-items")]
-        public async Task<IActionResult> GetAllMenuItems([FromBody] UrlQueryParameters urlQueryParameters, [FromQuery] Guid storeId)
+        public async Task<IActionResult> GetAllMenuItems([FromBody] UrlQueryParameters urlQueryParameters)
         {
-            var pagedResult = await _adminMenuItemService.GetAllMenuItemAsync(urlQueryParameters, storeId);
+            var pagedResult = await _adminMenuItemService.GetAllMenuItemAsync(urlQueryParameters, Guid.Parse(StoreId));
             return Ok(pagedResult);
         }
 

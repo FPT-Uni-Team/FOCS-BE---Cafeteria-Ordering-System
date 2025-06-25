@@ -17,11 +17,11 @@ namespace FOCS.Common.Utils
             }
         }
 
-        public static void CheckCondition(bool condition, string message)
+        public static void CheckCondition(bool condition, string message, string? fieldName = null)
         {
             if (!condition)
             {
-                throw new Exception(message);
+                throw new Exception(message + "@" + fieldName);
             }
         }
         public static void CheckCondition(bool condition, string message, int errorCode)

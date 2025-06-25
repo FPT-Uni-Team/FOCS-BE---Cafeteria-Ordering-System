@@ -7,7 +7,7 @@ namespace FOCS.Controllers
 {
     [Route("variant-group")]
     [ApiController]
-    public class VariantGroupController : ControllerBase
+    public class VariantGroupController : FocsController
     {
         private readonly IVariantGroupService _variantGroupService;
 

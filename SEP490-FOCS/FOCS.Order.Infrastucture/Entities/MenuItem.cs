@@ -33,6 +33,6 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public Store Store { get; set; }
 
-        public ICollection<VariantGroup> VariantGroups { get; set; }
+        public ICollection<MenuItemVariantGroup> MenuItemVariantGroups { get; set; }
     }
 }

@@ -9,6 +9,7 @@ using FOCS.Order.Infrastucture.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -22,14 +23,16 @@ namespace FOCS.Application.Services
         private readonly IAdminMenuItemService _menuItemService;
 
         private readonly IRepository<VariantGroup> _variantGroup;
+        private readonly IRepository<MenuItemVariantGroup> _menuItemVariantGroup;
         private readonly IMapper _mapper;
 
-        public VariantGroupService(IMenuItemVariantService menuItemVariantService, IMapper mapper, IAdminMenuItemService menuItemService, IRepository<VariantGroup> variantGroup)
+        public VariantGroupService(IMenuItemVariantService menuItemVariantService, IMapper mapper, IAdminMenuItemService menuItemService, IRepository<VariantGroup> variantGroup, IRepository<MenuItemVariantGroup> menuItemVariantGroup)
         {
             _menuItemService = menuItemService;
             _menuItemVariantService = menuItemVariantService;
             _variantGroup = variantGroup;
             _mapper = mapper;
+            _menuItemVariantGroup = menuItemVariantGroup;
         }
 
         public async Task<bool> AddMenuItemVariantToGroupAsync(AddVariantToGroupRequest request, Guid storeId)
@@ -41,24 +44,24 @@ namespace FOCS.Application.Services
 
                 var variants = await _menuItemVariantService.ListVariantsWithIds(request.VariantIds, storeId);
 
-                var groupNameExist = await _variantGroup.AsQueryable().AnyAsync(x => x.name == request.GroupName);
+                var groupNameExist = await _variantGroup.AsQueryable().AnyAsync(x => x.Name == request.GroupName);
                 ConditionCheck.CheckCondition(!groupNameExist, Errors.Common.NotFound);
 
                 var newGroupVariant = new VariantGroup
                 {
-                    id = Guid.NewGuid(),
-                    name = request.GroupName,
-                    IsRequired = request.IsRequired,
-                    MaxSelect = request.MaxSelect,
-                    MinSelect = request.MinSelect,
-                    MenuItemId = request.MenuItemId,
+                    Id = Guid.NewGuid(),
+                    Name = request.GroupName,
+                    //IsRequired = request.IsRequired,
+                    //MaxSelect = request.MaxSelect,
+                    //MinSelect = request.MinSelect,
+                    //MenuItemId = request.MenuItemId,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = storeId.ToString()
                 };
 
                 await _variantGroup.AddAsync(newGroupVariant);
 
-                await _menuItemVariantService.AssignVariantGroupToVariants(request.VariantIds, newGroupVariant.id);
+                await _menuItemVariantService.AssignVariantGroupToVariants(request.VariantIds, newGroupVariant.Id);
 
                 await _variantGroup.SaveChangesAsync();
             } catch (Exception ex)
@@ -73,24 +76,26 @@ namespace FOCS.Application.Services
             var menuItem = await _menuItemService.GetMenuDetailAsync(menuItemId);
             ConditionCheck.CheckCondition(menuItem != null, Errors.Common.NotFound);
 
-            return await _variantGroup.AsQueryable().Where(x => x.MenuItemId == menuItemId).Select(x => x.name).ToListAsync();
+            return await _menuItemVariantGroup.AsQueryable().Include(x => x.VariantGroup).Where(x => x.MenuItemId == menuItemId).Select(x => x.VariantGroup.Name).ToListAsync();
         }
 
         public async Task<List<VariantGroupDetailDTO>> GetVariantGroupsByMenuItemAsync(Guid menuItemId)
         {
-            var menuItem = await _menuItemService.GetMenuDetailAsync(menuItemId);
-            ConditionCheck.CheckCondition(menuItem != null, Errors.Common.NotFound);
+            //var menuItem = await _menuItemService.GetMenuDetailAsync(menuItemId);
+            //ConditionCheck.CheckCondition(menuItem != null, Errors.Common.NotFound);
 
-            var groups = await _variantGroup.AsQueryable().Include(x => x.Variants).Where(x => x.MenuItemId == menuItemId).ToListAsync();
+            //var groups = await _menuItemVariantGroup.AsQueryable().Include(x => x.).Where(x => x.MenuItemId == menuItemId).ToListAsync();
 
-            return groups.Select(x => new VariantGroupDetailDTO
-            {
-                GroupName = x.name,
-                IsRequired = x.IsRequired,
-                MaxSelect = x.MaxSelect,
-                MinSelect = x.MinSelect,
-                Variants = _mapper.Map<List<VariantOptionDTO>>(x.Variants)
-            }).ToList();
+            //return groups.Select(x => new VariantGroupDetailDTO
+            //{
+            //    GroupName = x.Name,
+            //    IsRequired = x.IsRequired,
+            //    MaxSelect = x.MaxSelect,
+            //    MinSelect = x.MinSelect,
+            //    Variants = _mapper.Map<List<VariantOptionDTO>>(x.Variants)
+            //}).ToList();
+
+            return new List<VariantGroupDetailDTO>();
         }
 
         public async Task<bool> RemoveVariantFromGroupAsync(Guid variantGroupId)
@@ -111,22 +116,23 @@ namespace FOCS.Application.Services
 
         public async Task<bool> UpdateGroupSettingsAsync(Guid menuItemId, string groupName, UpdateGroupSettingRequest request)
         {
-            try
-            {
-                var group = await _variantGroup.AsQueryable().FirstOrDefaultAsync(x => x.MenuItemId == menuItemId && x.name == groupName);
-                ConditionCheck.CheckCondition(group != null, Errors.Common.NotFound);
+            //try
+            //{
+            //    var group = await _variantGroup.AsQueryable().FirstOrDefaultAsync(x => x.MenuItemId == menuItemId && x.Name == groupName);
+            //    ConditionCheck.CheckCondition(group != null, Errors.Common.NotFound);
 
-                group!.IsRequired = request.IsRequired;
-                group!.MaxSelect = request.MaxSelect;
-                group!.MinSelect = request.MinSelect;
+            //    group!.IsRequired = request.IsRequired;
+            //    group!.MaxSelect = request.MaxSelect;
+            //    group!.MinSelect = request.MinSelect;
 
-                _variantGroup.Update(group);
-                await _variantGroup.SaveChangesAsync();
-            } catch(Exception ex)
-            {
-                return false;
-            }
-            return true;
+            //    _variantGroup.Update(group);
+            //    await _variantGroup.SaveChangesAsync();
+            //} catch(Exception ex)
+            //{
+            //    return false;
+            //}
+            //return true;
+            return false;
         }
     }
 }

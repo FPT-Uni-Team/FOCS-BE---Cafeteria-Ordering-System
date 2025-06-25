@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -21,6 +22,12 @@ namespace FOCS.Common.Exceptions
             public const string Empty = "Empty";
             public const string IsExist = "Exist in system";
             public const string InvalidGuidFormat = "Invalid Guid format";
+        }
+
+        public static class Variant
+        {
+            public const string Exist = "Group name already exists for this menu item.";
+            public const string FailWhenAssign = "Fail when assign";
         }
 
         public static class Category

@@ -1,4 +1,5 @@
-﻿using FOCS.Common.Constants;
+﻿using FOCS.Application.Services;
+using FOCS.Common.Constants;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -29,6 +30,12 @@ namespace FOCS.Controllers
         public async Task<CategoryMenuItemDetailResponse> GetCategoryWithMenuItems(Guid cateId)
         {
             return await _menuItemCategoryService.GetCategoryWithMenuItemDetail(cateId, Guid.Parse(StoreId));
+        }
+
+        [HttpPost("menu-item/{menuItemId}/categories")]
+        public async Task<List<MenuCategoryDTO>> ListCategoriesWithMenuItem(Guid menuItemId)
+        {
+            return await _menuItemCategoryService.ListCategoriesWithMenuItem(menuItemId, StoreId);
         }
 
         [HttpDelete("{cateId}")]
