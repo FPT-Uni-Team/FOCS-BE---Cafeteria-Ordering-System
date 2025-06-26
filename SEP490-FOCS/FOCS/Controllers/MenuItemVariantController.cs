@@ -7,7 +7,7 @@ namespace FOCS.Controllers
 {
     [Route("menu-item-variant")]
     [ApiController]
-    public class MenuItemVariantController : ControllerBase
+    public class MenuItemVariantController : FocsController
     {
         private readonly IMenuItemVariantService _menuItemVariantService;
 
@@ -68,6 +68,12 @@ namespace FOCS.Controllers
         public async Task<bool> AssignVariantsToVariantGroup([FromBody] AssignVariantsToGroupRequest request)
         {
             return await _menuItemVariantService.AssignVariantGroupToVariants(request.VariantIds, request.VariantGroupId);
+        }
+
+        [HttpGet("list-by-store")]
+        public async Task<List<VariantDTO>> ListVariantsByStore()
+        {
+            return await _menuItemVariantService.ListVariantByStore(StoreId);
         }
     }
 }

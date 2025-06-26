@@ -61,5 +61,11 @@ namespace FOCS.Controllers
             var result = await _variantGroupService.GetGroupNamesByMenuItemAsync(menuItemId);
             return Ok(result);
         }
+
+        [HttpGet("variants")]
+        public async Task<List<VariantGroupDetailDTO>> GetVariantGroupByStore()
+        {
+            return await _variantGroupService.GetVariantGroupsByStore(StoreId);
+        }
     }
 }
