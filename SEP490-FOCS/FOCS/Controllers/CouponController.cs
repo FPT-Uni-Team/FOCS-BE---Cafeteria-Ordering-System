@@ -1,7 +1,9 @@
 ﻿using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
+using FOCS.Common.Exceptions;
 using FOCS.Common.Models;
+using FOCS.Common.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -53,6 +55,14 @@ namespace FOCS.Controllers
             return Ok(pagedResult);
         }
 
+        [HttpPost("coupons/available")]
+        public async Task<IActionResult> GetAvailableCoupons([FromBody] UrlQueryParameters query)
+        {
+            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
+            var pagedResult = await _adminCouponService.GetAvailableCouponsAsync(query, storeIdGuid, UserId);
+            return Ok(pagedResult);
+        }
+
         [HttpGet("coupon/{id}")]
         public async Task<IActionResult> GetCoupon(Guid id)
         {
@@ -61,6 +71,16 @@ namespace FOCS.Controllers
                 return NotFound();
 
             return Ok(coupon);
+        }
+
+        [HttpPost("coupons/by-ids")]
+        public async Task<IActionResult> GetCouponsByListId([FromBody] List<Guid> couponIds)
+        {
+            if (couponIds == null || !couponIds.Any())
+                return NotFound();
+            var result = await _adminCouponService.GetCouponsByListIdAsync(couponIds, StoreId, UserId);
+
+            return Ok(result);
         }
 
         [HttpPut("coupon/{id}")]

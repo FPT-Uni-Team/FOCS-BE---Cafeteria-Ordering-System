@@ -26,7 +26,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         {
             get
             {
-                if (IsActive == false) return PromotionStatus.UnAvailable;
+                if (IsActive == false || CountUsed >= MaxUsage) return PromotionStatus.UnAvailable;
                 var now = DateTime.UtcNow;
                 if (StartDate > now) return PromotionStatus.Incomming;
                 if (EndDate < now) return PromotionStatus.Expired;
@@ -76,9 +76,6 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
 
         [JsonPropertyName("coupon_ids")]
         public List<Guid>? CouponIds { get; set; }
-
-        [JsonPropertyName("store_id")]
-        public Guid StoreId { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
