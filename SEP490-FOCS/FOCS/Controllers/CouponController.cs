@@ -73,6 +73,16 @@ namespace FOCS.Controllers
             return Ok(coupon);
         }
 
+        [HttpPost("coupons/by-ids")]
+        public async Task<IActionResult> GetCouponsByListId([FromBody] List<Guid> couponIds)
+        {
+            if (couponIds == null || !couponIds.Any())
+                return NotFound();
+            var result = await _adminCouponService.GetCouponsByListIdAsync(couponIds, StoreId, UserId);
+
+            return Ok(result);
+        }
+
         [HttpPut("coupon/{id}")]
         public async Task<IActionResult> UpdateCoupon(Guid id, [FromBody] CouponAdminDTO dto)
         {

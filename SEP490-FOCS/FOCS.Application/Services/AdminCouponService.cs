@@ -8,7 +8,9 @@ using FOCS.Common.Exceptions;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -19,13 +21,26 @@ namespace FOCS.Application.Services
         private readonly IRepository<Coupon> _couponRepository;
         private readonly IRepository<CouponUsage> _couponUsageRepository;
         private readonly IRepository<Promotion> _promotionRepository;
+        private readonly IRepository<UserStore> _userStoreRepository;
+        private readonly IRepository<Store> _storeRepository;
+        private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
 
         private readonly ILogger<Coupon> _logger;
 
-        public AdminCouponService(IRepository<Coupon> couponRepository, IRepository<CouponUsage> couponUsageRepository, ILogger<Coupon> logger, IRepository<Promotion> promotionRepository, IMapper mapper)
+        public AdminCouponService(IRepository<Coupon> couponRepository, 
+                                  IRepository<CouponUsage> couponUsageRepository,
+                                  IRepository<Store> storeRepository,
+                                  IRepository<UserStore> userStoreRepository,
+                                  UserManager<User> userManager,
+                                  ILogger<Coupon> logger, 
+                                  IRepository<Promotion> promotionRepository, 
+                                  IMapper mapper)
         {
             _couponRepository = couponRepository;
+            _storeRepository = storeRepository;
+            _userManager = userManager;
+            _userStoreRepository = userStoreRepository;
             _couponUsageRepository = couponUsageRepository;
             _logger = logger;
             _promotionRepository = promotionRepository;
@@ -391,6 +406,23 @@ namespace FOCS.Application.Services
             return _mapper.Map<CouponAdminDTO>(coupon);
         }
 
+        public async Task<List<CouponAdminDTO>> GetCouponsByListIdAsync(List<Guid> couponIds, string storeId, string userId)
+        {
+            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
+
+            await ValidateUser(userId, storeIdGuid);
+            await ValidateStoreExists(storeIdGuid);
+
+            if (couponIds == null || couponIds.Count == 0)
+                return new List<CouponAdminDTO>();
+
+            var coupons = await _couponRepository.FindAsync(c => couponIds.Contains(c.Id) && !c.IsDeleted);
+
+            ConditionCheck.CheckCondition(coupons.Any(), "Coupon not found or has been deleted", "couponIds");
+
+            return _mapper.Map<List<CouponAdminDTO>>(coupons.ToList());
+        }
+
         public async Task<bool> UpdateCouponAsync(Guid id, CouponAdminDTO dto, string userId, string storeId)
         {
             var coupon = await _couponRepository.GetByIdAsync(id);
@@ -504,6 +536,24 @@ namespace FOCS.Application.Services
             return true;
         }
 
+        #region Private Helper Methods
 
+        private async Task ValidateUser(string userId, Guid storeId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            var storesOfUser = (await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(userId))).Distinct().ToList();
+
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
+            ConditionCheck.CheckCondition(storesOfUser.Select(x => x.StoreId).Contains(storeId), Errors.AuthError.UserUnauthor);
+        }
+
+        private async Task ValidateStoreExists(Guid storeId)
+        {
+            var store = await _storeRepository.GetByIdAsync(storeId);
+            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
+        }
+
+        #endregion
     }
 }
