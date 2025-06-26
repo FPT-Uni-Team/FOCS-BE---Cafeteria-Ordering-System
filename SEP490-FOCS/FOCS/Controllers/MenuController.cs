@@ -9,17 +9,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FOCS.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("menu")]
     [ApiController]
     public class MenuController : FocsController
     {
         private readonly IMenuService _menuService;
+        private readonly IMenuItemsVariantGroupService _menuItemsVariantGroupService;
         private readonly IMapper _mapper;
 
-        public MenuController(IMenuService menuService, IMapper mapper)
+        public MenuController(IMenuService menuService, IMapper mapper, IMenuItemsVariantGroupService menuItemsVariantGroupService)
         {
             _menuService = menuService;
             _mapper = mapper;
+            _menuItemsVariantGroupService = menuItemsVariantGroupService;
         }
 
         [HttpPost("get-menu-item")]
@@ -32,6 +34,13 @@ namespace FOCS.Controllers
         public async Task<MenuItemDTO> GetItemVariant(Guid itemId)
         {
             return await _menuService.GetItemVariant(itemId);
+        }
+
+        [HttpGet("menu-items/{menuItemId}/variant-groups")]
+        public async Task<IActionResult> GetVariantGroups(Guid menuItemId)
+        {
+            var result = await _menuItemsVariantGroupService.GetVariantGroupsWithVariants(menuItemId, Guid.Parse(StoreId));
+            return Ok(result);
         }
 
     }

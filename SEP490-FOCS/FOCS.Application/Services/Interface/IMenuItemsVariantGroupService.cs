@@ -11,5 +11,7 @@ namespace FOCS.Common.Interfaces
     public interface IMenuItemsVariantGroupService
     {
         Task<List<MenuItemVariantGroup>> AssignMenuItemToVariantGroup(CreateMenuItemVariantGroupRequest request);
+
+        Task<GetVariantGroupAndVariantResponse> GetVariantGroupsWithVariants(Guid menuItemId, Guid storeId);
     }
 }

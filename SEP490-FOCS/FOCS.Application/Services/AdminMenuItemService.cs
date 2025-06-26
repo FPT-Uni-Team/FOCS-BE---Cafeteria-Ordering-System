@@ -140,15 +140,10 @@ namespace FOCS.Application.Services
 
         public async Task<MenuItemDetailAdminDTO> GetMenuItemDetail(Guid menuItemId, string storeId)
         {
-            //var menuItems = await _menuRepository.IncludeAsync(source => source
-            //                                                   .Where(m => m.StoreId == Guid.Parse(storeId) && m.Id == menuItemId)
-            //                                                   .Include(m => m.VariantGroups)
-            //                                                   .ThenInclude(v => v.Variants));
+            var menuItems = await _menuRepository.AsQueryable().FirstOrDefaultAsync(m => m.StoreId == Guid.Parse(storeId) && m.Id == menuItemId);
 
 
-            //return _mapper.Map<MenuItemDetailAdminDTO>(menuItems.FirstOrDefault());
-
-            return new MenuItemDetailAdminDTO();
+            return _mapper.Map<MenuItemDetailAdminDTO>(menuItems);
         }
     }
 }
