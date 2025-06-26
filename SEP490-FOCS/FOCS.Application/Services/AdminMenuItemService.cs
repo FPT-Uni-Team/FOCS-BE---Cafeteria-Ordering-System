@@ -2,13 +2,13 @@
 using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Exceptions;
-using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Security;
 
 namespace FOCS.Application.Services
 {
@@ -17,10 +17,22 @@ namespace FOCS.Application.Services
         private readonly IRepository<MenuItem> _menuRepository;
         private readonly IRepository<Category> _menuCategory;
 
+        private readonly IRepository<UserStore> _userStoreRepository;
+
+        private readonly IRepository<Store> _storeRepository;
+        private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
-        public AdminMenuItemService(IRepository<MenuItem> menuRepository, IMapper mapper, IRepository<Category> menuCategory)
+        public AdminMenuItemService(IRepository<MenuItem> menuRepository,
+            IRepository<Store> storeRepository,
+            UserManager<User> userManager,
+            IRepository<UserStore> userStoreRepository,
+            IMapper mapper, 
+            IRepository<Category> menuCategory)
         {
             _menuRepository = menuRepository;
+            _storeRepository = storeRepository;
+            _userManager = userManager;
+            _userStoreRepository = userStoreRepository;
             _mapper = mapper;
             _menuCategory = menuCategory;
         }
@@ -150,5 +162,36 @@ namespace FOCS.Application.Services
 
             return new MenuItemDetailAdminDTO();
         }
+
+        public async Task<List<MenuItemDetailAdminDTO>> GetListMenuItemDetail(List<Guid> menuItemIds, string storeId, string userId)
+        {
+            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
+            await ValidateUser(userId, storeIdGuid);
+            await ValidateStoreExists(storeIdGuid);
+            var menuItems = await _menuRepository.AsQueryable()
+                                .Where(m => m.StoreId == storeIdGuid && menuItemIds.Contains(m.Id)).ToListAsync();
+
+            return _mapper.Map<List<MenuItemDetailAdminDTO>>(menuItems);
+        }
+
+        #region Private Helper Methods
+
+        private async Task ValidateUser(string userId, Guid storeId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            var storesOfUser = (await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(userId))).Distinct().ToList();
+
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
+            ConditionCheck.CheckCondition(storesOfUser.Select(x => x.StoreId).Contains(storeId), Errors.AuthError.UserUnauthor);
+        }
+
+        private async Task ValidateStoreExists(Guid storeId)
+        {
+            var store = await _storeRepository.GetByIdAsync(storeId);
+            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
+        }
+
+        #endregion
     }
 }
