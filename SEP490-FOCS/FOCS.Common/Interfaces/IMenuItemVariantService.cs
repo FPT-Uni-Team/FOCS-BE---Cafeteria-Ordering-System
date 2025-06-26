@@ -17,5 +17,7 @@ namespace FOCS.Common.Interfaces
         Task<MenuItemVariantDTO> GetVariantDetail(Guid id, Guid storeId);
 
         Task<bool> AssignVariantGroupToVariants(List<Guid> ids, Guid variantGroupId);
+
+        Task<List<VariantDTO>> ListVariantByStore(string storeId);
     }
 }
