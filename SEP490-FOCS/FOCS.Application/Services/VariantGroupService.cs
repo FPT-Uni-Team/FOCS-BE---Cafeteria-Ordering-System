@@ -71,6 +71,24 @@ namespace FOCS.Application.Services
             return true;
         }
 
+        public async Task<List<VariantGroupDetailDTO>> GetVariantGroupsByStore(string storeId)
+        {
+            var variantsGroup = await _variantGroup.AsQueryable().Include(x => x.Variants).Where(x => x.CreatedBy == storeId).ToListAsync();
+
+            return variantsGroup.Select(x => new VariantGroupDetailDTO
+            {
+                GroupName = x.Name,
+                Variants = x.Variants.Select(x => new VariantOptionDTO
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    IsAvailable = x.IsAvailable,
+                    PrepPerTime = x.PrepPerTime,
+                    Price = x.Price,
+                    QuantityPerTime = x.QuantityPerTime
+                }).ToList()
+            }).ToList();
+        }
         public async Task<bool> CreateVariantGroup(CreateVariantGroupRequest request, string storeId)
         {
             try

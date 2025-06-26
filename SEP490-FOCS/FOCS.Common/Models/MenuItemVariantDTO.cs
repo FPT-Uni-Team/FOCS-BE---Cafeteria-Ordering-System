@@ -22,4 +22,16 @@ namespace FOCS.Common.Models
         [JsonPropertyName("is_available")]
         public bool IsAvailable { get; set; }
     }
+
+    public class VariantDTO
+    {
+        [JsonPropertyName("id")]
+        public Guid Id { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("price")]
+        public double Price { get; set; }
+    }
 }

@@ -43,6 +43,18 @@ namespace FOCS.Application.Services
             return _mapper.Map<MenuItemVariantDTO>(mapper);
         }
 
+        public async Task<List<VariantDTO>> ListVariantByStore(string storeId)
+        {
+            var variants = await _menuItemVariantRepository.AsQueryable().Where(x => x.CreatedBy == storeId).ToListAsync();
+
+            return variants.Select(x => new VariantDTO
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Price = x.Price
+            }).ToList();
+        }
+
         public async Task<List<MenuItemVariantDTO>> ListVariantsWithIds(List<Guid> ids, Guid storeId)
         {
             var variants = await _menuItemVariantRepository.AsQueryable()
