@@ -106,7 +106,7 @@ namespace FOCS.Application.Services
             var promotion = await _promotionRepository.AsQueryable()
                 .FirstOrDefaultAsync(p => p.Id == promotionId && !p.IsDeleted);
 
-            ConditionCheck.CheckCondition(promotion != null, Errors.Common.NotFound);
+            ConditionCheck.CheckCondition(promotion != null, Errors.Common.NotFound, Errors.FieldName.Id);
             await ValidateUser(userId, promotion.StoreId);
 
             return _mapper.Map<PromotionDTO>(promotion);
@@ -114,7 +114,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> UpdatePromotionAsync(Guid promotionId, PromotionDTO dto, Guid storeId, string userId)
         {
-            ConditionCheck.CheckCondition(promotionId == dto.Id, Errors.Common.NotFound);
+            ConditionCheck.CheckCondition(promotionId == dto.Id, Errors.Common.NotFound, Errors.FieldName.Id);
             var promotion = await GetAvailablePromotionById(promotionId);
             if (promotion == null) return false;
             await ValidateUser(userId, promotion.StoreId);
@@ -148,10 +148,7 @@ namespace FOCS.Application.Services
             if (promotion == null) return false;
 
             await ValidateUser(userId, promotion.StoreId);
-            ConditionCheck.CheckCondition(!promotion.IsActive, Errors.PromotionError.PromotionActive);
-            ConditionCheck.CheckCondition(promotion.StartDate.Date <= DateTime.Now.Date && 
-                                           promotion.EndDate.Date >= DateTime.Now.Date,
-                                           Errors.PromotionError.PromotionInvalidDateToActive);
+            ConditionCheck.CheckCondition(!promotion.IsActive, Errors.PromotionError.PromotionActive, Errors.FieldName.IsActive);
 
             promotion.IsActive = true;
             UpdateAuditFields(promotion, userId);
@@ -166,7 +163,7 @@ namespace FOCS.Application.Services
             if (promotion == null) return false;
 
             await ValidateUser(userId, promotion.StoreId);
-            ConditionCheck.CheckCondition(promotion.IsActive, Errors.PromotionError.PromotionInactive);
+            ConditionCheck.CheckCondition(promotion.IsActive, Errors.PromotionError.PromotionInactive, Errors.FieldName.IsActive);
 
             promotion.IsActive = false;
             UpdateAuditFields(promotion, userId);
@@ -181,7 +178,7 @@ namespace FOCS.Application.Services
             if (promotion == null) return false;
 
             await ValidateUser(userId, promotion.StoreId);
-            ConditionCheck.CheckCondition(!promotion.IsActive, Errors.PromotionError.PromotionActive);
+            ConditionCheck.CheckCondition(!promotion.IsActive, Errors.PromotionError.PromotionActive, Errors.FieldName.IsActive);
             promotion.IsDeleted = true;
             UpdateAuditFields(promotion, userId);
             await _promotionRepository.SaveChangesAsync();
@@ -202,30 +199,30 @@ namespace FOCS.Application.Services
         public async Task IsValidPromotionCouponAsync(string couponCode, string userId, Guid storeId)
         {
             //Check coupon eligible
-            ConditionCheck.CheckCondition(!string.IsNullOrWhiteSpace(couponCode), Errors.Common.Empty);
+            ConditionCheck.CheckCondition(!string.IsNullOrWhiteSpace(couponCode), Errors.Common.Empty, Errors.FieldName.CouponCode);
 
             var coupon = await _couponRepository.AsQueryable().FirstOrDefaultAsync(x => x.Code == couponCode && x.StoreId == storeId);
-            ConditionCheck.CheckCondition(coupon != null, Errors.PromotionError.CouponNotFound);
+            ConditionCheck.CheckCondition(coupon != null, Errors.PromotionError.CouponNotFound, Errors.FieldName.CouponCode);
 
-            ConditionCheck.CheckCondition(coupon.CountUsed < coupon.MaxUsage, Errors.PromotionError.CouponMaxUsed);
+            ConditionCheck.CheckCondition(coupon.CountUsed < coupon.MaxUsage, Errors.PromotionError.CouponMaxUsed, Errors.FieldName.CouponMaxUsed);
 
             //Validate max use per user
             if (!string.IsNullOrWhiteSpace(userId))
             {
                 var couponUsageTime = await _couponUsageRepository.FindAsync(x => x.UserId == Guid.Parse(userId) && x.CouponId == coupon.Id);
-                ConditionCheck.CheckCondition(couponUsageTime.Count() <= coupon.MaxUsagePerUser, Errors.PromotionError.CouponMaxUsed);
+                ConditionCheck.CheckCondition(couponUsageTime.Count() <= coupon.MaxUsagePerUser, Errors.PromotionError.CouponMaxUsed, Errors.FieldName.CouponMaxUsed);
             }
 
             var currentDate = DateTime.Now;
-            ConditionCheck.CheckCondition(currentDate >= coupon.StartDate && currentDate <= coupon.EndDate, Errors.PromotionError.InvalidPeriodDatetime);
+            ConditionCheck.CheckCondition(currentDate >= coupon.StartDate && currentDate <= coupon.EndDate, Errors.PromotionError.InvalidPeriodDatetime, Errors.FieldName.EndDate);
 
             //Check promotion eligible
             if (coupon.PromotionId.HasValue)
             {
                 var promotion = await _promotionRepository.FindAsync(x => x.Id == coupon.PromotionId && x.StoreId == storeId);
-                ConditionCheck.CheckCondition(promotion != null, Errors.PromotionError.PromotionNotFound);
+                ConditionCheck.CheckCondition(promotion != null, Errors.PromotionError.PromotionNotFound, Errors.FieldName.Id);
                 var currentPromotion = promotion?.FirstOrDefault();
-                ConditionCheck.CheckCondition(currentDate >= currentPromotion?.StartDate && currentDate <= currentPromotion.EndDate, Errors.PromotionError.InvalidPeriodDatetime);
+                ConditionCheck.CheckCondition(currentDate >= currentPromotion?.StartDate && currentDate <= currentPromotion.EndDate, Errors.PromotionError.InvalidPeriodDatetime, Errors.FieldName.EndDate);
             }
         }
 
@@ -334,8 +331,8 @@ namespace FOCS.Application.Services
 
             var storesOfUser = (await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(userId))).Distinct().ToList();
 
-            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
-            ConditionCheck.CheckCondition(storesOfUser.Select(x => x.StoreId).Contains(storeId), Errors.AuthError.UserUnauthor);
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound, Errors.FieldName.UserId);
+            ConditionCheck.CheckCondition(storesOfUser.Select(x => x.StoreId).Contains(storeId), Errors.AuthError.UserUnauthor, Errors.FieldName.UserId);
         }
 
         private async Task ValidatePromotionDto(PromotionDTO dto)
@@ -343,7 +340,7 @@ namespace FOCS.Application.Services
             var context = new ValidationContext(dto);
             var validationResults = dto.Validate(context);
             ConditionCheck.CheckCondition(!validationResults.Any(),
-                string.Join("; ", validationResults.Select(r => r.ErrorMessage)));
+                string.Join("; ", validationResults.Select(r => r.ErrorMessage)), "");
         }
 
         private async Task ValidatePromotionUniqueness(PromotionDTO dto, Guid storeId)
@@ -352,7 +349,7 @@ namespace FOCS.Application.Services
                 .AsQueryable()
                 .FirstOrDefaultAsync(p => p.Title == dto.Title && !p.IsDeleted);
 
-            ConditionCheck.CheckCondition(existingPromotionTitle == null, Errors.PromotionError.PromotionTitleExist);
+            ConditionCheck.CheckCondition(existingPromotionTitle == null, Errors.PromotionError.PromotionTitleExist, Errors.FieldName.Id);
 
             var overlappingPromotion = await _promotionRepository
                 .AsQueryable()
@@ -363,7 +360,7 @@ namespace FOCS.Application.Services
                                             || (dto.StartDate <= p.StartDate && dto.EndDate >= p.EndDate))
                                         && !p.IsDeleted);
 
-            ConditionCheck.CheckCondition(overlappingPromotion == null, Errors.PromotionError.PromotionOverLapping);
+            ConditionCheck.CheckCondition(overlappingPromotion == null, Errors.PromotionError.PromotionOverLapping, Errors.FieldName.UserId);
 
             if (dto.AcceptForItems?.Count > 0)
             {
@@ -377,7 +374,7 @@ namespace FOCS.Application.Services
         private async Task ValidateStoreExists(Guid storeId)
         {
             var store = await _storeRepository.GetByIdAsync(storeId);
-            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
+            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, Errors.FieldName.StoreId);
         }
 
         private Promotion CreatePromotionEntity(PromotionDTO dto, string userId, ICollection<Coupon>? coupons = null)
@@ -395,7 +392,7 @@ namespace FOCS.Application.Services
         private async Task ValidateMenuItem(Guid id)
         {
             var menuItem = await _menuItemRepository.GetByIdAsync(id);
-            ConditionCheck.CheckCondition(menuItem != null, Errors.OrderError.MenuItemNotFound);
+            ConditionCheck.CheckCondition(menuItem != null, Errors.OrderError.MenuItemNotFound, Errors.FieldName.Id);
         }
 
         private async Task CreatePromotionItemCondition(PromotionDTO dto, Guid promotionId)

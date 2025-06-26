@@ -58,7 +58,10 @@ namespace FOCS.Controllers
         [HttpPost("coupons/available")]
         public async Task<IActionResult> GetAvailableCoupons([FromBody] UrlQueryParameters query)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
+
+            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid),
+                                                    Errors.Common.InvalidGuidFormat,
+                                                    Errors.FieldName.StoreId);
             var pagedResult = await _adminCouponService.GetAvailableCouponsAsync(query, storeIdGuid, UserId);
             return Ok(pagedResult);
         }
