@@ -49,14 +49,14 @@ namespace FOCS.Application.Services
 
         public async Task<CouponAdminDTO> CreateCouponAsync(CouponAdminDTO dto, string userId, string storeId)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat, "storeId");
+            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat, AdminCouponConstants.FieldStoreId);
             await ValidateUser(userId, storeIdGuid);
             await ValidateStoreExists(storeIdGuid);
 
             // Check coupon code type
             ConditionCheck.CheckCondition(dto.CouponType == CouponType.Manual
                                                      || dto.CouponType == CouponType.AutoGenerate,
-                                                        AdminCouponConstants.CheckCouponCodeType, "couponType");
+                                                        AdminCouponConstants.CheckCouponCodeType, AdminCouponConstants.FieldCouponType);
 
             // Type 'auto' => Generate unique code
             string couponCode = dto.CouponType == CouponType.AutoGenerate ? await GenerateUniqueCouponCodeAsync()
@@ -65,22 +65,22 @@ namespace FOCS.Application.Services
             // Check manual code empty
             ConditionCheck.CheckCondition(dto.CouponType != CouponType.AutoGenerate
                                                      || !string.IsNullOrWhiteSpace(couponCode),
-                                                        AdminCouponConstants.CheckCouponCodeForManual, "code");
+                                                        AdminCouponConstants.CheckCouponCodeForManual, AdminCouponConstants.FieldCode);
 
             // Check unique code
             var existing = await _couponRepository.AsQueryable()
                                                   .AnyAsync(c => c.Code == couponCode && !c.IsDeleted);
-            ConditionCheck.CheckCondition(!existing, AdminCouponConstants.CheckCreateUniqueCode, "code");
+            ConditionCheck.CheckCondition(!existing, AdminCouponConstants.CheckCreateUniqueCode, AdminCouponConstants.FieldCode);
 
             // Check dates
-            ConditionCheck.CheckCondition(dto.StartDate < dto.EndDate, AdminCouponConstants.CheckCreateDate, "date");
+            ConditionCheck.CheckCondition(dto.StartDate < dto.EndDate, AdminCouponConstants.CheckCreateDate, AdminCouponConstants.FieldDate);
 
             // Check promotion Id
             if (dto.PromotionId.HasValue)
             {
                 var existingPromotion = await _promotionRepository.AsQueryable()
                                                   .AnyAsync(c => c.Id == dto.PromotionId && !c.IsDeleted);
-                ConditionCheck.CheckCondition(existingPromotion, AdminCouponConstants.CheckPromotion, "promotionId");
+                ConditionCheck.CheckCondition(existingPromotion, AdminCouponConstants.CheckPromotion, AdminCouponConstants.FieldPromotionId);
             }
 
             // Map DTO to entity
@@ -407,7 +407,7 @@ namespace FOCS.Application.Services
 
         public async Task<List<CouponAdminDTO>> GetCouponsByListIdAsync(List<Guid> couponIds, string storeId, string userId)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat, "storeId");
+            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat, AdminCouponConstants.FieldStoreId);
             await ValidateUser(userId, storeIdGuid);
             await ValidateStoreExists(storeIdGuid);
 
@@ -416,7 +416,7 @@ namespace FOCS.Application.Services
 
             var coupons = await _couponRepository.FindAsync(c => couponIds.Contains(c.Id) && !c.IsDeleted);
 
-            ConditionCheck.CheckCondition(coupons.Any(), AdminCouponConstants.GetCouponsByListIdNotFound, "couponIds");
+            ConditionCheck.CheckCondition(coupons.Any(), AdminCouponConstants.GetCouponsByListIdNotFound, AdminCouponConstants.FieldListCouponId);
 
             return _mapper.Map<List<CouponAdminDTO>>(coupons.ToList());
         }
@@ -430,10 +430,10 @@ namespace FOCS.Application.Services
             // Check unique code (exclude current coupon)
             var existing = await _couponRepository.AsQueryable()
                                                   .AnyAsync(c => c.Id != id && c.Code == dto.Code && !c.IsDeleted);
-            ConditionCheck.CheckCondition(!existing, AdminCouponConstants.CheckUpdateUniqueCode, "code");
+            ConditionCheck.CheckCondition(!existing, AdminCouponConstants.CheckUpdateUniqueCode, AdminCouponConstants.FieldCode);
 
             // Check dates
-            ConditionCheck.CheckCondition(dto.StartDate <= dto.EndDate, AdminCouponConstants.CheckUpdateDate, "date");
+            ConditionCheck.CheckCondition(dto.StartDate <= dto.EndDate, AdminCouponConstants.CheckUpdateDate, AdminCouponConstants.FieldDate);
 
             _mapper.Map(dto, coupon);
             coupon.StoreId = Guid.Parse(storeId);
@@ -509,7 +509,7 @@ namespace FOCS.Application.Services
         {
             // Get promotion
             var promotion = await _promotionRepository.GetByIdAsync(promotionId);
-            ConditionCheck.CheckCondition(promotion != null && !promotion.IsDeleted, AdminCouponConstants.CheckPromotion, "promotionId");
+            ConditionCheck.CheckCondition(promotion != null && !promotion.IsDeleted, AdminCouponConstants.CheckPromotion, AdminCouponConstants.FieldPromotionId);
 
             // Get coupons
             var coupons = await _couponRepository.FindAsync(c => couponIds.Contains(c.Id) && !c.IsDeleted);
@@ -517,12 +517,12 @@ namespace FOCS.Application.Services
             foreach (var coupon in coupons)
             {
                 // Check exists store
-                ConditionCheck.CheckCondition(coupon.StoreId == storeId, $"Coupon {coupon.Code} does not belong to this store.", "storeId");
+                ConditionCheck.CheckCondition(coupon.StoreId == storeId, $"Coupon {coupon.Code} does not belong to this store.", AdminCouponConstants.FieldStoreId);
 
                 // Check coupon dates within promotion dates
                 ConditionCheck.CheckCondition(coupon.StartDate >= promotion.StartDate
                                            && coupon.EndDate <= promotion.EndDate,
-                                              $"Coupon {coupon.Code} must be within the promotion period.", "date");
+                                              $"Coupon {coupon.Code} must be within the promotion period.", AdminCouponConstants.FieldDate);
 
                 // Apply PromotionId
                 coupon.PromotionId = promotionId;
@@ -542,14 +542,14 @@ namespace FOCS.Application.Services
 
             var storesOfUser = (await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(userId))).Distinct().ToList();
 
-            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound, "userId");
-            ConditionCheck.CheckCondition(storesOfUser.Select(x => x.StoreId).Contains(storeId), Errors.AuthError.UserUnauthor, "storeId");
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound, AdminCouponConstants.FieldUserId);
+            ConditionCheck.CheckCondition(storesOfUser.Select(x => x.StoreId).Contains(storeId), Errors.AuthError.UserUnauthor, AdminCouponConstants.FieldStoreId);
         }
 
         private async Task ValidateStoreExists(Guid storeId)
         {
             var store = await _storeRepository.GetByIdAsync(storeId);
-            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, "storeId");
+            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, AdminCouponConstants.FieldStoreId);
         }
 
         #endregion
