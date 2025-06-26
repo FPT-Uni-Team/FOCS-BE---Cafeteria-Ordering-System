@@ -67,7 +67,7 @@ namespace FOCS.Application.Services
                                         dto.CouponIds.Contains(c.Id))
                             .ToList();
 
-            var newPromotion = CreatePromotionEntity(dto, userId, coupons);
+            var newPromotion = CreatePromotionEntity(dto, userId, storeId, coupons);
 
             await _promotionRepository.AddAsync(newPromotion);
             await _promotionRepository.SaveChangesAsync();
@@ -380,11 +380,12 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
         }
 
-        private Promotion CreatePromotionEntity(PromotionDTO dto, string userId, ICollection<Coupon>? coupons = null)
+        private Promotion CreatePromotionEntity(PromotionDTO dto, string userId, Guid storeId, ICollection<Coupon>? coupons = null)
         {
             var promotion = _mapper.Map<Promotion>(dto);
             promotion.CountUsed = 0;
             promotion.Id = Guid.NewGuid();
+            promotion.StoreId = storeId;
             promotion.IsDeleted = false;
             promotion.CreatedAt = DateTime.UtcNow;
             promotion.CreatedBy = userId;
