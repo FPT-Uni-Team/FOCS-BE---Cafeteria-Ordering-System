@@ -48,6 +48,16 @@ namespace FOCS.Controllers
             return Ok(menuItems);
         }
 
+        [HttpPost("menu-item-list")]
+        public async Task<IActionResult> GetListMenuItem(List<Guid> menuItemIds)
+        {
+            var menuItems = await _adminMenuItemService.GetListMenuItemDetail(menuItemIds, StoreId, UserId);
+            if (menuItems == null)
+                return NotFound();
+
+            return Ok(menuItems);
+        }
+
         [HttpPut("menu-item/{id}")]
         public async Task<IActionResult> UpdateMenuItem(Guid id, [FromBody] MenuItemAdminDTO dto)
         {
