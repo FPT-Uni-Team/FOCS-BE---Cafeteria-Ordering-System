@@ -12,6 +12,9 @@
         public const string CheckCreateDate = "Start date must be before end date.";
         public const string GenerateUniqueCouponCode = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
+        //Get by list Id
+        public const string GetCouponsByListIdNotFound = "Coupon not found or has been deleted";
+
         // Update controller
         public const string UpdateNotFound = "Update unsuccessfully";
         public const string UpdateOk = "Update successfully";
