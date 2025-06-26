@@ -9,6 +9,29 @@ namespace FOCS.Common.Exceptions
 {
     public static class Errors
     {
+        public static class FieldName
+        {
+            public const string Id = "id";
+            public const string Title = "title";
+            public const string Email = "email";
+            public const string StoreId = "store_id";
+            public const string UserId = "user_id";
+            public const string MenuItemId = "menu_item_id";
+            public const string CategoryId = "category_id";
+            public const string VariantGroupId = "variantgroup_id";
+            public const string VariantId = "variant_id";
+            public const string CouponId = "coupon_id";
+            public const string CouponCode = "coupon_code";
+            public const string CouponMaxUsed = "coupon_max_used";
+            public const string IsActive = "is_active";
+            public const string StartDate = "start_date";
+            public const string EndDate = "end_date";
+            public const string Description = "description";
+            public const string DiscountValue = "discount_value";
+            public const string MaxDiscountValue = "max_discount_value";
+            public const string PromotionItemCondition = "promotion_item_condition";
+        }
+
         public static class SystemError
         {
             public const string UnhandledExceptionOccurred = "Unhandled exception occurred";
@@ -82,6 +105,11 @@ namespace FOCS.Common.Exceptions
             public const string CannotChangeScopeWhilePromotionIsOngoing = "Cannot change scope while promotion is ongoing";
             public const string CannotChangeTypeWhilePromotionIsOngoing = "Cannot change type while promotion is ongoing";
             public const string CannotChangeDiscountValueWhilePromotionIsOngoing = "Cannot change discount value while promotion is ongoing";
+            public const string StartDateInPast = "Start Date cannot be in the past";
+            public const string StartDateAfterEndDate = "Start Date must be before End Date";
+            public const string MaxPercentageDiscountValue = "Discount Value cannot exceed 100% for Percentage discount type";
+            public const string DiscountValueExceedMaxValue = "Discount Value cannot exceed Max Discount Value";
+            public const string RequireItemCondition = "Condition is required for Buy X Get Y promotion type";
         }
     }
 }

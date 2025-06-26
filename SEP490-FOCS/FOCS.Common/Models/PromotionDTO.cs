@@ -1,4 +1,6 @@
 ﻿using FOCS.Common.Enums;
+using FOCS.Common.Exceptions;
+using FOCS.Common.Utils;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -81,41 +83,30 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         {
             var results = new List<ValidationResult>();
 
-            if (StartDate.Date < DateTime.UtcNow.Date)
+            ConditionCheck.CheckCondition(StartDate.Date > DateTime.UtcNow.Date,
+                                                Errors.PromotionError.StartDateInPast, 
+                                                Errors.FieldName.StartDate);
+
+            ConditionCheck.CheckCondition(StartDate < EndDate,
+                                                Errors.PromotionError.StartDateAfterEndDate,
+                                                Errors.FieldName.EndDate);
+
+            ConditionCheck.CheckCondition(StartDate.Date > DateTime.UtcNow.Date,
+                                                Errors.PromotionError.MaxPercentageDiscountValue,
+                                                Errors.FieldName.DiscountValue);
+
+            if (DiscountValue.HasValue && MaxDiscountValue.HasValue)
             {
-                results.Add(new ValidationResult(
-                    "Start Date cannot be in the past",
-                    new[] { nameof(StartDate) }));
+                ConditionCheck.CheckCondition(DiscountValue < MaxDiscountValue,
+                                                    Errors.PromotionError.DiscountValueExceedMaxValue,
+                                                    Errors.FieldName.MaxDiscountValue);
             }
 
-            // Validate Start Date must be before End Date
-            if (StartDate > EndDate)
+            if (PromotionType == PromotionType.BuyXGetY)
             {
-                results.Add(new ValidationResult(
-                    "Start Date must be before End Date",
-                    new[] { nameof(StartDate), nameof(EndDate) }));
-            }
-
-            // Validate Discount Value for Percentage type
-            if (PromotionType.Equals(PromotionType.Percentage) && DiscountValue > 100)
-            {
-                results.Add(new ValidationResult(
-                    "Discount Value cannot exceed 100% for Percentage discount type",
-                    new[] { nameof(DiscountValue) }));
-            }
-
-            if (DiscountValue.HasValue && MaxDiscountValue.HasValue && DiscountValue > MaxDiscountValue)
-            {
-                results.Add(new ValidationResult(
-                    "Discount Value cannot exceed Max Discount Value",
-                    new[] { nameof(DiscountValue), nameof(MaxDiscountValue) }));
-            }
-
-            if (PromotionType == PromotionType.BuyXGetY && PromotionItemConditionDTO == null)
-            {
-                results.Add(new ValidationResult(
-                    "Condition is required for Buy X Get Y promotion type",
-                    new[] { nameof(PromotionItemConditionDTO) }));
+                ConditionCheck.CheckCondition(PromotionItemConditionDTO != null,
+                                                    Errors.PromotionError.RequireItemCondition,
+                                                    Errors.FieldName.PromotionItemCondition);
             }
 
             return results;

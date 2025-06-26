@@ -114,7 +114,7 @@ namespace FOCS.Application.Services
         public async Task SetCouponConditionAsync(Guid couponId, SetCouponConditionRequest setCouponConditionRequest)
         {
             var coupon = await _couponRepository.GetByIdAsync(couponId);
-            ConditionCheck.CheckCondition(coupon != null, FOCS.Common.Exceptions.Errors.Common.NotFound);
+            ConditionCheck.CheckCondition(coupon != null, FOCS.Common.Exceptions.Errors.Common.NotFound, Errors.FieldName.CouponId);
 
             try
             {
