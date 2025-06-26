@@ -22,5 +22,7 @@ namespace FOCS.Common.Interfaces
 
      
         Task<List<string>> GetGroupNamesByMenuItemAsync(Guid menuItemId);
+
+        Task<bool> CreateVariantGroup(CreateVariantGroupRequest request, string storeId);
     }
 }

@@ -24,8 +24,14 @@ namespace FOCS.Controllers
             return Ok(result);
         }
 
-        // POST: /variant-group
         [HttpPost]
+        public async Task<bool> CreateNewVariantGroup(CreateVariantGroupRequest request)
+        {
+            return await _variantGroupService.CreateVariantGroup(request, StoreId);
+        }
+
+        // POST: /variant-group
+        [HttpPost("assign")]
         public async Task<IActionResult> AddMenuItemVariantToGroupAsync([FromBody] AddVariantToGroupRequest request, [FromHeader(Name = "StoreId")] Guid storeId)
         {
             var result = await _variantGroupService.AddMenuItemVariantToGroupAsync(request, storeId);

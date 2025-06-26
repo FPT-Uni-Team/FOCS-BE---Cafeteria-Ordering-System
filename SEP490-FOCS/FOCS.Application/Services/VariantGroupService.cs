@@ -71,6 +71,28 @@ namespace FOCS.Application.Services
             return true;
         }
 
+        public async Task<bool> CreateVariantGroup(CreateVariantGroupRequest request, string storeId)
+        {
+            try
+            {
+                var isExist = await _variantGroup.AsQueryable().AnyAsync(x => x.Name == request.Name && x.CreatedBy == storeId);
+                ConditionCheck.CheckCondition(!isExist, Errors.Common.IsExist, "name");
+
+                var newVariantGroup = _mapper.Map<VariantGroup>(request);
+                newVariantGroup.Id = Guid.NewGuid();
+                newVariantGroup.CreatedBy = storeId;
+
+                await _variantGroup.AddAsync(newVariantGroup);
+                await _variantGroup.SaveChangesAsync();
+
+                return true;
+            } catch(Exception ex)
+            {
+                //loger
+                return false;
+            }
+        }
+
         public async Task<List<string>> GetGroupNamesByMenuItemAsync(Guid menuItemId)
         {
             var menuItem = await _menuItemService.GetMenuDetailAsync(menuItemId);
