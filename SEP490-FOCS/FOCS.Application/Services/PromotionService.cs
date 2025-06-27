@@ -61,11 +61,7 @@ namespace FOCS.Application.Services
             await ValidatePromotionUniqueness(dto, storeId);
             await ValidateStoreExists(storeId);
 
-            var coupons = _couponRepository.AsQueryable()
-                            .Where(c => c.StoreId == storeId &&
-                                        c.PromotionId == null &&
-                                        dto.CouponIds.Contains(c.Id))
-                            .ToList();
+            var coupons = await ValidateCoupons(dto.CouponIds, storeId);
 
             var newPromotion = CreatePromotionEntity(dto, userId, storeId, coupons);
 
@@ -130,6 +126,8 @@ namespace FOCS.Application.Services
             }
             else
             {
+                var coupons = await ValidateCoupons(dto.CouponIds, storeId);
+                promotion.Coupons = coupons;
                 _mapper.Map(dto, promotion);
             }
 
@@ -377,6 +375,18 @@ namespace FOCS.Application.Services
         {
             var store = await _storeRepository.GetByIdAsync(storeId);
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, Errors.FieldName.StoreId);
+        }
+
+        private async Task<ICollection<Coupon>> ValidateCoupons(List<Guid> couponIds, Guid storeId)
+        {
+            var coupons = await _couponRepository.AsQueryable()
+                            .Where(c => c.StoreId == storeId &&
+                                        couponIds.Contains(c.Id))
+                            .ToListAsync();
+
+            ConditionCheck.CheckCondition(!coupons.Any(c => c.PromotionId != null), Errors.PromotionError.CouponAssigned, Errors.FieldName.CouponIds);
+
+            return coupons;
         }
 
         private Promotion CreatePromotionEntity(PromotionDTO dto, string userId, Guid storeId, ICollection<Coupon>? coupons = null)
