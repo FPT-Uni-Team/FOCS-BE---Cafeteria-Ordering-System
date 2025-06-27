@@ -23,6 +23,7 @@ namespace FOCS.Common.Exceptions
             public const string CouponId = "coupon_id";
             public const string CouponCode = "coupon_code";
             public const string CouponMaxUsed = "coupon_max_used";
+            public const string CouponIds = "coupon_ids";
             public const string IsActive = "is_active";
             public const string StartDate = "start_date";
             public const string EndDate = "end_date";
@@ -95,6 +96,7 @@ namespace FOCS.Common.Exceptions
         {
             public const string CouponNotFound = "Coupon code not found";
             public const string CouponMaxUsed = "Coupon is max used";
+            public const string CouponAssigned = "Coupon has assigned to another promotion";
             public const string InvalidPeriodDatetime = "Coupon/Promotion is out of date";
             public const string PromotionNotFound = "Promotion not found";
             public const string PromotionActive = "Promotion is active now";

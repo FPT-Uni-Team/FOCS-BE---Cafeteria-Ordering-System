@@ -61,21 +61,18 @@ namespace FOCS.Application.Services
             await ValidatePromotionUniqueness(dto, storeId);
             await ValidateStoreExists(storeId);
 
-            var coupons = _couponRepository.AsQueryable()
-                            .Where(c => c.StoreId == storeId &&
-                                        c.PromotionId == null &&
-                                        dto.CouponIds.Contains(c.Id))
-                            .ToList();
+            var coupons = await ValidateCoupons(dto.CouponIds, storeId);
 
             var newPromotion = CreatePromotionEntity(dto, userId, storeId, coupons);
 
             await _promotionRepository.AddAsync(newPromotion);
-            await _promotionRepository.SaveChangesAsync();
 
             if (newPromotion.PromotionType == PromotionType.BuyXGetY)
             {
                 await CreatePromotionItemCondition(dto, newPromotion.Id);
             }
+
+            await _promotionRepository.SaveChangesAsync();
 
             return _mapper.Map<PromotionDTO>(newPromotion);
         }
@@ -129,15 +126,17 @@ namespace FOCS.Application.Services
             }
             else
             {
+                var coupons = await ValidateCoupons(dto.CouponIds, storeId);
+                promotion.Coupons = coupons;
                 _mapper.Map(dto, promotion);
             }
-            UpdateAuditFields(promotion, userId);
 
             if (promotion.PromotionType == PromotionType.BuyXGetY)
             {
                 await CreatePromotionItemCondition(dto, promotion.Id);
             }
 
+            UpdateAuditFields(promotion, userId);
             await _promotionRepository.SaveChangesAsync();
             return true;
         }
@@ -347,7 +346,7 @@ namespace FOCS.Application.Services
         {
             var existingPromotionTitle = await _promotionRepository
                 .AsQueryable()
-                .FirstOrDefaultAsync(p => p.Title == dto.Title && !p.IsDeleted);
+                .FirstOrDefaultAsync(p => p.Title == dto.Title && p.Id != dto.Id && !p.IsDeleted);
 
             ConditionCheck.CheckCondition(existingPromotionTitle == null, Errors.PromotionError.PromotionTitleExist, Errors.FieldName.Id);
 
@@ -355,12 +354,13 @@ namespace FOCS.Application.Services
                 .AsQueryable()
                 .FirstOrDefaultAsync(p => p.PromotionType == dto.PromotionType
                                         && p.StoreId == storeId
+                                        && p.Id != dto.Id
                                         && ((dto.StartDate >= p.StartDate && dto.StartDate <= p.EndDate)
                                             || (dto.EndDate >= p.StartDate && dto.EndDate <= p.EndDate)
                                             || (dto.StartDate <= p.StartDate && dto.EndDate >= p.EndDate))
                                         && !p.IsDeleted);
 
-            ConditionCheck.CheckCondition(overlappingPromotion == null, Errors.PromotionError.PromotionOverLapping, Errors.FieldName.UserId);
+            ConditionCheck.CheckCondition(overlappingPromotion == null, Errors.PromotionError.PromotionOverLapping, Errors.FieldName.EndDate);
 
             if (dto.AcceptForItems?.Count > 0)
             {
@@ -375,6 +375,18 @@ namespace FOCS.Application.Services
         {
             var store = await _storeRepository.GetByIdAsync(storeId);
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, Errors.FieldName.StoreId);
+        }
+
+        private async Task<ICollection<Coupon>> ValidateCoupons(List<Guid> couponIds, Guid storeId)
+        {
+            var coupons = await _couponRepository.AsQueryable()
+                            .Where(c => c.StoreId == storeId &&
+                                        couponIds.Contains(c.Id))
+                            .ToListAsync();
+
+            ConditionCheck.CheckCondition(!coupons.Any(c => c.PromotionId != null), Errors.PromotionError.CouponAssigned, Errors.FieldName.CouponIds);
+
+            return coupons;
         }
 
         private Promotion CreatePromotionEntity(PromotionDTO dto, string userId, Guid storeId, ICollection<Coupon>? coupons = null)
