@@ -25,7 +25,7 @@ namespace FOCS.Common.Models
         public PagedResult(List<T> items, int totalCount, int pageIndex, int pageSize)
         {
             Items = items;
-            TotalCount = items.Count;
+            TotalCount = totalCount;
             PageIndex = pageIndex;
             PageSize = pageSize;
         }
