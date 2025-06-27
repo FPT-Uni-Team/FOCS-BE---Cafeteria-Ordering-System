@@ -70,12 +70,13 @@ namespace FOCS.Application.Services
             var newPromotion = CreatePromotionEntity(dto, userId, storeId, coupons);
 
             await _promotionRepository.AddAsync(newPromotion);
-            await _promotionRepository.SaveChangesAsync();
 
             if (newPromotion.PromotionType == PromotionType.BuyXGetY)
             {
                 await CreatePromotionItemCondition(dto, newPromotion.Id);
             }
+
+            await _promotionRepository.SaveChangesAsync();
 
             return _mapper.Map<PromotionDTO>(newPromotion);
         }
@@ -131,13 +132,13 @@ namespace FOCS.Application.Services
             {
                 _mapper.Map(dto, promotion);
             }
-            UpdateAuditFields(promotion, userId);
 
             if (promotion.PromotionType == PromotionType.BuyXGetY)
             {
                 await CreatePromotionItemCondition(dto, promotion.Id);
             }
 
+            UpdateAuditFields(promotion, userId);
             await _promotionRepository.SaveChangesAsync();
             return true;
         }
@@ -347,7 +348,7 @@ namespace FOCS.Application.Services
         {
             var existingPromotionTitle = await _promotionRepository
                 .AsQueryable()
-                .FirstOrDefaultAsync(p => p.Title == dto.Title && !p.IsDeleted);
+                .FirstOrDefaultAsync(p => p.Title == dto.Title && p.Id != dto.Id && !p.IsDeleted);
 
             ConditionCheck.CheckCondition(existingPromotionTitle == null, Errors.PromotionError.PromotionTitleExist, Errors.FieldName.Id);
 
@@ -355,12 +356,13 @@ namespace FOCS.Application.Services
                 .AsQueryable()
                 .FirstOrDefaultAsync(p => p.PromotionType == dto.PromotionType
                                         && p.StoreId == storeId
+                                        && p.Id != dto.Id
                                         && ((dto.StartDate >= p.StartDate && dto.StartDate <= p.EndDate)
                                             || (dto.EndDate >= p.StartDate && dto.EndDate <= p.EndDate)
                                             || (dto.StartDate <= p.StartDate && dto.EndDate >= p.EndDate))
                                         && !p.IsDeleted);
 
-            ConditionCheck.CheckCondition(overlappingPromotion == null, Errors.PromotionError.PromotionOverLapping, Errors.FieldName.UserId);
+            ConditionCheck.CheckCondition(overlappingPromotion == null, Errors.PromotionError.PromotionOverLapping, Errors.FieldName.EndDate);
 
             if (dto.AcceptForItems?.Count > 0)
             {

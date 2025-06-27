@@ -53,7 +53,9 @@ namespace FOCS.Application.Mappings
                                            src.AcceptForItems.Distinct().ToList() : null))
                 .ForMember(dest => dest.CouponIds, 
                     opt => opt.MapFrom(src => src.Coupons != null ? 
-                                            src.Coupons.Select(c => c.Id) : null));
+                                            src.Coupons.Select(c => c.Id) : null))
+                .ForMember(dest => dest.PromotionItemConditionDTO,
+                    opt => opt.MapFrom(src => src.PromotionItemConditions.FirstOrDefault()));
 
             CreateMap<PromotionItemCondition, PromotionItemConditionDTO>().ReverseMap();
 
