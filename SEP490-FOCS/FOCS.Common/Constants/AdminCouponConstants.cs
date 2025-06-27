@@ -39,5 +39,14 @@
         // Assign Coupons To Promotion service
         public const string CheckPromotion = "Promotion not found or deleted.";
 
+        //Field Names
+        public const string FieldStoreId = "storeId";
+        public const string FieldUserId = "userId";
+        public const string FieldCouponType= "coupon_type";
+        public const string FieldCode= "code";
+        public const string FieldDate= "end_date";
+        public const string FieldPromotionId= "promotion_id";
+        public const string FieldListCouponId= "accept_for_items";
+
     }
 }
