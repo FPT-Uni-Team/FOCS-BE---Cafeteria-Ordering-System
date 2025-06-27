@@ -8,7 +8,7 @@ using Org.BouncyCastle.Bcpg.OpenPgp;
 
 namespace FOCS.Controllers
 {
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class CategoryController : FocsController
     {
