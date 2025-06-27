@@ -39,7 +39,7 @@ namespace FOCS.Application.Services
             IRepository<CouponUsage> couponUsageRepository,
             UserManager<User> userManager,
             IMapper mapper,
-            IRepository<UserStore> userStoreRepository, 
+            IRepository<UserStore> userStoreRepository,
             IPricingService pricingService)
         {
             _promotionRepository = promotionRepository;
@@ -54,7 +54,7 @@ namespace FOCS.Application.Services
             _pricingService = pricingService;
         }
 
-        public async Task<PromotionDTO> CreatePromotionAsync(PromotionDTO dto, Guid storeId ,string userId)
+        public async Task<PromotionDTO> CreatePromotionAsync(PromotionDTO dto, Guid storeId, string userId)
         {
             await ValidateUser(userId, storeId);
             await ValidatePromotionDto(dto);
@@ -313,7 +313,7 @@ namespace FOCS.Application.Services
 
                     case PromotionType.Percentage:
                         itemDiscount = (decimal)itemTotalPrice * ((decimal)promotion.DiscountValue!.Value / 100);
-                        break; 
+                        break;
                 }
 
                 totalDiscount += itemDiscount;
@@ -348,7 +348,7 @@ namespace FOCS.Application.Services
                 .AsQueryable()
                 .FirstOrDefaultAsync(p => p.Title == dto.Title && p.Id != dto.Id && !p.IsDeleted);
 
-            ConditionCheck.CheckCondition(existingPromotionTitle == null, Errors.PromotionError.PromotionTitleExist, Errors.FieldName.Id);
+            ConditionCheck.CheckCondition(existingPromotionTitle == null, Errors.PromotionError.PromotionTitleExist, Errors.FieldName.Title);
 
             var overlappingPromotion = await _promotionRepository
                 .AsQueryable()
@@ -405,7 +405,7 @@ namespace FOCS.Application.Services
         private async Task ValidateMenuItem(Guid id)
         {
             var menuItem = await _menuItemRepository.GetByIdAsync(id);
-            ConditionCheck.CheckCondition(menuItem != null, Errors.OrderError.MenuItemNotFound, Errors.FieldName.Id);
+            ConditionCheck.CheckCondition(menuItem != null, Errors.OrderError.MenuItemNotFound, Errors.FieldName.MenuItemId);
         }
 
         private async Task CreatePromotionItemCondition(PromotionDTO dto, Guid promotionId)
