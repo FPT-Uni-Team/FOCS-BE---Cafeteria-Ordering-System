@@ -87,17 +87,23 @@ namespace FOCS.Application.Services
             var newCoupon = _mapper.Map<Coupon>(dto);
             newCoupon.Id = Guid.NewGuid();
 
-            newCoupon.MinimumItemQuantity = dto.SetCouponConditionRequest.ConditionType switch
+            switch (dto.SetCouponConditionRequest.ConditionType)
             {
-                CouponConditionType.MinItemsQuantity => dto.SetCouponConditionRequest.Value,
-                _ => null
-            };
+                case CouponConditionType.MinOrderAmount:
+                    newCoupon.MinimumOrderAmount = dto.SetCouponConditionRequest.Value;
+                    break;
 
-            newCoupon.MinimumOrderAmount = dto.SetCouponConditionRequest.ConditionType switch
-            {
-                CouponConditionType.MinOrderAmount => dto.SetCouponConditionRequest.Value,
-                _ => null
-            };
+                case CouponConditionType.MinItemsQuantity:
+                    if (int.TryParse(dto.SetCouponConditionRequest.Value.ToString(), out int minItemQuantity))
+                    {
+                        newCoupon.MinimumItemQuantity = minItemQuantity;
+                    }
+                    else
+                    {
+                        throw new ArgumentException("Invalid MinimumItemQuantity value.");
+                    }
+                    break;
+            }
 
             newCoupon.Code = couponCode;
             newCoupon.StoreId = Guid.Parse(storeId);
@@ -118,17 +124,23 @@ namespace FOCS.Application.Services
 
             try
             {
-                coupon.MinimumItemQuantity = setCouponConditionRequest.ConditionType switch
+                switch (setCouponConditionRequest.ConditionType)
                 {
-                    CouponConditionType.MinItemsQuantity => setCouponConditionRequest.Value,
-                    _ => null
-                };
+                    case CouponConditionType.MinOrderAmount:
+                        coupon.MinimumOrderAmount = setCouponConditionRequest.Value;
+                        break;
 
-                coupon.MinimumOrderAmount = setCouponConditionRequest.ConditionType switch
-                {
-                    CouponConditionType.MinOrderAmount => setCouponConditionRequest.Value,
-                    _ => null
-                };
+                    case CouponConditionType.MinItemsQuantity:
+                        if (int.TryParse(setCouponConditionRequest.Value.ToString(), out int minItemQuantity))
+                        {
+                            coupon.MinimumItemQuantity = minItemQuantity;
+                        }
+                        else
+                        {
+                            throw new ArgumentException("Invalid MinimumItemQuantity value.");
+                        }
+                        break;
+                }
 
                 _couponRepository.Update(coupon);
                 await _couponRepository.SaveChangesAsync();
