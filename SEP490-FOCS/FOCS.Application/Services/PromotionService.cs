@@ -101,6 +101,7 @@ namespace FOCS.Application.Services
         public async Task<PromotionDTO> GetPromotionAsync(Guid promotionId, string userId)
         {
             var promotion = await _promotionRepository.AsQueryable()
+                .Include(p => p.PromotionItemConditions).Include(p => p.Coupons)
                 .FirstOrDefaultAsync(p => p.Id == promotionId && !p.IsDeleted);
 
             ConditionCheck.CheckCondition(promotion != null, Errors.Common.NotFound, Errors.FieldName.Id);
