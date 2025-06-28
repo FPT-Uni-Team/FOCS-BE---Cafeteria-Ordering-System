@@ -28,6 +28,7 @@
 
         // Track Coupon Usage controller
         public const string TrackNotFound = "Coupon cannot be used anymore.";
+        public const string CouponUsageLimitExceed = "Coupon usage limit exceed";
 
         // Set Coupon Status controller
         public const string CouponStatusNotFound = "Coupon not found or has been deleted.";
@@ -41,6 +42,7 @@
 
         //Field Names
         public const string FieldStoreId = "storeId";
+        public const string FieldCouponId = "couponId";
         public const string FieldUserId = "userId";
         public const string FieldCouponType= "coupon_type";
         public const string FieldCode= "code";

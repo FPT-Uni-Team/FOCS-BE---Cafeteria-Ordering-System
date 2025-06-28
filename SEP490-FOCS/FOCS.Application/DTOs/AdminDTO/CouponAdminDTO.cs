@@ -58,8 +58,11 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         [JsonPropertyName("accept_for_items")]
         public List<string>? AcceptForItems { get; set; }
 
-        [JsonPropertyName("coupon_condition")]
-        public SetCouponConditionRequest SetCouponConditionRequest { get; set; }
+        [JsonPropertyName("minimum_order_amount")]
+        public double? MinimumOrderAmount { get; set; }
+
+        [JsonPropertyName("minimum_item_quantity")]
+        public int? MinimumItemQuantity { get; set; }
 
         [JsonPropertyName("is_active")]
         public bool IsActive { get; set; }
