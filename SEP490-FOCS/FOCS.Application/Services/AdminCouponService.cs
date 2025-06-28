@@ -104,7 +104,7 @@ namespace FOCS.Application.Services
             newCoupon.IsDeleted = false;
             newCoupon.CreatedAt = DateTime.UtcNow;
             newCoupon.CreatedBy = userId;
-
+            
             await _couponRepository.AddAsync(newCoupon);
             await _couponRepository.SaveChangesAsync();
 
