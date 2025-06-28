@@ -15,7 +15,7 @@ namespace FOCS.Common.Models
 
         public Guid StoreId { get; set; }
 
-        public DateTime JoinDate { get; set; } = DateTime.Now;
+        public DateTime JoinDate { get; set; } = DateTime.UtcNow;
 
         public UserStoreStatus Status { get; set; } = UserStoreStatus.Active;
         
