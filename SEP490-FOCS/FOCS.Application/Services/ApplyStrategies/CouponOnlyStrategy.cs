@@ -95,10 +95,9 @@ namespace FOCS.Application.Services.ApplyStrategy
 
             // Case 2: Discount specific items
             HashSet<Guid>? acceptItemIds = null;
-            if (!string.IsNullOrWhiteSpace(coupon.AcceptForItems))
+            if (coupon.AcceptForItems != null)
             {
                 acceptItemIds = coupon.AcceptForItems
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
                     .Select(Guid.Parse)
                     .ToHashSet();
             }
