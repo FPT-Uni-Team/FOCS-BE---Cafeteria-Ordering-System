@@ -110,7 +110,6 @@ namespace FOCS.Common.Exceptions
             public const string StartDateInPast = "Start Date cannot be in the past";
             public const string StartDateAfterEndDate = "Start Date must be before End Date";
             public const string MaxPercentageDiscountValue = "Discount Value cannot exceed 100% for Percentage discount type";
-            public const string DiscountValueExceedMaxValue = "Discount Value cannot exceed Max Discount Value";
             public const string RequireItemCondition = "Condition is required for Buy X Get Y promotion type";
         }
     }

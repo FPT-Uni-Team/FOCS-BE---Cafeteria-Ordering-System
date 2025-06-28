@@ -95,13 +95,6 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
                                                 Errors.PromotionError.MaxPercentageDiscountValue,
                                                 Errors.FieldName.DiscountValue);
 
-            if (DiscountValue.HasValue && MaxDiscountValue.HasValue)
-            {
-                ConditionCheck.CheckCondition(DiscountValue < MaxDiscountValue,
-                                                    Errors.PromotionError.DiscountValueExceedMaxValue,
-                                                    Errors.FieldName.MaxDiscountValue);
-            }
-
             if (PromotionType == PromotionType.BuyXGetY)
             {
                 ConditionCheck.CheckCondition(PromotionItemConditionDTO != null,
