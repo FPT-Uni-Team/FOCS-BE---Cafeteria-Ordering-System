@@ -14,6 +14,6 @@ namespace FOCS.Common.Models
         public CouponConditionType ConditionType { get; set; }
 
         [JsonPropertyName("value")]
-        public int Value { get; set; }
+        public double Value { get; set; }
     }
 }
