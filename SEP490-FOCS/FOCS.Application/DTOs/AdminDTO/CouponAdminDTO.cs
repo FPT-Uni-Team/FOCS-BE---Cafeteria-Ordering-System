@@ -56,7 +56,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         public int? MaxUsagePerUser { get; set; }
 
         [JsonPropertyName("accept_for_items")]
-        public string? AcceptForItems { get; set; }
+        public List<string>? AcceptForItems { get; set; }
 
         [JsonPropertyName("coupon_condition")]
         public SetCouponConditionRequest SetCouponConditionRequest { get; set; }
