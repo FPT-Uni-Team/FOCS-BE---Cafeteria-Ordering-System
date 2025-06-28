@@ -35,7 +35,7 @@ namespace FOCS.Application.Services
 
             ConditionCheck.CheckCondition(coupon.CountUsed < coupon.MaxUsage, Errors.PromotionError.CouponMaxUsed);
 
-            var currentDate = DateTime.Now;
+            var currentDate = DateTime.UtcNow;
             ConditionCheck.CheckCondition(currentDate >= coupon.StartDate && currentDate <= coupon.EndDate, Errors.PromotionError.InvalidPeriodDatetime);
         }
 

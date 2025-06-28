@@ -30,9 +30,9 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public string CustomerNote { get; set; }
 
-        public DateTime? CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
         public string? CreatedBy { get; set; }
-        public DateTime? UpdatedAt { get; set; } = DateTime.Now;
+        public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
         public string? UpdatedBy { get; set; }
 
         //Store
