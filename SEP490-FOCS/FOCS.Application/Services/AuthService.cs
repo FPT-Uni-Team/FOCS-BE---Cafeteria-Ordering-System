@@ -164,7 +164,7 @@ namespace FOCS.Application.Services
         {
             var tokenEntity = (await _userRefreshTokenRepository.FindAsync(x => x.Token == refreshToken && !x.IsRevoked)).FirstOrDefault();
 
-            if (tokenEntity == null || tokenEntity.ExpirationDate < DateTime.Now)
+            if (tokenEntity == null || tokenEntity.ExpirationDate < DateTime.UtcNow)
             {
                 return new AuthResult
                 {

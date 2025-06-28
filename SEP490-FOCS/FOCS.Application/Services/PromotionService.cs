@@ -213,7 +213,7 @@ namespace FOCS.Application.Services
                 ConditionCheck.CheckCondition(couponUsageTime.Count() <= coupon.MaxUsagePerUser, Errors.PromotionError.CouponMaxUsed, Errors.FieldName.CouponMaxUsed);
             }
 
-            var currentDate = DateTime.Now;
+            var currentDate = DateTime.UtcNow;
             ConditionCheck.CheckCondition(currentDate >= coupon.StartDate && currentDate <= coupon.EndDate, Errors.PromotionError.InvalidPeriodDatetime, Errors.FieldName.EndDate);
 
             //Check promotion eligible
