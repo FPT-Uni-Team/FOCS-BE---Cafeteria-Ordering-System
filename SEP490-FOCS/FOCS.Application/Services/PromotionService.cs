@@ -69,7 +69,7 @@ namespace FOCS.Application.Services
 
             if (newPromotion.PromotionType == PromotionType.BuyXGetY)
             {
-                await CreatePromotionItemCondition(dto, newPromotion.Id);
+                await CreateOrUpdatePromotionItemCondition(dto, newPromotion.Id);
             }
 
             await _promotionRepository.SaveChangesAsync();
@@ -134,7 +134,7 @@ namespace FOCS.Application.Services
 
             if (promotion.PromotionType == PromotionType.BuyXGetY)
             {
-                await CreatePromotionItemCondition(dto, promotion.Id);
+                await CreateOrUpdatePromotionItemCondition(dto, promotion.Id);
             }
 
             UpdateAuditFields(promotion, userId);
@@ -410,17 +410,26 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(menuItem != null, Errors.OrderError.MenuItemNotFound, Errors.FieldName.MenuItemId);
         }
 
-        private async Task CreatePromotionItemCondition(PromotionDTO dto, Guid promotionId)
+        private async Task CreateOrUpdatePromotionItemCondition(PromotionDTO dto, Guid promotionId)
         {
             await ValidateMenuItem(dto.PromotionItemConditionDTO.BuyItemId);
             await ValidateMenuItem(dto.PromotionItemConditionDTO.GetItemId);
 
-            var condition = _mapper.Map<PromotionItemCondition>(dto.PromotionItemConditionDTO);
-            condition.Id = Guid.NewGuid();
-            condition.PromotionId = promotionId;
+            var existingCondition = await _promotionItemConditionRepository.AsQueryable().Where(c => c.PromotionId == promotionId).FirstOrDefaultAsync();
 
-            await _promotionItemConditionRepository.AddAsync(condition);
-            await _promotionItemConditionRepository.SaveChangesAsync();
+            if (existingCondition != null)
+            {
+                _mapper.Map(dto.PromotionItemConditionDTO, existingCondition);
+                await _promotionItemConditionRepository.SaveChangesAsync();
+            }
+            else
+            {
+                var condition = _mapper.Map<PromotionItemCondition>(dto.PromotionItemConditionDTO);
+                condition.Id = Guid.NewGuid();
+                condition.PromotionId = promotionId;
+                await _promotionItemConditionRepository.AddAsync(condition);
+                await _promotionItemConditionRepository.SaveChangesAsync();
+            }
         }
 
         private async Task<Promotion> GetAvailablePromotionById(Guid id)
