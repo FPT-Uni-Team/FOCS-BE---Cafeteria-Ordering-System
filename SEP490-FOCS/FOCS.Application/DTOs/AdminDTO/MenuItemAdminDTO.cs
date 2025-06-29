@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using FOCS.Common.Models;
+using System.Text.Json.Serialization;
 
 namespace FOCS.Application.DTOs.AdminServiceDTO
 {
@@ -12,9 +13,6 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
 
         [JsonPropertyName("description")]
         public string Description { get; set; }
-
-        [JsonPropertyName("images")]
-        public string Images { get; set; }
 
         [JsonPropertyName("base_price")]
         public double BasePrice { get; set; }

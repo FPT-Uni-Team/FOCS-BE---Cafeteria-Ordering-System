@@ -3,7 +3,11 @@ using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
+using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
+using MailKit;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,11 +22,16 @@ namespace FOCS.Application.Services
         private readonly IMenuItemsVariantGroupService _menuVariantGroupService;
         private readonly IMenuItemsVariantGroupItemService _menuItemsVariantGroupItemService;
 
-        public MenuItemManagementService(IMenuItemsVariantGroupService menuVariantGroupService, IMenuItemsVariantGroupItemService menuItemsVariantGroupItemService, IAdminMenuItemService adminMenuItemService)
+        private readonly IRepository<MenuItemImage> _menuItemImageRepository;
+        private readonly ICloudinaryService _cloudinaryService;
+
+        public MenuItemManagementService(IMenuItemsVariantGroupService menuVariantGroupService, ICloudinaryService cloudinaryService, IRepository<MenuItemImage> menuItemImageRepository, IMenuItemsVariantGroupItemService menuItemsVariantGroupItemService, IAdminMenuItemService adminMenuItemService)
         {
             _menuVariantGroupService = menuVariantGroupService;
             _menuItemsVariantGroupItemService = menuItemsVariantGroupItemService;
             _adminMenuItemService = adminMenuItemService;
+            _menuItemImageRepository = menuItemImageRepository;
+            _cloudinaryService = cloudinaryService;
         }
 
         public async Task<bool> CreateNewMenuItemWithVariant(CreateMenuItemWithVariantRequest request)
@@ -33,7 +42,6 @@ namespace FOCS.Application.Services
                 Id = request.Id ?? Guid.NewGuid(),
                 Name = request.Name,
                 Description = request.Description,
-                Images = request.Images,
                 BasePrice = request.BasePrice,
                 IsAvailable = request.IsAvailable,
                 StoreId = request.StoreId
@@ -80,6 +88,41 @@ namespace FOCS.Application.Services
             return true;
         }
 
+        public async Task<List<UploadedImageResult>> GetImagesOfProduct(Guid menuItemId, string storeId)
+        {
+            var images = await _menuItemImageRepository.AsQueryable().Where(x => x.MenuItemId == menuItemId).ToListAsync();
 
+            return images.Select(x => new UploadedImageResult
+            {
+                IsMain = x.IsMain,
+                Url = x.Url,
+            }).ToList();
+        }
+
+        public async Task<bool> UploadImagesAsync(List<IFormFile> files, List<bool> isMain, string menuItemId, string storeId)
+        {
+            try
+            {
+                var uploads = await _cloudinaryService.UploadImageAsync(files, isMain, menuItemId, storeId);
+
+                var images = uploads.Select(x => new MenuItemImage
+                {
+                    Id = Guid.NewGuid(),
+                    CreatedAt = DateTime.Now,
+                    CreatedBy = storeId,
+                    IsMain = x.IsMain,
+                    Url = x.Url,
+                    MenuItemId = Guid.Parse(menuItemId)
+                });
+
+                await _menuItemImageRepository.AddRangeAsync(images);
+                await _menuItemImageRepository.SaveChangesAsync();
+
+                return true;
+            } catch(Exception ex)
+            {
+                return false;
+            }
+        }
     }
 }

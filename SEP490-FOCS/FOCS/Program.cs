@@ -104,10 +104,15 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IRepository<MenuItemVariantGroup>, Repository<MenuItemVariantGroup, OrderDbContext>>()
                 .AddScoped<IMenuItemCategoryService, MenuItemCategoryService>()
                 .AddScoped<IRepository<MenuItemVariantGroup>, Repository<MenuItemVariantGroup, OrderDbContext>>()
+                .AddScoped<IRepository<MenuItemImage>, Repository<MenuItemImage, OrderDbContext>>()
+                .AddSingleton<ICloudinaryService, CloudinaryService>()
                 .AddSingleton<IRedisCacheService>(sp => new RedisCacheService("localhost:6379"));
 ;
 //builder.Services.AddHostedService<OrderBatchingService>();
 //builder.Services.AddHostedService<CartFlushBackgroundService>();
+
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(
