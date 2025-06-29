@@ -58,12 +58,16 @@ namespace FOCS.Application.Services
                                                      || dto.CouponType == CouponType.AutoGenerate,
                                                         AdminCouponConstants.CheckCouponCodeType, AdminCouponConstants.FieldCouponType);
 
+            // Auto && Has Code
+            ConditionCheck.CheckCondition(dto.CouponType != CouponType.AutoGenerate || string.IsNullOrWhiteSpace(dto.Code),
+                                                        AdminCouponConstants.CheckCouponCodeForAuto, AdminCouponConstants.FieldCode);
+
             // Type 'auto' => Generate unique code
             string couponCode = dto.CouponType == CouponType.AutoGenerate ? await GenerateUniqueCouponCodeAsync()
                                                                          : dto.Code?.Trim() ?? "";
 
             // Check manual code empty
-            ConditionCheck.CheckCondition(dto.CouponType != CouponType.AutoGenerate
+            ConditionCheck.CheckCondition(dto.CouponType != CouponType.Manual
                                                      || !string.IsNullOrWhiteSpace(couponCode),
                                                         AdminCouponConstants.CheckCouponCodeForManual, AdminCouponConstants.FieldCode);
 
@@ -401,6 +405,24 @@ namespace FOCS.Application.Services
             if (coupon == null || coupon.IsDeleted)
                 return false;
 
+            // Check coupon code type
+            ConditionCheck.CheckCondition(dto.CouponType == CouponType.Manual
+                                                     || dto.CouponType == CouponType.AutoGenerate,
+                                                        AdminCouponConstants.CheckCouponCodeType, AdminCouponConstants.FieldCouponType);
+
+            // Auto && Has Code
+            ConditionCheck.CheckCondition(dto.CouponType != CouponType.AutoGenerate || string.IsNullOrWhiteSpace(dto.Code),
+                                                        AdminCouponConstants.CheckCouponCodeForAuto, AdminCouponConstants.FieldCode);
+
+            // Type 'auto' => Generate unique code
+            string couponCode = dto.CouponType == CouponType.AutoGenerate ? await GenerateUniqueCouponCodeAsync()
+                                                                         : dto.Code?.Trim() ?? "";
+
+            // Check manual code empty
+            ConditionCheck.CheckCondition(dto.CouponType != CouponType.Manual
+                                                     || !string.IsNullOrWhiteSpace(couponCode),
+                                                        AdminCouponConstants.CheckCouponCodeForManual, AdminCouponConstants.FieldCode);
+
             // Check unique code (exclude current coupon)
             var existing = await _couponRepository.AsQueryable()
                                                   .AnyAsync(c => c.Id != id && c.Code == dto.Code && !c.IsDeleted);
@@ -420,6 +442,7 @@ namespace FOCS.Application.Services
 
             _mapper.Map(dto, coupon);
             coupon.StoreId = Guid.Parse(storeId);
+            coupon.Code = couponCode;
             coupon.UpdatedAt = DateTime.UtcNow;
             coupon.UpdatedBy = userId;
 
