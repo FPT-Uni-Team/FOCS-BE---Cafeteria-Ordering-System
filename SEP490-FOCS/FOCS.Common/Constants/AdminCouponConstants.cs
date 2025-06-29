@@ -39,6 +39,7 @@
         public const string CouponsToPromotionOk = "Update successfully";
         // Assign Coupons To Promotion service
         public const string CheckPromotion = "Promotion not found or deleted.";
+        public const string PromotionOutOfDate = "Coupons must be usage within the start and end dates of the promotion.";
 
         //Field Names
         public const string FieldStoreId = "storeId";

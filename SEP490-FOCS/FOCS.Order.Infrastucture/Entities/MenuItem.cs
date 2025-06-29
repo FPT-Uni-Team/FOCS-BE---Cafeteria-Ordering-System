@@ -15,8 +15,6 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public string Description { get; set; }
 
-        public string Images { get; set; }
-
         public double BasePrice { get; set; }
 
         public bool IsAvailable {  get; set; }
@@ -34,5 +32,7 @@ namespace FOCS.Order.Infrastucture.Entities
         public Store Store { get; set; }
 
         public ICollection<MenuItemVariantGroup> MenuItemVariantGroups { get; set; }
+        
+        public ICollection<MenuItemImage> Images { get; set; }
     }
 }

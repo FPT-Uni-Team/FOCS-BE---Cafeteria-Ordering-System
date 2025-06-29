@@ -19,9 +19,6 @@ namespace FOCS.Common.Models
         [JsonPropertyName("description")]
         public string Description { get; set; }
 
-        [JsonPropertyName("images")]
-        public string Images { get; set; }
-
         [JsonPropertyName("base_price")]
         public double BasePrice { get; set; }
 

@@ -36,6 +36,7 @@ namespace FOCS.Common.Exceptions
         public static class SystemError
         {
             public const string UnhandledExceptionOccurred = "Unhandled exception occurred";
+            public const string ErrorWhenUpload = "Error when upload images";
         }
 
         public static class Common
@@ -58,6 +59,7 @@ namespace FOCS.Common.Exceptions
         {
             public const string CategoryIsExist = "Category is exist in system";
         }
+
         public static class StoreSetting
         {
             public const string StoreSettingNotFound = "No store settings found for this store";
