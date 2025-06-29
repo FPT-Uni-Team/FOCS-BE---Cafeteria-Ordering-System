@@ -61,7 +61,7 @@ namespace FOCS.Application.Services
             await ValidatePromotionUniqueness(dto, storeId);
             await ValidateStoreExists(storeId);
 
-            var coupons = await ValidateCoupons(dto.CouponIds, storeId);
+            var coupons = await ValidateCoupons(dto.CouponIds, dto.StartDate, dto.EndDate, storeId);
 
             var newPromotion = CreatePromotionEntity(dto, userId, storeId, coupons);
 
@@ -127,7 +127,7 @@ namespace FOCS.Application.Services
             }
             else
             {
-                var coupons = await ValidateCoupons(dto.CouponIds, storeId);
+                var coupons = await ValidateCoupons(dto.CouponIds, dto.StartDate, dto.EndDate, storeId);
                 promotion.Coupons = coupons;
                 _mapper.Map(dto, promotion);
             }
@@ -378,13 +378,14 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, Errors.FieldName.StoreId);
         }
 
-        private async Task<ICollection<Coupon>> ValidateCoupons(List<Guid> couponIds, Guid storeId)
+        private async Task<ICollection<Coupon>> ValidateCoupons(List<Guid> couponIds, DateTime startDate, DateTime endDate, Guid storeId)
         {
             var coupons = await _couponRepository.AsQueryable()
                             .Where(c => c.StoreId == storeId &&
                                         couponIds.Contains(c.Id))
                             .ToListAsync();
 
+            ConditionCheck.CheckCondition(!coupons.Any(c => c.StartDate < startDate || c.EndDate > endDate), Errors.PromotionError.InvalidPeriodDatetime, Errors.FieldName.CouponIds);
             ConditionCheck.CheckCondition(!coupons.Any(c => c.PromotionId != null), Errors.PromotionError.CouponAssigned, Errors.FieldName.CouponIds);
 
             return coupons;
@@ -478,7 +479,7 @@ namespace FOCS.Application.Services
 
         private static IQueryable<Promotion> ApplySort(IQueryable<Promotion> query, UrlQueryParameters parameters)
         {
-            if (string.IsNullOrWhiteSpace(parameters.SortBy)) return query;
+            if (string.IsNullOrWhiteSpace(parameters.SortBy)) return query.OrderBy(p => p.StartDate);
 
             var isDescending = string.Equals(parameters.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
 
@@ -499,7 +500,7 @@ namespace FOCS.Application.Services
                 "discount_value" => isDescending
                     ? query.OrderByDescending(p => p.DiscountValue)
                     : query.OrderBy(p => p.DiscountValue),
-                _ => query
+                _ => query.OrderBy(p => p.StartDate)
             };
         }
 
