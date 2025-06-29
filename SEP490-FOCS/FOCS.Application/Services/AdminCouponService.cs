@@ -286,7 +286,7 @@ namespace FOCS.Application.Services
             return new PagedResult<CouponAdminDTO>(mapped, total, query.Page, query.PageSize);
         }
 
-        public async Task<PagedResult<CouponAdminDTO>> GetAvailableCouponsAsync(UrlQueryParameters query, Guid storeId, string userId)
+        public async Task<PagedResult<CouponAdminDTO>> GetAvailableCouponsAsync(UrlQueryParameters query, Guid promotionId, Guid storeId, string userId)
         {
             await ValidateUser(userId, storeId);
             await ValidateStoreExists(storeId);
@@ -294,7 +294,7 @@ namespace FOCS.Application.Services
             var couponQuery = _couponRepository.AsQueryable().Include(c => c.Promotion)
                                                                 .Where(c => !c.IsDeleted &&
                                                                 c.StoreId == storeId &&
-                                                                c.PromotionId == null &&
+                                                                (c.PromotionId == null || c.PromotionId == promotionId) &&
                                                                 c.CountUsed < c.MaxUsage &&
                                                                 c.IsActive && c.EndDate > DateTime.UtcNow);
 
