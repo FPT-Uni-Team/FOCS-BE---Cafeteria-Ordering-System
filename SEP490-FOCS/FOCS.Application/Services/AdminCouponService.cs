@@ -28,13 +28,13 @@ namespace FOCS.Application.Services
 
         private readonly ILogger<Coupon> _logger;
 
-        public AdminCouponService(IRepository<Coupon> couponRepository, 
+        public AdminCouponService(IRepository<Coupon> couponRepository,
                                   IRepository<CouponUsage> couponUsageRepository,
                                   IRepository<Store> storeRepository,
                                   IRepository<UserStore> userStoreRepository,
                                   UserManager<User> userManager,
-                                  ILogger<Coupon> logger, 
-                                  IRepository<Promotion> promotionRepository, 
+                                  ILogger<Coupon> logger,
+                                  IRepository<Promotion> promotionRepository,
                                   IMapper mapper)
         {
             _couponRepository = couponRepository;
@@ -58,12 +58,16 @@ namespace FOCS.Application.Services
                                                      || dto.CouponType == CouponType.AutoGenerate,
                                                         AdminCouponConstants.CheckCouponCodeType, AdminCouponConstants.FieldCouponType);
 
+            // Auto && Has Code
+            ConditionCheck.CheckCondition(dto.CouponType != CouponType.AutoGenerate || string.IsNullOrWhiteSpace(dto.Code),
+                                                        AdminCouponConstants.CheckCouponCodeForAuto, AdminCouponConstants.FieldCode);
+
             // Type 'auto' => Generate unique code
             string couponCode = dto.CouponType == CouponType.AutoGenerate ? await GenerateUniqueCouponCodeAsync()
                                                                          : dto.Code?.Trim() ?? "";
 
             // Check manual code empty
-            ConditionCheck.CheckCondition(dto.CouponType != CouponType.AutoGenerate
+            ConditionCheck.CheckCondition(dto.CouponType != CouponType.Manual
                                                      || !string.IsNullOrWhiteSpace(couponCode),
                                                         AdminCouponConstants.CheckCouponCodeForManual, AdminCouponConstants.FieldCode);
 
@@ -88,31 +92,12 @@ namespace FOCS.Application.Services
             // Map DTO to entity
             var newCoupon = _mapper.Map<Coupon>(dto);
             newCoupon.Id = Guid.NewGuid();
-
-            switch (dto.SetCouponConditionRequest.ConditionType)
-            {
-                case CouponConditionType.MinOrderAmount:
-                    newCoupon.MinimumOrderAmount = dto.SetCouponConditionRequest.Value;
-                    break;
-
-                case CouponConditionType.MinItemsQuantity:
-                    if (int.TryParse(dto.SetCouponConditionRequest.Value.ToString(), out int minItemQuantity))
-                    {
-                        newCoupon.MinimumItemQuantity = minItemQuantity;
-                    }
-                    else
-                    {
-                        throw new ArgumentException("Invalid MinimumItemQuantity value.");
-                    }
-                    break;
-            }
-
             newCoupon.Code = couponCode;
             newCoupon.StoreId = Guid.Parse(storeId);
             newCoupon.IsDeleted = false;
             newCoupon.CreatedAt = DateTime.UtcNow;
             newCoupon.CreatedBy = userId;
-            
+
             await _couponRepository.AddAsync(newCoupon);
             await _couponRepository.SaveChangesAsync();
 
@@ -151,27 +136,6 @@ namespace FOCS.Application.Services
             {
                 _logger.LogError(ex.Message);
             }
-        }
-
-        private async Task<string> GenerateUniqueCouponCodeAsync()
-        {
-            const string chars = AdminCouponConstants.GenerateUniqueCouponCode;
-            var random = new Random();
-
-            string newCode;
-            bool exists;
-
-            do
-            {
-                newCode = new string(Enumerable.Repeat(chars, 8)
-                    .Select(s => s[random.Next(s.Length)]).ToArray());
-
-                exists = await _couponRepository.AsQueryable()
-                    .AnyAsync(c => c.Code == newCode && !c.IsDeleted);
-
-            } while (exists);
-
-            return newCode;
         }
 
         public async Task<PagedResult<CouponAdminDTO>> GetAllCouponsAsync(UrlQueryParameters query, Guid storeId, string userId)
@@ -441,6 +405,24 @@ namespace FOCS.Application.Services
             if (coupon == null || coupon.IsDeleted)
                 return false;
 
+            // Check coupon code type
+            ConditionCheck.CheckCondition(dto.CouponType == CouponType.Manual
+                                                     || dto.CouponType == CouponType.AutoGenerate,
+                                                        AdminCouponConstants.CheckCouponCodeType, AdminCouponConstants.FieldCouponType);
+
+            // Auto && Has Code
+            ConditionCheck.CheckCondition(dto.CouponType != CouponType.AutoGenerate || string.IsNullOrWhiteSpace(dto.Code),
+                                                        AdminCouponConstants.CheckCouponCodeForAuto, AdminCouponConstants.FieldCode);
+
+            // Type 'auto' => Generate unique code
+            string couponCode = dto.CouponType == CouponType.AutoGenerate ? await GenerateUniqueCouponCodeAsync()
+                                                                         : dto.Code?.Trim() ?? "";
+
+            // Check manual code empty
+            ConditionCheck.CheckCondition(dto.CouponType != CouponType.Manual
+                                                     || !string.IsNullOrWhiteSpace(couponCode),
+                                                        AdminCouponConstants.CheckCouponCodeForManual, AdminCouponConstants.FieldCode);
+
             // Check unique code (exclude current coupon)
             var existing = await _couponRepository.AsQueryable()
                                                   .AnyAsync(c => c.Id != id && c.Code == dto.Code && !c.IsDeleted);
@@ -460,6 +442,7 @@ namespace FOCS.Application.Services
 
             _mapper.Map(dto, coupon);
             coupon.StoreId = Guid.Parse(storeId);
+            coupon.Code = couponCode;
             coupon.UpdatedAt = DateTime.UtcNow;
             coupon.UpdatedBy = userId;
 
@@ -481,36 +464,35 @@ namespace FOCS.Application.Services
             return true;
         }
 
-        public async Task<TrackCouponUsageDTO?> TrackCouponUsageAsync(Guid couponId, Guid? userId)
+        public async Task<TrackCouponUsageDTO?> TrackCouponUsageAsync(Guid couponId)
         {
             var coupon = await _couponRepository.GetByIdAsync(couponId);
             // If coupon unavailable
-            if (coupon == null || coupon.IsDeleted || !coupon.IsActive) return null;
+            ConditionCheck.CheckCondition(coupon != null, AdminCouponConstants.CouponStatusNotFound, AdminCouponConstants.FieldCouponId);
+            ConditionCheck.CheckCondition(!coupon.IsDeleted, AdminCouponConstants.CouponStatusNotFound, AdminCouponConstants.FieldCouponId);
+            ConditionCheck.CheckCondition(coupon.IsActive, AdminCouponConstants.TrackNotFound, AdminCouponConstants.FieldCouponId);
 
             var now = DateTime.UtcNow;
             // If coupon not in date range
-            if (now < coupon.StartDate || now > coupon.EndDate) return null;
+            ConditionCheck.CheckCondition(coupon.StartDate <= now && now <= coupon.EndDate, $"Coupon {coupon.Code} must be within the promotion period.", AdminCouponConstants.FieldDate);
 
-            var usageCount = await _couponUsageRepository.AsQueryable().CountAsync(u => u.CouponId == couponId);
-            // If coupon usage exceeded
-            if (usageCount >= coupon.MaxUsage) return null;
+            var usages = await _couponUsageRepository.AsQueryable()
+                                                     .Where(u => u.CouponId == couponId)
+                                                     .Select(u => new TrackCouponUsageDTO.UsageInfo
+                                                     {
+                                                         OrderId = u.OrderId,
+                                                         UsedAt = u.UsedAt
+                                                     })
+                                                     .ToListAsync();
 
-            int? leftPerUser = null;
-            if (userId.HasValue && coupon.MaxUsagePerUser.HasValue)
-            {
-                var userUsage = await _couponUsageRepository.AsQueryable()
-                            .CountAsync(u => u.CouponId == couponId && u.UserId == userId.Value);
+            var usageCount = usages.Count;
 
-                if (userUsage >= coupon.MaxUsagePerUser.Value)
-                    leftPerUser = 0;
-                else
-                    leftPerUser = coupon.MaxUsagePerUser.Value - userUsage;
-            }
+            ConditionCheck.CheckCondition(usageCount < coupon.MaxUsage, AdminCouponConstants.CouponUsageLimitExceed, AdminCouponConstants.FieldCouponId);
 
             return new TrackCouponUsageDTO
             {
                 TotalLeft = coupon.MaxUsage - usageCount,
-                LeftPerUser = leftPerUser
+                Usages = usages
             };
         }
 
@@ -558,6 +540,26 @@ namespace FOCS.Application.Services
         }
 
         #region Private Helper Methods
+        private async Task<string> GenerateUniqueCouponCodeAsync()
+        {
+            const string chars = AdminCouponConstants.GenerateUniqueCouponCode;
+            var random = new Random();
+
+            string newCode;
+            bool exists;
+
+            do
+            {
+                newCode = new string(Enumerable.Repeat(chars, 8)
+                    .Select(s => s[random.Next(s.Length)]).ToArray());
+
+                exists = await _couponRepository.AsQueryable()
+                    .AnyAsync(c => c.Code == newCode && !c.IsDeleted);
+
+            } while (exists);
+
+            return newCode;
+        }
 
         private async Task ValidateUser(string userId, Guid storeId)
         {

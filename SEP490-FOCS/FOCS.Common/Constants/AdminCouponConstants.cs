@@ -8,6 +8,7 @@
         public const string CouponCodeManual = "Manual";
         public const string CheckCouponCodeType = "Invalid coupon type. Must be 'auto' or 'manual'.";
         public const string CheckCouponCodeForManual = "Coupon code must be provided for manual type.";
+        public const string CheckCouponCodeForAuto = "Coupon code mustn't be provided for auto type.";
         public const string CheckCreateUniqueCode = "Coupon code already exists";
         public const string CheckCreateDate = "Start date must be before end date.";
         public const string GenerateUniqueCouponCode = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -28,6 +29,7 @@
 
         // Track Coupon Usage controller
         public const string TrackNotFound = "Coupon cannot be used anymore.";
+        public const string CouponUsageLimitExceed = "Coupon usage limit exceed";
 
         // Set Coupon Status controller
         public const string CouponStatusNotFound = "Coupon not found or has been deleted.";
@@ -42,6 +44,7 @@
 
         //Field Names
         public const string FieldStoreId = "storeId";
+        public const string FieldCouponId = "couponId";
         public const string FieldUserId = "userId";
         public const string FieldCouponType= "coupon_type";
         public const string FieldCode= "code";

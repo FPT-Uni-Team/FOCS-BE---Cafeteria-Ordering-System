@@ -109,9 +109,9 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("coupon/{id}/track-usage")]
-        public async Task<IActionResult> TrackCouponUsage(Guid id, Guid? userId)
+        public async Task<IActionResult> TrackCouponUsage(Guid id)
         {
-            var result = await _adminCouponService.TrackCouponUsageAsync(id, userId);
+            var result = await _adminCouponService.TrackCouponUsageAsync(id);
             if (result == null)
                 return NotFound(AdminCouponConstants.TrackNotFound);
 
