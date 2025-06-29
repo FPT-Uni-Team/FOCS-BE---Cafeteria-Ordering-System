@@ -119,7 +119,6 @@ namespace FOCS.Application.Services
                     Id = x.MenuItem.Id,
                     Description = x.MenuItem.Description,
                     Name = x.MenuItem.Name,
-                    Images = x.MenuItem.Images,
                     IsAvailable = x.MenuItem.IsAvailable
                 }).ToList()
             };
@@ -151,7 +150,6 @@ namespace FOCS.Application.Services
                          Id = x.MenuItem.Id,
                          Name = x.MenuItem.Name,
                          Description = x.MenuItem.Description,
-                         Images = x.MenuItem.Images,
                          IsAvailable = x.MenuItem.IsAvailable
                      }).ToList()
                  }).ToList();

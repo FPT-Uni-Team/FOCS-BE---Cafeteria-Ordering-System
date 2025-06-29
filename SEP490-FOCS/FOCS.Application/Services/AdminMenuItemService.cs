@@ -2,6 +2,7 @@
 using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Exceptions;
+using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
@@ -9,6 +10,7 @@ using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography.Xml;
 
 namespace FOCS.Application.Services
 {
@@ -22,12 +24,14 @@ namespace FOCS.Application.Services
         private readonly IRepository<Store> _storeRepository;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
+        private readonly IRepository<MenuItemImage> _menuItemImageRepository;
         public AdminMenuItemService(IRepository<MenuItem> menuRepository,
             IRepository<Store> storeRepository,
             UserManager<User> userManager,
             IRepository<UserStore> userStoreRepository,
-            IMapper mapper, 
-            IRepository<Category> menuCategory)
+            IMapper mapper,
+            IRepository<Category> menuCategory,
+            IRepository<MenuItemImage> menuItemImageRepository)
         {
             _menuRepository = menuRepository;
             _storeRepository = storeRepository;
@@ -35,6 +39,7 @@ namespace FOCS.Application.Services
             _userStoreRepository = userStoreRepository;
             _mapper = mapper;
             _menuCategory = menuCategory;
+            _menuItemImageRepository = menuItemImageRepository;
         }
 
         public async Task<MenuItemAdminDTO> CreateMenuAsync(MenuItemAdminDTO dto, string storeId)
@@ -152,7 +157,7 @@ namespace FOCS.Application.Services
 
         public async Task<MenuItemDetailAdminDTO> GetMenuItemDetail(Guid menuItemId, string storeId)
         {
-            var menuItems = await _menuRepository.AsQueryable().FirstOrDefaultAsync(m => m.StoreId == Guid.Parse(storeId) && m.Id == menuItemId);
+            var menuItems = await _menuRepository.AsQueryable().Include(x => x.Images).FirstOrDefaultAsync(m => m.StoreId == Guid.Parse(storeId) && m.Id == menuItemId);
 
 
             return _mapper.Map<MenuItemDetailAdminDTO>(menuItems);
