@@ -79,8 +79,10 @@ namespace FOCS.Application.Services
             if (dto.PromotionId.HasValue)
             {
                 var existingPromotion = await _promotionRepository.AsQueryable()
-                                                  .AnyAsync(c => c.Id == dto.PromotionId && !c.IsDeleted);
-                ConditionCheck.CheckCondition(existingPromotion, AdminCouponConstants.CheckPromotion, AdminCouponConstants.FieldPromotionId);
+                                                  .Where(c => c.Id == dto.PromotionId && !c.IsDeleted).FirstOrDefaultAsync();
+
+                ConditionCheck.CheckCondition(existingPromotion != null, AdminCouponConstants.CheckPromotion, AdminCouponConstants.FieldPromotionId);
+                ConditionCheck.CheckCondition(dto.StartDate > existingPromotion.StartDate || dto.EndDate < existingPromotion.EndDate, AdminCouponConstants.PromotionOutOfDate, AdminCouponConstants.FieldPromotionId);
             }
 
             // Map DTO to entity
@@ -446,6 +448,15 @@ namespace FOCS.Application.Services
 
             // Check dates
             ConditionCheck.CheckCondition(dto.StartDate <= dto.EndDate, AdminCouponConstants.CheckUpdateDate, AdminCouponConstants.FieldDate);
+
+            if (dto.PromotionId.HasValue && dto.PromotionId != coupon.PromotionId)
+            {
+                var existingPromotion = await _promotionRepository.AsQueryable()
+                                                  .Where(c => c.Id == dto.PromotionId && !c.IsDeleted).FirstOrDefaultAsync();
+
+                ConditionCheck.CheckCondition(existingPromotion != null, AdminCouponConstants.CheckPromotion, AdminCouponConstants.FieldPromotionId);
+                ConditionCheck.CheckCondition(dto.StartDate > existingPromotion.StartDate && dto.EndDate < existingPromotion.EndDate, AdminCouponConstants.PromotionOutOfDate, AdminCouponConstants.FieldPromotionId);
+            }
 
             _mapper.Map(dto, coupon);
             coupon.StoreId = Guid.Parse(storeId);
