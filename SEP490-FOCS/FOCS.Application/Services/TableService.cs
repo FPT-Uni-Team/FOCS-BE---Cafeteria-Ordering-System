@@ -1,12 +1,15 @@
 ﻿using AutoMapper;
+using CloudinaryDotNet;
 using FOCS.Application.DTOs;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
 using FOCS.Common.Enums;
+using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using QRCoder;
 
@@ -17,10 +20,13 @@ namespace FOCS.Application.Services
         private readonly IRepository<Table> _tableRepository;
         private readonly IMapper _mapper;
 
-        public TableService(IRepository<Table> tableRepository, IMapper mapper)
+        private readonly ICloudinaryService _cloudinaryService; 
+
+        public TableService(IRepository<Table> tableRepository, IMapper mapper, ICloudinaryService cloudinaryService)
         {
             _tableRepository = tableRepository;
             _mapper = mapper;
+            _cloudinaryService = cloudinaryService;
         }
 
         public async Task<TableDTO> CreateTableAsync(TableDTO dto, string storeId)
@@ -38,7 +44,7 @@ namespace FOCS.Application.Services
             var table = _mapper.Map<Table>(dto);
             table.Id = Guid.NewGuid();
             table.IsDeleted = false;
-            table.CreatedAt = DateTime.UtcNow;
+            table.CreatedAt = DateTime.UtcNow;  
             table.CreatedBy = storeId;
 
             await _tableRepository.AddAsync(table);
@@ -164,32 +170,41 @@ namespace FOCS.Application.Services
 
         public async Task<string> GenerateQrCodeForTableAsync(Guid tableId, string userId, Guid storeId)
         {
-            // Check user empty
             ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), TableConstants.UserIdEmpty);
 
-            // Find table
             var table = await _tableRepository
                                 .AsQueryable()
                                 .FirstOrDefaultAsync(t => t.Id == tableId && t.StoreId == storeId && !t.IsDeleted);
-            //Check table
             ConditionCheck.CheckCondition(table != null, TableConstants.TableEmpty);
 
-            var qrCodeBase64 = GenerateQrCodeBytes(tableId);
-            table.QrCode = qrCodeBase64;
+            var qrBytes = GenerateQrCodeForTable(tableId); // returns byte[]
+
+            var formFile = CreateFormFileFromBytes(qrBytes, tableId.ToString(), "image/png");
+
+            var uploadResult = await _cloudinaryService.UploadQrCodeForTable(formFile, storeId.ToString(), table!.Id.ToString());
+
+            table!.QrCode = uploadResult.Url;
             table.UpdatedAt = DateTime.UtcNow;
             table.UpdatedBy = userId;
 
             await _tableRepository.SaveChangesAsync();
-            return qrCodeBase64;
-        }
-        public string GenerateQrCodeBytes(Guid tableId)
-        {
-            using var qrGenerator = new QRCodeGenerator();
-            var qrData = qrGenerator.CreateQrCode(tableId.ToString(), QRCodeGenerator.ECCLevel.Q);
-            using var qrCode = new PngByteQRCode(qrData);
-            var qrCodeBytes = qrCode.GetGraphic(20);
-            return Convert.ToBase64String(qrCodeBytes);
+
+            return table.QrCode; 
         }
 
+        private IFormFile CreateFormFileFromBytes(byte[] fileBytes, string fileName, string contentType)
+        {
+            return new InMemoryFormFile(fileBytes, fileName, contentType);
+        }
+
+        public byte[] GenerateQrCodeForTable(Guid tableId)
+        {
+            var url = $"https://focs.site/order?tableCode={tableId}";
+
+            using var qrGenerator = new QRCodeGenerator();
+            using var qrCodeData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
+            using var qrCode = new PngByteQRCode(qrCodeData);
+            return qrCode.GetGraphic(20);
+        }
     }
 }

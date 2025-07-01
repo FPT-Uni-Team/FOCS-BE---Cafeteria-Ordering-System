@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace FOCS.Application.Services
 {
@@ -73,5 +74,34 @@ namespace FOCS.Application.Services
 
             return results;
         }
+
+        public async Task<UploadedImageResult> UploadQrCodeForTable(IFormFile file, string storeId, string tableId)
+        {
+            if (file == null || file.Length == 0)
+                throw new ArgumentException("QR file is empty", nameof(file));
+
+            var folderPath = $"stores/{storeId}/tables";
+            var publicId = $"table_{tableId}_{Guid.NewGuid()}";
+
+            var uploadParams = new ImageUploadParams
+            {
+                File = new FileDescription(file.FileName, file.OpenReadStream()),
+                Folder = folderPath,
+                PublicId = publicId,
+                Transformation = new Transformation().Crop("limit").Width(800).Height(800)
+            };
+
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+            if (uploadResult.StatusCode != System.Net.HttpStatusCode.OK || string.IsNullOrEmpty(uploadResult.SecureUrl?.ToString()))
+                throw new Exception("QR code upload failed to Cloudinary");
+
+            return new UploadedImageResult
+            {
+                Url = uploadResult.SecureUrl.ToString(),
+                IsMain = true
+            };
+        }
+
     }
 }
