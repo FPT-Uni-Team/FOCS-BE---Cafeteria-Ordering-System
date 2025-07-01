@@ -27,7 +27,7 @@ namespace FOCS.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var created = await _tableService.CreateTableAsync(dto, UserId);
+            var created = await _tableService.CreateTableAsync(dto, StoreId);
             return Ok(created);
         }
 

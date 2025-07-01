@@ -7,14 +7,16 @@ namespace FOCS.Application.DTOs
     {
         [JsonPropertyName("id")]
         public Guid? Id { get; set; }
+        
         [JsonPropertyName("table_number")]
         public int TableNumber { get; set; }
-        [JsonPropertyName("qr_code")]
-        public string QrCode { get; set; }
+
         [JsonPropertyName("status")]
         public TableStatus Status { get; set; }
+        
         [JsonPropertyName("is_active")]
         public bool IsActive { get; set; }
+        
         [JsonPropertyName("store_id")]
         public Guid StoreId { get; set; }
     }
