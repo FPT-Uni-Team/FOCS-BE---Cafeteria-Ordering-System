@@ -12,5 +12,7 @@ namespace FOCS.Common.Interfaces
     public interface ICloudinaryService
     {
         Task<List<UploadedImageResult>> UploadImageAsync(List<IFormFile> files, List<bool> isMain, string storeId, string menuItemId);
+
+        Task<UploadedImageResult> UploadQrCodeForTable(IFormFile file, string storeId, string tableId);
     }
 }
