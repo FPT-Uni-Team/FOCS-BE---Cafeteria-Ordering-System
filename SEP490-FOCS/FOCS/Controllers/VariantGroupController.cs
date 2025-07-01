@@ -63,9 +63,9 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("variants")]
-        public async Task<List<VariantGroupDetailDTO>> GetVariantGroupByStore()
+        public async Task<List<VariantGroupDetailDTO>> GetVariantGroupByStore(UrlQueryParameters urlQueryParameters)
         {
-            return await _variantGroupService.GetVariantGroupsByStore(StoreId);
+            return await _variantGroupService.GetVariantGroupsByStore(urlQueryParameters, StoreId);
         }
     }
 }

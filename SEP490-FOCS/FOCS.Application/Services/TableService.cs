@@ -4,6 +4,7 @@ using FOCS.Application.DTOs;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
 using FOCS.Common.Enums;
+using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
@@ -11,6 +12,7 @@ using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using MimeKit.Tnef;
 using QRCoder;
 
 namespace FOCS.Application.Services
@@ -97,8 +99,8 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), TableConstants.UserIdEmpty);
 
             var table = await _tableRepository.GetByIdAsync(id);
-            if (table == null || table.IsDeleted)
-                return null;
+
+            ConditionCheck.CheckCondition(table != null && table.IsDeleted, Errors.Common.NotFound, "id");
 
             return _mapper.Map<TableDTO>(table);
         }

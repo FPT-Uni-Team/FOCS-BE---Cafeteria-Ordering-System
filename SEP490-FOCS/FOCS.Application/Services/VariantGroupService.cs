@@ -71,24 +71,58 @@ namespace FOCS.Application.Services
             return true;
         }
 
-        public async Task<List<VariantGroupDetailDTO>> GetVariantGroupsByStore(string storeId)
+        public async Task<List<VariantGroupDetailDTO>> GetVariantGroupsByStore(UrlQueryParameters urlQueryParameters, string storeId)
         {
-            var variantsGroup = await _variantGroup.AsQueryable().Include(x => x.Variants).Where(x => x.CreatedBy == storeId).ToListAsync();
+            var variantsGroup = _variantGroup
+                .AsQueryable()
+                .Include(x => x.Variants)
+                .Where(x => x.CreatedBy == storeId);
 
-            return variantsGroup.Select(x => new VariantGroupDetailDTO
+            // Search
+            if (!string.IsNullOrWhiteSpace(urlQueryParameters.SearchBy) && !string.IsNullOrWhiteSpace(urlQueryParameters.SearchValue))
+            {
+                variantsGroup = urlQueryParameters.SearchBy.ToLower() switch
+                {
+                    "name" => variantsGroup.Where(x => x.Name.Contains(urlQueryParameters.SearchValue)),
+                    _ => variantsGroup
+                };
+            }
+
+            // Sort
+            if (!string.IsNullOrEmpty(urlQueryParameters.SortBy))
+            {
+                var sortDirection = urlQueryParameters.SortOrder?.ToLower() ?? "asc";
+
+                variantsGroup = (urlQueryParameters.SortBy.ToLower(), sortDirection) switch
+                {
+                    ("name", "asc") => variantsGroup.OrderBy(x => x.Name),
+                    ("name", "desc") => variantsGroup.OrderByDescending(x => x.Name),
+                    _ => variantsGroup
+                };
+            }
+
+            int page = urlQueryParameters.Page > 0 ? urlQueryParameters.Page : 1;
+            int pageSize = urlQueryParameters.PageSize > 0 ? urlQueryParameters.PageSize : 10;
+
+            variantsGroup = variantsGroup.Skip((page - 1) * pageSize).Take(pageSize);
+
+            var result = await variantsGroup.Select(x => new VariantGroupDetailDTO
             {
                 GroupName = x.Name,
-                Variants = x.Variants.Select(x => new VariantOptionDTO
+                Variants = x.Variants.Select(v => new VariantOptionDTO
                 {
-                    Id = x.Id,
-                    Name = x.Name,
-                    IsAvailable = x.IsAvailable,
-                    PrepPerTime = x.PrepPerTime,
-                    Price = x.Price,
-                    QuantityPerTime = x.QuantityPerTime
+                    Id = v.Id,
+                    Name = v.Name,
+                    IsAvailable = v.IsAvailable,
+                    PrepPerTime = v.PrepPerTime,
+                    Price = v.Price,
+                    QuantityPerTime = v.QuantityPerTime
                 }).ToList()
-            }).ToList();
+            }).ToListAsync();
+
+            return result;
         }
+
         public async Task<bool> CreateVariantGroup(CreateVariantGroupRequest request, string storeId)
         {
             try
