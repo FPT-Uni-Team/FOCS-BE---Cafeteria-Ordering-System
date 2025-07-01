@@ -112,7 +112,7 @@ namespace FOCS.Application.Services.ApplyStrategy
                     switch (promotion.PromotionType)
                     {
                         case PromotionType.Percentage:
-                            itemDiscount = ApplyPercentageDiscount(itemPrice, promotion.DiscountValue);
+                            itemDiscount = ApplyPercentageDiscount(itemPrice, promotion.DiscountValue, promotion.MaxDiscountValue);
                             break;
                         case PromotionType.FixedAmount:
                             itemDiscount = ApplyFixedAmountDiscount(itemPrice, promotion.DiscountValue);
@@ -159,10 +159,14 @@ namespace FOCS.Application.Services.ApplyStrategy
             return result;
         }
 
-        private double ApplyPercentageDiscount(double itemPrice, double? discountValue)
+        private double ApplyPercentageDiscount(double itemPrice, double? discountValue, double? maxDiscountValue)
         {
             if (discountValue == null) return 0;
-            return Math.Round(itemPrice * (double)(discountValue / 100), 2);
+            var currentDecrease = Math.Round(itemPrice * (double)(discountValue / 100), 2);
+
+            if (maxDiscountValue.HasValue && currentDecrease > maxDiscountValue) currentDecrease = (double)maxDiscountValue;
+        
+            return currentDecrease;
         }
 
         private double ApplyFixedAmountDiscount(double itemPrice, double? discountValue)
