@@ -55,14 +55,14 @@ namespace FOCS.Controllers
             return Ok(pagedResult);
         }
 
-        [HttpPost("coupons/available")]
-        public async Task<IActionResult> GetAvailableCoupons([FromBody] UrlQueryParameters query)
+        [HttpPost("coupons/available/{promotionId?}")]
+        public async Task<IActionResult> GetAvailableCoupons([FromBody] UrlQueryParameters query, Guid? promotionId)
         {
 
             ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid),
                                                     Errors.Common.InvalidGuidFormat,
                                                     Errors.FieldName.StoreId);
-            var pagedResult = await _adminCouponService.GetAvailableCouponsAsync(query, storeIdGuid, UserId);
+            var pagedResult = await _adminCouponService.GetAvailableCouponsAsync(query, promotionId ?? Guid.Empty, storeIdGuid, UserId);
             return Ok(pagedResult);
         }
 
@@ -109,9 +109,9 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("coupon/{id}/track-usage")]
-        public async Task<IActionResult> TrackCouponUsage(Guid id, Guid? userId)
+        public async Task<IActionResult> TrackCouponUsage(Guid id)
         {
-            var result = await _adminCouponService.TrackCouponUsageAsync(id, userId);
+            var result = await _adminCouponService.TrackCouponUsageAsync(id);
             if (result == null)
                 return NotFound(AdminCouponConstants.TrackNotFound);
 

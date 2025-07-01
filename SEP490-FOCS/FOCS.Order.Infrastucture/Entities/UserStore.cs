@@ -17,7 +17,7 @@ namespace FOCS.Order.Infrastucture.Entities
         public Guid StoreId { get; set; }
         public Store Store { get; set; }
         
-        public DateTime JoinDate { get; set; } = DateTime.Now;
+        public DateTime JoinDate { get; set; } = DateTime.UtcNow;
 
         public UserStoreStatus Status { get; set; } = UserStoreStatus.Active;
         public string? BlockReason { get; set; }

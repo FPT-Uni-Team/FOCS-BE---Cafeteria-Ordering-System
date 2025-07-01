@@ -39,7 +39,6 @@ namespace FOCS.Controllers
         {
             return await _menuManagementService.UploadImagesAsync(files, isMain, menuItemId, storeId);
         }
-
         [HttpDelete("{url}")]
         public async Task<bool> RemoveImageAsync(string url)
         {

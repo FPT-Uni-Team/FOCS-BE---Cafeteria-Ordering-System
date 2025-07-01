@@ -50,7 +50,7 @@ namespace FOCS.Application.Services
                     Id = Guid.NewGuid(),
                     CategoryId = x,
                     MenuItemId = menuItemId,
-                    CreatedAt = DateTime.Now,
+                    CreatedAt = DateTime.UtcNow,
                     CreatedBy = userId
                 });
 
@@ -88,7 +88,7 @@ namespace FOCS.Application.Services
                     Id = Guid.NewGuid(),
                     CategoryId = cateId,
                     MenuItemId = x,
-                    CreatedAt = DateTime.Now,
+                    CreatedAt = DateTime.UtcNow,
                     CreatedBy = storeId.ToString()
                 });
 

@@ -61,7 +61,7 @@ namespace FOCS.Application.Services
             await ValidatePromotionUniqueness(dto, storeId);
             await ValidateStoreExists(storeId);
 
-            var coupons = await ValidateCoupons(dto.CouponIds, storeId);
+            var coupons = await ValidateCoupons(dto.CouponIds, dto.StartDate, dto.EndDate, storeId);
 
             var newPromotion = CreatePromotionEntity(dto, userId, storeId, coupons);
 
@@ -69,7 +69,7 @@ namespace FOCS.Application.Services
 
             if (newPromotion.PromotionType == PromotionType.BuyXGetY)
             {
-                await CreatePromotionItemCondition(dto, newPromotion.Id);
+                await CreateOrUpdatePromotionItemCondition(dto, newPromotion.Id);
             }
 
             await _promotionRepository.SaveChangesAsync();
@@ -127,14 +127,14 @@ namespace FOCS.Application.Services
             }
             else
             {
-                var coupons = await ValidateCoupons(dto.CouponIds, storeId);
+                var coupons = await ValidateCoupons(dto.CouponIds, dto.StartDate, dto.EndDate, storeId);
                 promotion.Coupons = coupons;
                 _mapper.Map(dto, promotion);
             }
 
             if (promotion.PromotionType == PromotionType.BuyXGetY)
             {
-                await CreatePromotionItemCondition(dto, promotion.Id);
+                await CreateOrUpdatePromotionItemCondition(dto, promotion.Id);
             }
 
             UpdateAuditFields(promotion, userId);
@@ -213,7 +213,7 @@ namespace FOCS.Application.Services
                 ConditionCheck.CheckCondition(couponUsageTime.Count() <= coupon.MaxUsagePerUser, Errors.PromotionError.CouponMaxUsed, Errors.FieldName.CouponMaxUsed);
             }
 
-            var currentDate = DateTime.Now;
+            var currentDate = DateTime.UtcNow;
             ConditionCheck.CheckCondition(currentDate >= coupon.StartDate && currentDate <= coupon.EndDate, Errors.PromotionError.InvalidPeriodDatetime, Errors.FieldName.EndDate);
 
             //Check promotion eligible
@@ -378,13 +378,14 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, Errors.FieldName.StoreId);
         }
 
-        private async Task<ICollection<Coupon>> ValidateCoupons(List<Guid> couponIds, Guid storeId)
+        private async Task<ICollection<Coupon>> ValidateCoupons(List<Guid> couponIds, DateTime startDate, DateTime endDate, Guid storeId)
         {
             var coupons = await _couponRepository.AsQueryable()
                             .Where(c => c.StoreId == storeId &&
                                         couponIds.Contains(c.Id))
                             .ToListAsync();
 
+            ConditionCheck.CheckCondition(!coupons.Any(c => c.StartDate < startDate || c.EndDate > endDate), Errors.PromotionError.InvalidPeriodDatetime, Errors.FieldName.CouponIds);
             ConditionCheck.CheckCondition(!coupons.Any(c => c.PromotionId != null), Errors.PromotionError.CouponAssigned, Errors.FieldName.CouponIds);
 
             return coupons;
@@ -409,17 +410,26 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(menuItem != null, Errors.OrderError.MenuItemNotFound, Errors.FieldName.MenuItemId);
         }
 
-        private async Task CreatePromotionItemCondition(PromotionDTO dto, Guid promotionId)
+        private async Task CreateOrUpdatePromotionItemCondition(PromotionDTO dto, Guid promotionId)
         {
             await ValidateMenuItem(dto.PromotionItemConditionDTO.BuyItemId);
             await ValidateMenuItem(dto.PromotionItemConditionDTO.GetItemId);
 
-            var condition = _mapper.Map<PromotionItemCondition>(dto.PromotionItemConditionDTO);
-            condition.Id = Guid.NewGuid();
-            condition.PromotionId = promotionId;
+            var existingCondition = await _promotionItemConditionRepository.AsQueryable().Where(c => c.PromotionId == promotionId).FirstOrDefaultAsync();
 
-            await _promotionItemConditionRepository.AddAsync(condition);
-            await _promotionItemConditionRepository.SaveChangesAsync();
+            if (existingCondition != null)
+            {
+                _mapper.Map(dto.PromotionItemConditionDTO, existingCondition);
+                await _promotionItemConditionRepository.SaveChangesAsync();
+            }
+            else
+            {
+                var condition = _mapper.Map<PromotionItemCondition>(dto.PromotionItemConditionDTO);
+                condition.Id = Guid.NewGuid();
+                condition.PromotionId = promotionId;
+                await _promotionItemConditionRepository.AddAsync(condition);
+                await _promotionItemConditionRepository.SaveChangesAsync();
+            }
         }
 
         private async Task<Promotion> GetAvailablePromotionById(Guid id)
@@ -478,7 +488,7 @@ namespace FOCS.Application.Services
 
         private static IQueryable<Promotion> ApplySort(IQueryable<Promotion> query, UrlQueryParameters parameters)
         {
-            if (string.IsNullOrWhiteSpace(parameters.SortBy)) return query;
+            if (string.IsNullOrWhiteSpace(parameters.SortBy)) return query.OrderBy(p => p.StartDate);
 
             var isDescending = string.Equals(parameters.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
 
@@ -499,7 +509,7 @@ namespace FOCS.Application.Services
                 "discount_value" => isDescending
                     ? query.OrderByDescending(p => p.DiscountValue)
                     : query.OrderBy(p => p.DiscountValue),
-                _ => query
+                _ => query.OrderBy(p => p.StartDate)
             };
         }
 
