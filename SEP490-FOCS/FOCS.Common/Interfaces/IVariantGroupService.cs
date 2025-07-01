@@ -25,6 +25,6 @@ namespace FOCS.Common.Interfaces
 
         Task<bool> CreateVariantGroup(CreateVariantGroupRequest request, string storeId);
 
-        Task<List<VariantGroupDetailDTO>> GetVariantGroupsByStore(string storeId);
+        Task<List<VariantGroupDetailDTO>> GetVariantGroupsByStore(UrlQueryParameters urlQueryParameters, string storeId);
     }
 }
