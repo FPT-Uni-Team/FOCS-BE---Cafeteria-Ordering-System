@@ -103,7 +103,7 @@ namespace FOCS.Application.Services
         {
             try
             {
-                var uploads = await _cloudinaryService.UploadImageAsync(files, isMain, menuItemId, storeId);
+                var uploads = await _cloudinaryService.UploadImageAsync(files, isMain, storeId, menuItemId);
 
                 var images = uploads.Select(x => new MenuItemImage
                 {
@@ -120,6 +120,25 @@ namespace FOCS.Application.Services
 
                 return true;
             } catch(Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> RemoveImageAsync(string url)
+        {
+            try
+            {
+                var image = await _menuItemImageRepository.AsQueryable().FirstOrDefaultAsync(x => x.Url == url);
+
+                ConditionCheck.CheckCondition(image != null, Errors.Common.NotFound);
+
+                _menuItemImageRepository.Remove(image!);
+                await _menuItemImageRepository.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
             {
                 return false;
             }

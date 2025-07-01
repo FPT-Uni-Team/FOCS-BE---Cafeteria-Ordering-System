@@ -6,7 +6,7 @@ namespace FOCS.Application.Services.Interface
 {
     public interface ITableService
     {
-        Task<TableDTO> CreateTableAsync(TableDTO dto, string userId);
+        Task<TableDTO> CreateTableAsync(TableDTO dto, string storeId);
         Task<PagedResult<TableDTO>> GetAllTablesAsync(UrlQueryParameters query, string userId, Guid storeId);
         Task<TableDTO> GetTableByIdAsync(Guid id, string userId);
         Task<bool> UpdateTableAsync(Guid id, TableDTO dto, string userId);

@@ -23,10 +23,10 @@ namespace FOCS.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<TableDTO> CreateTableAsync(TableDTO dto, string userId)
+        public async Task<TableDTO> CreateTableAsync(TableDTO dto, string storeId)
         {
             // Check userId
-            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), TableConstants.UserIdEmpty);
+            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(storeId), TableConstants.UserIdEmpty);
 
             bool exists = await _tableRepository
                                     .AsQueryable()
@@ -39,7 +39,7 @@ namespace FOCS.Application.Services
             table.Id = Guid.NewGuid();
             table.IsDeleted = false;
             table.CreatedAt = DateTime.UtcNow;
-            table.CreatedBy = userId;
+            table.CreatedBy = storeId;
 
             await _tableRepository.AddAsync(table);
             await _tableRepository.SaveChangesAsync();
