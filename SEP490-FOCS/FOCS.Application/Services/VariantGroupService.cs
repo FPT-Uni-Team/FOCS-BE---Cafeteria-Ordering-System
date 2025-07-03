@@ -7,13 +7,6 @@ using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FOCS.Application.Services
 {
@@ -71,7 +64,7 @@ namespace FOCS.Application.Services
             return true;
         }
 
-        public async Task<List<VariantGroupDetailDTO>> GetVariantGroupsByStore(UrlQueryParameters urlQueryParameters, string storeId)
+        public async Task<PagedResult<VariantGroupDetailDTO>> GetVariantGroupsByStore(UrlQueryParameters urlQueryParameters, string storeId)
         {
             var variantsGroup = _variantGroup
                 .AsQueryable()
@@ -120,7 +113,9 @@ namespace FOCS.Application.Services
                 }).ToList()
             }).ToListAsync();
 
-            return result;
+            var total = await variantsGroup.CountAsync();
+
+            return new PagedResult<VariantGroupDetailDTO>(result, total, page, pageSize);
         }
 
         public async Task<bool> CreateVariantGroup(CreateVariantGroupRequest request, string storeId)
