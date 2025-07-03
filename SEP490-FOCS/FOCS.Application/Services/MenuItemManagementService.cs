@@ -25,13 +25,16 @@ namespace FOCS.Application.Services
         private readonly IRepository<MenuItemImage> _menuItemImageRepository;
         private readonly ICloudinaryService _cloudinaryService;
 
-        public MenuItemManagementService(IMenuItemsVariantGroupService menuVariantGroupService, ICloudinaryService cloudinaryService, IRepository<MenuItemImage> menuItemImageRepository, IMenuItemsVariantGroupItemService menuItemsVariantGroupItemService, IAdminMenuItemService adminMenuItemService)
+        private readonly IMenuItemCategoryService _menuItemCategoryService;
+
+        public MenuItemManagementService(IMenuItemsVariantGroupService menuVariantGroupService, IMenuItemCategoryService menuItemCategoryService, ICloudinaryService cloudinaryService, IRepository<MenuItemImage> menuItemImageRepository, IMenuItemsVariantGroupItemService menuItemsVariantGroupItemService, IAdminMenuItemService adminMenuItemService)
         {
             _menuVariantGroupService = menuVariantGroupService;
             _menuItemsVariantGroupItemService = menuItemsVariantGroupItemService;
             _adminMenuItemService = adminMenuItemService;
             _menuItemImageRepository = menuItemImageRepository;
             _cloudinaryService = cloudinaryService;
+            _menuItemCategoryService = menuItemCategoryService;
         }
 
         public async Task<bool> CreateNewMenuItemWithVariant(CreateMenuItemWithVariantRequest request)
@@ -47,7 +50,13 @@ namespace FOCS.Application.Services
                 StoreId = request.StoreId
             }, request.StoreId.ToString());
 
-            // Step 2: Link each VariantGroup for MenuItem
+            // Step 2: Link categories to menu item
+            if (request.CategoryIds!= null && request.CategoryIds.Any())
+            {
+                await _menuItemCategoryService.AssignCategoriesToMenuItem(request.CategoryIds, (Guid)newMenuItem.Id, request.StoreId.ToString());
+            }
+
+            // Step 3: Link each VariantGroup for MenuItem
             var createdVariantGroups = new List<MenuItemVariantGroup>();
 
             foreach (var variantGroup in request.VariantGroupRequests)
@@ -66,7 +75,7 @@ namespace FOCS.Application.Services
 
             ConditionCheck.CheckCondition(createdVariantGroups.Any(), Errors.Variant.FailWhenAssign);
 
-            // Step 3: link MenuItemVariantGroupItem (Link with spec variant)
+            // Step 4: link MenuItemVariantGroupItem (Link with spec variant)
             var groupItemRequests = createdVariantGroups.Select(group =>
             {
                 var matchedGroup = request.VariantGroupRequests.FirstOrDefault(x => x.Id == group.VariantGroupId);
@@ -74,7 +83,7 @@ namespace FOCS.Application.Services
                 return new MenuItemVariantGroupItemRequest
                 {
                     MenuItemVariantGroupId = group.Id,
-                    VariantIds = matchedGroup?.VariantIds ?? new List<Guid>()
+                    Variants = matchedGroup?.Variants ?? new List<VariantRequest>()
                 };
             }).ToList();
 

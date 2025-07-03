@@ -19,7 +19,7 @@ namespace FOCS.Common.Models
         public Guid MenuItemVariantGroupId { get; set; }
 
 
-        [JsonPropertyName("variant_ids")]
-        public List<Guid> VariantIds { get; set; }
+        [JsonPropertyName("variants")]
+        public List<VariantRequest> Variants { get; set; }
     }
 }

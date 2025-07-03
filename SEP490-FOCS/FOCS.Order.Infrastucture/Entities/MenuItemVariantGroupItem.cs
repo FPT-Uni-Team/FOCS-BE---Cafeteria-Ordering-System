@@ -17,5 +17,11 @@ namespace FOCS.Order.Infrastucture.Entities
         public MenuItemVariant MenuItemVariant { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        public bool IsAvailable { get; set; } = true;
+
+        public int PrepPerTime { get; set; }
+
+        public int QuantityPerTime { get; set; }
     }
 }

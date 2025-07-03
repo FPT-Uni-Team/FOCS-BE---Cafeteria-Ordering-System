@@ -39,6 +39,9 @@ namespace FOCS.Common.Models
 
     public class VariantGroupDetailDTO
     {
+        [JsonPropertyName("id")]
+        public Guid Id { get; set; }
+
         [JsonPropertyName("group_name")]
         public string GroupName { get; set; }
 

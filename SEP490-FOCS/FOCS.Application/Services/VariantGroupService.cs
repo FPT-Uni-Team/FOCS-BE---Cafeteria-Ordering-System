@@ -69,6 +69,7 @@ namespace FOCS.Application.Services
             var variantsGroup = _variantGroup
                 .AsQueryable()
                 .Include(x => x.Variants)
+                .ThenInclude(x => x.VariantGroup)
                 .Where(x => x.CreatedBy == storeId);
 
             // Search
@@ -101,15 +102,14 @@ namespace FOCS.Application.Services
 
             var result = await variantsGroup.Select(x => new VariantGroupDetailDTO
             {
+                Id = x.Id,
                 GroupName = x.Name,
                 Variants = x.Variants.Select(v => new VariantOptionDTO
                 {
                     Id = v.Id,
                     Name = v.Name,
                     IsAvailable = v.IsAvailable,
-                    PrepPerTime = v.PrepPerTime,
                     Price = v.Price,
-                    QuantityPerTime = v.QuantityPerTime
                 }).ToList()
             }).ToListAsync();
 
