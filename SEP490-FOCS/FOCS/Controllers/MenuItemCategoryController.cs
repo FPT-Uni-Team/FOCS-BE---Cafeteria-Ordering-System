@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
-    [Route("MenuItemCategory")]
+    [Route("api/MenuItemCategory")]
     [Authorize(Roles = Roles.Manager +","+ Roles.Admin)]
     [ApiController]
     public class MenuItemCategoryController : FocsController

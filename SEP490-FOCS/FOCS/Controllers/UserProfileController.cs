@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FOCS.Controllers
 {
     [Authorize(Roles = Roles.User + "," + Roles.Admin + "," + Roles.Manager)]
-    [Route("user")]
+    [Route("api/user")]
     [ApiController]
     public class UserProfileController : FocsController
     {

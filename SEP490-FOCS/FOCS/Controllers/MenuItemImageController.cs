@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
-    [Route("image")]
+    [Route("api/image")]
     [ApiController]
     public class MenuItemImageController : FocsController
     {

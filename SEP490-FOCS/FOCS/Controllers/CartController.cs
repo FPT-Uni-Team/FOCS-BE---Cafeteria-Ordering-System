@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
-    [Route("order")]
+    [Route("api/order")]
     [ApiController]
     public class CartController : FocsController
     {
