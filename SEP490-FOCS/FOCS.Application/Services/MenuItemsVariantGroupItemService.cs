@@ -24,12 +24,15 @@ namespace FOCS.Application.Services
             try
             {
                 var newMenuItemVariantGroupItems = request.MenuItemVariantGroupItemRequests
-                    .Where(x => x.VariantIds != null && x.VariantIds.Any())
-                    .SelectMany(group => group.VariantIds.Select(variantId => new MenuItemVariantGroupItem
+                    .Where(x => x.Variants != null && x.Variants.Any())
+                    .SelectMany(group => group.Variants.Select(variant => new MenuItemVariantGroupItem
                     {
                         Id = Guid.NewGuid(),
                         MenuItemVariantGroupId = group.MenuItemVariantGroupId,
-                        MenuItemVariantId = variantId,
+                        MenuItemVariantId = variant.Id,
+                        IsAvailable = variant.IsAvailable,
+                        PrepPerTime = variant.PrepPerTime,
+                        QuantityPerTime = variant.QuantityPerTime,
                         IsActive = true
                     }))
                     .ToList();

@@ -14,10 +14,6 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public double Price { get; set; }
 
-        public int PrepPerTime { get; set; }
-
-        public int QuantityPerTime { get; set; }
-
         public bool IsAvailable { get; set; }
 
         public bool IsDeleted {  get; set; }

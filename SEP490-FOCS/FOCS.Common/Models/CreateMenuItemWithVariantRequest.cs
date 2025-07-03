@@ -28,6 +28,9 @@ namespace FOCS.Common.Models
         [JsonPropertyName("store_id")]
         public Guid StoreId { get; set; }
 
+        [JsonPropertyName("category_ids")]
+        public List<Guid>? CategoryIds { get; set; }
+
         [JsonPropertyName("variant_groups")]
         public List<VariantGroupRequest> VariantGroupRequests { get; set; }
         #endregion
@@ -48,6 +51,23 @@ namespace FOCS.Common.Models
         public int MaxSelect { get; set; }
 
         [JsonPropertyName("variant_ids")]
-        public List<Guid> VariantIds {  get; set; }
+        public List<VariantRequest> Variants {  get; set; }
     }
+
+    public class VariantRequest
+    {
+        [JsonPropertyName("id")]
+        public Guid Id { get; set; }
+
+        [JsonPropertyName("is_available")]
+        public bool IsAvailable { get; set; }
+
+        [JsonPropertyName("prep_per_time")]
+        public int PrepPerTime { get; set; }
+
+        [JsonPropertyName("quantity_per_time")]
+        public int QuantityPerTime { get; set; }
+
+    }
+
 }
