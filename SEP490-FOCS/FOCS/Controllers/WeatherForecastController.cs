@@ -11,7 +11,7 @@ using StackExchange.Redis;
 namespace FOCS.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class WeatherForecastController : FocsController
     {
         private static readonly string[] Summaries = new[]

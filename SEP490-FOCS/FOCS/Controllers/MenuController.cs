@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FOCS.Controllers
 {
-    [Route("menu")]
+    [Route("api/menu")]
     [ApiController]
     public class MenuController : FocsController
     {
