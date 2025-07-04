@@ -1,4 +1,7 @@
-﻿using FOCS.Application.Services.Interface;
+﻿using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
+using FOCS.Application.DTOs;
+using FOCS.Application.Services.Interface;
 using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
@@ -129,6 +132,60 @@ namespace FOCS.Application.Services
 
                 return true;
             } catch(Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateImagesAsync(List<string> urls, List<IFormFile> files, List<bool> isMainList, string storeId)
+        {
+            try
+            {
+                if (urls.Count != files.Count || urls.Count != isMainList.Count)
+                    return false;
+
+                var existingImages = await _menuItemImageRepository.FindAsync(i => urls.Contains(i.Url));
+                var imageDict = existingImages.ToDictionary(i => i.Url);
+
+                var uploadFiles = new List<IFormFile>();
+                var isMainFlags = new List<bool>();
+                var updateTargets = new List<(MenuItemImage image, int index)>();
+
+                for (int i = 0; i < urls.Count; i++)
+                {
+                    var url = urls[i];
+                    var file = files[i];
+                    var isMain = isMainList[i];
+
+                    if (!imageDict.TryGetValue(url, out var image))
+                        continue;
+
+                    uploadFiles.Add(file);
+                    isMainFlags.Add(isMain);
+                    updateTargets.Add((image, uploadFiles.Count - 1));
+                }
+
+                if (uploadFiles.Count == 0)
+                    return true;
+
+                var menuItemId = existingImages.First().MenuItemId.ToString();
+                var uploaded = await _cloudinaryService.UploadImageAsync(uploadFiles, isMainFlags, storeId, menuItemId);
+
+                for (int i = 0; i < updateTargets.Count; i++)
+                {
+                    var (image, index) = updateTargets[i];
+                    var result = uploaded[index];
+
+                    image.Url = result.Url;
+                    image.IsMain = result.IsMain;
+                    image.UpdatedAt = DateTime.UtcNow;
+                    image.UpdatedBy = storeId;
+                }
+
+                await _menuItemImageRepository.SaveChangesAsync();
+                return true;
+            }
+            catch
             {
                 return false;
             }
