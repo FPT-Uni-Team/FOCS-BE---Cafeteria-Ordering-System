@@ -1,4 +1,5 @@
-﻿using FOCS.Common.Interfaces;
+﻿using FOCS.Application.DTOs;
+using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Order.Infrastucture.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -39,6 +40,17 @@ namespace FOCS.Controllers
         {
             return await _menuManagementService.UploadImagesAsync(files, isMain, menuItemId, storeId);
         }
+
+        [HttpPut("images/update")]
+        public async Task<bool> UpdateImages(
+                [FromForm] List<string> urls,
+                [FromForm] List<IFormFile> files,
+                [FromForm] List<bool> isMain,
+                [FromHeader] string storeId)
+        {
+            return await _menuManagementService.UpdateImagesAsync(urls, files, isMain, storeId);
+        }
+
         [HttpDelete("{url}")]
         public async Task<bool> RemoveImageAsync(string url)
         {

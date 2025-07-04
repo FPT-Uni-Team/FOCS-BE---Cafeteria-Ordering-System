@@ -1,10 +1,5 @@
 ﻿using FOCS.Common.Models;
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FOCS.Common.Interfaces
 {
@@ -14,5 +9,6 @@ namespace FOCS.Common.Interfaces
         Task<List<UploadedImageResult>> GetImagesOfProduct(Guid menuItemId, string storeId);
         Task<bool> RemoveImageAsync(string url);
         Task<bool> UploadImagesAsync(List<IFormFile> files, List<bool> isMain, string menuItemId, string storeId);
+        Task<bool> UpdateImagesAsync(List<string> urls, List<IFormFile> files, List<bool> isMainList, string storeId);
     }
 }
