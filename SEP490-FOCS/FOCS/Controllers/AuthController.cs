@@ -87,8 +87,12 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("refresh-token")]
-        public async Task<AuthResult> RefreshToken(string refreshToken)
+        public async Task<AuthResult> RefreshToken()
         {
+            var refreshToken = Request.Cookies["refreshToken"];
+
+            ConditionCheck.CheckCondition(refreshToken != null, Errors.Common.NotFound, "refresh token");
+
             ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
             return await _authService.RefreshTokenAsync(refreshToken, storeIdGuid);
         }
