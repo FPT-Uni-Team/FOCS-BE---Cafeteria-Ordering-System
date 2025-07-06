@@ -66,6 +66,7 @@ namespace FOCS.Application.Mappings
 
             CreateMap<User, UserProfileDTO>().ReverseMap();
 
+            CreateMap<User, StaffProfileDTO>().ReverseMap();
 
             // Order mapping
             CreateMap<OrderDTO, Order.Infrastucture.Entities.Order>().ReverseMap(); 

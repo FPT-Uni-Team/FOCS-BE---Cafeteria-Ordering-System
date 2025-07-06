@@ -7,7 +7,12 @@ namespace FOCS.Application.Services.Interface
 {
     public interface IStaffService
     {
-        Task<bool> AddStaffRoleAsync(string role, string userId, string managerId);
-        Task<bool> RemoveStaffRoleAsync(string role, string userId, string managerId);
+        Task<StaffProfileDTO> CreateStaffAsync(RegisterRequest request, string StoreId, string managerId);
+        Task<PagedResult<StaffProfileDTO>> GetStaffListAsync(UrlQueryParameters query, string storeId);
+        Task<StaffProfileDTO> GetStaffProfileAsync(string staffId, string managerId);
+        Task<StaffProfileDTO> UpdateStaffProfileAsync(StaffProfileDTO dto, string staffId, string managerId);
+        Task<bool> DeleteStaffAsync(string staffId, string managerId);
+        Task<bool> AddStaffRoleAsync(string role, string staffId, string managerId);
+        Task<bool> RemoveStaffRoleAsync(string role, string staffId, string managerId);
     }
 }
