@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
-using FOCS.Application.DTOs.AdminServiceDTO;
-using FOCS.Application.Services.Interface;
+using FOCS.Application.DTOs;
 using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
@@ -8,27 +7,21 @@ using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Esf;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.AccessControl;
-using System.Text;
-using System.Threading.Tasks;
-using static FOCS.Common.Exceptions.Errors;
 
 namespace FOCS.Application.Services
 {
     public class MenuItemsVariantGroupService : IMenuItemsVariantGroupService
     {
         private readonly IRepository<MenuItemVariantGroup> _menuItemVariantGroupRepository;
+        private readonly IRepository<MenuItemVariantGroupItem> _menuItemVariantGroupItemRepository;
 
         private readonly IMapper _mapper;
 
-        public MenuItemsVariantGroupService(IMapper mapper, IRepository<MenuItemVariantGroup> menuItemVariantGroupRepo)
+        public MenuItemsVariantGroupService(IMapper mapper, IRepository<MenuItemVariantGroup> menuItemVariantGroupRepo, IRepository<MenuItemVariantGroupItem> menuItemVariantGroupItemRepository)
         {
             _menuItemVariantGroupRepository = menuItemVariantGroupRepo;
             _mapper = mapper;
+            _menuItemVariantGroupItemRepository = menuItemVariantGroupItemRepository;
         }
 
         public async Task<List<MenuItemVariantGroup>> AssignMenuItemToVariantGroup(CreateMenuItemVariantGroupRequest request)
@@ -57,38 +50,36 @@ namespace FOCS.Application.Services
             }
         }
 
-        public async Task<GetVariantGroupAndVariantResponse> GetVariantGroupsWithVariants(Guid menuItemId, Guid storeId)
+        public async Task<List<VariantGroupResponse>> GetVariantGroupsWithVariants(Guid menuItemId, Guid storeId)
         {
-            var variantGroups = await _menuItemVariantGroupRepository.AsQueryable().Include(x => x.VariantGroup).
-                                                                                    ThenInclude(x => x.Variants.Where(x => x.CreatedBy == storeId.ToString())).
-                                                                                    Where(x => x.MenuItemId == menuItemId).ToListAsync();
+            var variantGroups = await _menuItemVariantGroupRepository.AsQueryable().Include(x => x.VariantGroup)
+                                                                        .Where(x => x.MenuItemId == menuItemId).ToListAsync();
 
             ConditionCheck.CheckCondition(variantGroups != null, Errors.Common.NotFound);
 
-            var rs = new GetVariantGroupAndVariantResponse
+            var variantGroupResponses = new List<VariantGroupResponse>();
+
+            foreach (var variantGroup in variantGroups)
             {
-                Group = new Dictionary<string, List<GetVariantGroupResponse>>()
-            };
+                var variants = await _menuItemVariantGroupItemRepository
+                    .AsQueryable()
+                    .Where(x => x.MenuItemVariantGroupId == variantGroup.Id)
+                    .Include(v => v.MenuItemVariant)
+                    .Select(v => v.MenuItemVariant)
+                    .ToListAsync();
 
-            foreach (var groupWrapper in variantGroups)
-            {
-                var groupName = groupWrapper.VariantGroup.Name;
+                var variantDtos = _mapper.Map<List<MenuItemVariantDTO>>(variants);
 
-                if (!rs.Group.ContainsKey(groupName))
+                var groupResponse = new VariantGroupResponse
                 {
-                    rs.Group[groupName] = new List<GetVariantGroupResponse>();
-                }
+                    Name = variantGroup.VariantGroup.Name,
+                    Variant = variantDtos
+                };
 
-                foreach (var variant in groupWrapper.VariantGroup.Variants)
-                {
-                    if (!rs.Group[groupName].Any(v => v.Name == variant.Name))
-                    {
-                        rs.Group[groupName].Add(new GetVariantGroupResponse { Name = variant.Name });
-                    }
-                }
+                variantGroupResponses.Add(groupResponse);
             }
 
-            return rs;
+            return variantGroupResponses;
         }
     }
 }
