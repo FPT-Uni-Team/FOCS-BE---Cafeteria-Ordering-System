@@ -37,9 +37,45 @@ namespace FOCS.Application.Services
             _userStoreRepository = userStoreRepository;
         }
 
-        public Task<StaffProfileDTO> CreateStaffAsync(RegisterRequest request, string StoreId, string managerId)
+        public async Task<StaffProfileDTO> CreateStaffAsync(RegisterRequest request, string storeId, string managerId)
         {
-            throw new NotImplementedException();
+            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid),
+                                                    Errors.Common.InvalidGuidFormat,
+                                                    Errors.FieldName.StoreId);
+            var store = await _storeRepository.GetByIdAsync(storeIdGuid);
+            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, Errors.FieldName.StoreId);
+
+            var staff = new User
+            {
+                Email = request.Email,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                UserName = request.Email,
+                PhoneNumber = request.Phone
+            };
+
+            var result = await _userManager.CreateAsync(staff, request.Password);
+            ConditionCheck.CheckCondition(result.Succeeded,
+                    string.Join("; ", result.Errors.Select(e => e.Description)));
+
+            var newUserStore = new UserStoreDTO
+            {
+                Id = Guid.NewGuid(),
+                UserId = Guid.Parse(staff.Id),
+                StoreId = storeIdGuid,
+                BlockReason = null,
+                JoinDate = DateTime.UtcNow,
+                Status = Common.Enums.UserStoreStatus.Active
+            };
+
+            await _userStoreRepository.AddAsync(_mapper.Map<UserStore>(newUserStore));
+            await _userStoreRepository.SaveChangesAsync();
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(staff);
+
+            await _emailService.SendEmailConfirmationAsync(staff.Email, token);
+
+            return _mapper.Map<StaffProfileDTO>(staff);
         }
 
         public Task<PagedResult<StaffProfileDTO>> GetStaffListAsync(UrlQueryParameters query, string storeId)
