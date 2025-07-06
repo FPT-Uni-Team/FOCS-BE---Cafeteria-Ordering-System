@@ -51,10 +51,10 @@ namespace FOCS.Controllers
             return await _menuManagementService.UpdateImagesAsync(urls, files, isMain, storeId);
         }
 
-        [HttpDelete("{url}")]
-        public async Task<bool> RemoveImageAsync(string url)
+        [HttpDelete("images/delete")]
+        public async Task<bool> RemoveImageAsync(List<string> urls)
         {
-            return await _menuManagementService.RemoveImageAsync(url);
+            return await _menuManagementService.RemoveImageAsync(urls);
         }
     }
 }

@@ -191,15 +191,18 @@ namespace FOCS.Application.Services
             }
         }
 
-        public async Task<bool> RemoveImageAsync(string url)
+        public async Task<bool> RemoveImageAsync(List<string> urls)
         {
             try
             {
-                var image = await _menuItemImageRepository.AsQueryable().FirstOrDefaultAsync(x => x.Url == url);
+                if (urls == null || urls.Count == 0)
+                    return false;
 
-                ConditionCheck.CheckCondition(image != null, Errors.Common.NotFound);
+                var images = await _menuItemImageRepository.FindAsync(x => urls.Contains(x.Url));
 
-                _menuItemImageRepository.Remove(image!);
+                ConditionCheck.CheckCondition(images != null, Errors.Common.NotFound);
+
+                _menuItemImageRepository.RemoveRange(images.ToList());
                 await _menuItemImageRepository.SaveChangesAsync();
 
                 return true;
