@@ -116,9 +116,14 @@ namespace FOCS.Application.Services
             return new PagedResult<StaffProfileDTO>(items, total, query.Page, query.PageSize);
         }
 
-        public Task<StaffProfileDTO> GetStaffProfileAsync(string staffId, string managerId)
+        public async Task<StaffProfileDTO> GetStaffProfileAsync(string staffId, string managerId)
         {
-            throw new NotImplementedException();
+            var staff = await ValidatePermissionAsync(staffId, managerId);
+            ConditionCheck.CheckCondition(staff != null, Errors.Common.UserNotFound);
+
+            var result = _mapper.Map<StaffProfileDTO>(staff);
+            result.Roles = await _userManager.GetRolesAsync(staff);
+            return result;
         }
 
         public Task<StaffProfileDTO> UpdateStaffProfileAsync(StaffProfileDTO dto, string staffId, string managerId)
