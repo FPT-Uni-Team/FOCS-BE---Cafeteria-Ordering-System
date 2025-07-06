@@ -20,7 +20,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         public string Description { get; set; }
 
         [JsonPropertyName("images")]
-        public UploadedImageResult Images { get; set; }
+        public List<UploadedImageResult> Images { get; set; }
 
         [JsonPropertyName("base_price")]
         public double BasePrice { get; set; }

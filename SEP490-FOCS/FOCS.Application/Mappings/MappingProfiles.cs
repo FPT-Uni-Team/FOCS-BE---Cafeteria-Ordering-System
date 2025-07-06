@@ -22,7 +22,20 @@ namespace FOCS.Application.Mappings
             CreateMap<Category, MenuCategoryDTO>().ReverseMap();
             CreateMap<MenuItem, MenuItemDTO>().ReverseMap();
 
-            CreateMap<MenuItem, MenuItemDetailAdminDTO>().ReverseMap();
+            CreateMap<MenuItem, MenuItemDetailAdminDTO>()
+                 .ForMember(dest => dest.Images, opt => opt.MapFrom(src =>
+                     src.Images
+                         .Select(i => new UploadedImageResult
+                         {
+                             IsMain = i.IsMain,
+                             Url = i.Url
+                         })
+                 ))
+                 .ReverseMap()
+                 .ForMember(dest => dest.Images, opt => opt.Ignore());
+
+
+
             CreateMap<MenuItemVariant, MenuItemVariantDTO>().ReverseMap();
             CreateMap<VariantGroup, VariantGroupDTO>().ReverseMap();
             // Admin Mappings for Menu item
