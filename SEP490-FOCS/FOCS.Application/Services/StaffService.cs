@@ -143,9 +143,18 @@ namespace FOCS.Application.Services
             return result;
         }
 
-        public Task<bool> DeleteStaffAsync(string staffId, string managerId)
+        public async Task<bool> DeleteStaffAsync(string staffId, string managerId)
         {
-            throw new NotImplementedException();
+            var staff = await ValidatePermissionAsync(staffId, managerId);
+            ConditionCheck.CheckCondition(staff != null, Errors.Common.UserNotFound);
+
+            staff.IsActive = false;
+            staff.IsDeleted = true;
+            staff.UpdatedAt = DateTime.UtcNow;
+            staff.UpdatedBy = staffId;
+
+            await _userManager.UpdateAsync(staff);
+            return true;
         }
 
         public async Task<bool> AddStaffRoleAsync(string role, string staffId, string managerId)
