@@ -78,9 +78,42 @@ namespace FOCS.Application.Services
             return _mapper.Map<StaffProfileDTO>(staff);
         }
 
-        public Task<PagedResult<StaffProfileDTO>> GetStaffListAsync(UrlQueryParameters query, string storeId)
+        public async Task<PagedResult<StaffProfileDTO>> GetStaffListAsync(UrlQueryParameters query, string storeId)
         {
-            throw new NotImplementedException();
+            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid),
+                                                    Errors.Common.InvalidGuidFormat,
+                                                    Errors.FieldName.StoreId);
+            var userStores = await _userStoreRepository.FindAsync(us => us.StoreId == storeIdGuid &&
+                                                                       us.Status == Common.Enums.UserStoreStatus.Active);
+            var userIds = userStores.Select(us => us.UserId.ToString()).ToList();
+
+            var allUsers = _userManager.Users.Where(u => u.IsActive && !u.IsDeleted && userIds.Contains(u.Id)).ToList();
+
+            // Filter out users with "User" role
+            var staff = new List<StaffProfileDTO>();
+            foreach (var user in allUsers)
+            {
+                if (!await _userManager.IsInRoleAsync(user, Roles.User))
+                {
+                    var dto = _mapper.Map<StaffProfileDTO>(user);
+                    dto.Roles = await _userManager.GetRolesAsync(user);
+                    staff.Add(dto);
+                }
+            }
+
+            var staffQuery = staff.AsQueryable();
+
+            staffQuery = ApplyFilters(staffQuery, query);
+            staffQuery = ApplySearch(staffQuery, query);
+            staffQuery = ApplySort(staffQuery, query);
+
+            var total = staffQuery.Count();
+            var items = staffQuery
+                .Skip((query.Page - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .ToList();
+
+            return new PagedResult<StaffProfileDTO>(items, total, query.Page, query.PageSize);
         }
 
         public Task<StaffProfileDTO> GetStaffProfileAsync(string staffId, string managerId)
