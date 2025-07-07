@@ -90,6 +90,8 @@ namespace FOCS.Application.Mappings
             CreateMap<MenuItemVariantGroup, CreateMenuItemVariantGroupRequest>().ReverseMap();
 
             CreateMap<VariantGroup, CreateVariantGroupRequest>().ReverseMap();
+
+            CreateMap<VariantGroup, VariantGroupResponse>().ReverseMap();
         }
     }
 }
