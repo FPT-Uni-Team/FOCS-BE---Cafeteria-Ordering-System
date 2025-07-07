@@ -160,26 +160,34 @@ namespace FOCS.Application.Services
                     if (!imageDict.TryGetValue(url, out var image))
                         continue;
 
+                    if (file == null || file.Length == 0)
+                    {
+                        image.IsMain = isMain;
+                        image.UpdatedAt = DateTime.UtcNow;
+                        image.UpdatedBy = storeId;
+                        continue;
+                    }
+
                     uploadFiles.Add(file);
                     isMainFlags.Add(isMain);
                     updateTargets.Add((image, uploadFiles.Count - 1));
                 }
 
-                if (uploadFiles.Count == 0)
-                    return true;
-
-                var menuItemId = existingImages.First().MenuItemId.ToString();
-                var uploaded = await _cloudinaryService.UploadImageAsync(uploadFiles, isMainFlags, storeId, menuItemId);
-
-                for (int i = 0; i < updateTargets.Count; i++)
+                if (uploadFiles.Count > 0)
                 {
-                    var (image, index) = updateTargets[i];
-                    var result = uploaded[index];
+                    var menuItemId = existingImages.First().MenuItemId.ToString();
+                    var uploaded = await _cloudinaryService.UploadImageAsync(uploadFiles, isMainFlags, storeId, menuItemId);
 
-                    image.Url = result.Url;
-                    image.IsMain = result.IsMain;
-                    image.UpdatedAt = DateTime.UtcNow;
-                    image.UpdatedBy = storeId;
+                    for (int i = 0; i < updateTargets.Count; i++)
+                    {
+                        var (image, index) = updateTargets[i];
+                        var result = uploaded[index];
+
+                        image.Url = result.Url;
+                        image.IsMain = result.IsMain;
+                        image.UpdatedAt = DateTime.UtcNow;
+                        image.UpdatedBy = storeId;
+                    }
                 }
 
                 await _menuItemImageRepository.SaveChangesAsync();
@@ -191,15 +199,18 @@ namespace FOCS.Application.Services
             }
         }
 
-        public async Task<bool> RemoveImageAsync(string url)
+        public async Task<bool> RemoveImageAsync(List<string> urls)
         {
             try
             {
-                var image = await _menuItemImageRepository.AsQueryable().FirstOrDefaultAsync(x => x.Url == url);
+                if (urls == null || urls.Count == 0)
+                    return false;
 
-                ConditionCheck.CheckCondition(image != null, Errors.Common.NotFound);
+                var images = await _menuItemImageRepository.FindAsync(x => urls.Contains(x.Url));
 
-                _menuItemImageRepository.Remove(image!);
+                ConditionCheck.CheckCondition(images != null, Errors.Common.NotFound);
+
+                _menuItemImageRepository.RemoveRange(images.ToList());
                 await _menuItemImageRepository.SaveChangesAsync();
 
                 return true;

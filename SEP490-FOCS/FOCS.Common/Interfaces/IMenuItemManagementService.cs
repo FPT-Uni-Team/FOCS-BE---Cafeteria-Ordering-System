@@ -7,7 +7,7 @@ namespace FOCS.Common.Interfaces
     {
         Task<bool> CreateNewMenuItemWithVariant(CreateMenuItemWithVariantRequest request);
         Task<List<UploadedImageResult>> GetImagesOfProduct(Guid menuItemId, string storeId);
-        Task<bool> RemoveImageAsync(string url);
+        Task<bool> RemoveImageAsync(List<string> urls);
         Task<bool> UploadImagesAsync(List<IFormFile> files, List<bool> isMain, string menuItemId, string storeId);
         Task<bool> UpdateImagesAsync(List<string> urls, List<IFormFile> files, List<bool> isMainList, string storeId);
     }
