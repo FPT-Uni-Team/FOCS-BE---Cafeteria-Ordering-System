@@ -9,39 +9,29 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FOCS.Controllers
 {
-    [Route("api/menu")]
+    [Route("api/me/menu-item")]
     [ApiController]
     public class MenuController : FocsController
     {
         private readonly IMenuService _menuService;
-        private readonly IMenuItemsVariantGroupService _menuItemsVariantGroupService;
         private readonly IMapper _mapper;
 
-        public MenuController(IMenuService menuService, IMapper mapper, IMenuItemsVariantGroupService menuItemsVariantGroupService)
+        public MenuController(IMenuService menuService, IMapper mapper)
         {
             _menuService = menuService;
             _mapper = mapper;
-            _menuItemsVariantGroupService = menuItemsVariantGroupService;
         }
 
-        [HttpPost("get-menu-item")]
+        [HttpPost]
         public async Task<PagedResult<MenuItemDTO>> GetMenuItemByStore([FromBody] UrlQueryParameters urlQueryParameters, [FromQuery] Guid storeId)
         { 
             return await _menuService.GetMenuItemByStore(urlQueryParameters, storeId);
         }
 
-        [HttpPost("get-menu-item-detail")]
+        [HttpPost("{itemId}")]
         public async Task<MenuItemDTO> GetItemVariant(Guid itemId)
         {
             return await _menuService.GetItemVariant(itemId);
         }
-
-        [HttpGet("menu-items/{menuItemId}/variant-groups")]
-        public async Task<IActionResult> GetVariantGroups(Guid menuItemId)
-        {
-            var result = await _menuItemsVariantGroupService.GetVariantGroupsWithVariants(menuItemId, Guid.Parse(StoreId));
-            return Ok(result);
-        }
-
     }
 }

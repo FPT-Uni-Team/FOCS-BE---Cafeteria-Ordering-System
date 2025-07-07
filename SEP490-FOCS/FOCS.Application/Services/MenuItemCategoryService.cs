@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -132,6 +133,7 @@ namespace FOCS.Application.Services
             menuItemCategoryQuery = ApplyFilters(menuItemCategoryQuery, urlQueryParameters);
             menuItemCategoryQuery = ApplySearch(menuItemCategoryQuery, urlQueryParameters);
             menuItemCategoryQuery = ApplySort(menuItemCategoryQuery, urlQueryParameters);
+
             var total = await menuItemCategoryQuery.CountAsync();
             var items = await menuItemCategoryQuery
                 .Skip((urlQueryParameters.Page - 1) * urlQueryParameters.PageSize)
@@ -167,11 +169,31 @@ namespace FOCS.Application.Services
 
                 _menuItemCategoryRepository.RemoveRange(found!);
                 await _menuItemCategoryRepository.SaveChangesAsync();
+
+                return true;
             } catch (Exception ex)
             {
                 return false;
             }
-            return true;
+        }
+
+        public async Task<bool> RemoveCategoriesFromProduct(RemoveCategoriesFromProductRequest request, string storeId)
+        {
+            try
+            {
+                var found = await _menuItemCategoryRepository.AsQueryable().Where(x => request.CateIds.Contains(x.CategoryId) && x.MenuItemId == request.MenuItemId).ToListAsync();
+
+                ConditionCheck.CheckCondition(found != null, Errors.Common.NotFound);
+
+                _menuItemCategoryRepository.RemoveRange(found!);
+                await _menuItemCategoryRepository.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
 
         private static IQueryable<MenuItemCategories> ApplyFilters(IQueryable<MenuItemCategories> query, UrlQueryParameters parameters)

@@ -5,10 +5,11 @@ using FOCS.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 
 namespace FOCS.Controllers
 {
-    [Route("api/MenuItemCategory")]
+    [Route("api/menu-item-category")]
     [Authorize(Roles = Roles.Manager +","+ Roles.Admin)]
     [ApiController]
     public class MenuItemCategoryController : FocsController
@@ -36,6 +37,12 @@ namespace FOCS.Controllers
         public async Task<List<MenuCategoryDTO>> ListCategoriesWithMenuItem(Guid menuItemId)
         {
             return await _menuItemCategoryService.ListCategoriesWithMenuItem(menuItemId, StoreId);
+        }
+
+        [HttpPost("remove-from-product")]
+        public async Task<bool> RemoveCategoriesFromProduct(RemoveCategoriesFromProductRequest removeCategoriesFromProductRequest)
+        {
+            return await _menuItemCategoryService.RemoveCategoriesFromProduct(removeCategoriesFromProductRequest, StoreId);
         }
 
         [HttpDelete("{cateId}")]

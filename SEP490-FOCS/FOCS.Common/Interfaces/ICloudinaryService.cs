@@ -14,5 +14,7 @@ namespace FOCS.Common.Interfaces
         Task<List<UploadedImageResult>> UploadImageAsync(List<IFormFile> files, List<bool> isMain, string storeId, string menuItemId);
 
         Task<UploadedImageResult> UploadQrCodeForTable(IFormFile file, string storeId, string tableId);
+        
+        Task<object> RemoveImageFromCloud(List<string> ids, string objectId, string storeId);
     }
 }

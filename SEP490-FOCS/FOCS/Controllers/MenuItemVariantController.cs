@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
-    [Route("api/menu-item-variant")]
+    [Route("api/admin/menu-item-variant")]
     [ApiController]
     public class MenuItemVariantController : FocsController
     {

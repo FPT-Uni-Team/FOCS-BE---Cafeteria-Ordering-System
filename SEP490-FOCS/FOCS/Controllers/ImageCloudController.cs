@@ -5,13 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
-    [Route("api/image")]
+    [Route("api/image-cloud")]
     [ApiController]
-    public class MenuItemImageController : FocsController
+    public class ImageCloudController : FocsController
     {
         private readonly ICloudinaryService _cloudinaryService;
 
-        public MenuItemImageController(ICloudinaryService cloudinaryService)
+        public ImageCloudController(ICloudinaryService cloudinaryService)
         {
             _cloudinaryService = cloudinaryService;
         }
@@ -26,6 +26,12 @@ namespace FOCS.Controllers
         {
             var imageUrls = await _cloudinaryService.UploadImageAsync(files, isMain, storeId, menuItemId);
             return Ok(imageUrls);
+        }
+
+        [HttpPost("remove-object")]
+        public async Task<object> Remove([FromBody] List<string> urls, [FromHeader] string objectId)
+        {
+            return await _cloudinaryService.RemoveImageFromCloud(urls, objectId, StoreId);
         }
     }
 }

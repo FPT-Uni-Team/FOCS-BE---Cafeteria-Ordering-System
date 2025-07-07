@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
-    [Route("api/variant-group")]
+    [Route("api/admin/variant-group")]
     [ApiController]
     public class VariantGroupController : FocsController
     {

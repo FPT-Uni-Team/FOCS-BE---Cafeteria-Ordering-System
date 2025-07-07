@@ -2,6 +2,7 @@
 using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,5 +49,22 @@ namespace FOCS.Application.Services
             }
         }
 
+        public async Task<bool> RemoveVariantsFromMenuItemVariantGroup(RemoveProductVariantFromProduct request, Guid menuItemId, string storeId)
+        {
+            try
+            {
+
+                var menuItemVariantGroup = await _menuItemVariantGroupItemRepo.AsQueryable().Include(x => x.MenuItemVariantGroup)
+                                                                                            .Where(x => x.MenuItemVariantGroup.MenuItemId == menuItemId && x.MenuItemVariantGroup.VariantGroupId == request.VariantGroupId && request.VariantIds.Contains(x.MenuItemVariantId)).ToListAsync();
+
+                _menuItemVariantGroupItemRepo.RemoveRange(menuItemVariantGroup);
+                await _menuItemVariantGroupItemRepo.SaveChangesAsync();
+
+                return true;
+            } catch (Exception ex)
+            {
+                return false;
+            }
+        }
     }
 }

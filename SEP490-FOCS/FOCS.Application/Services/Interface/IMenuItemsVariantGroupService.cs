@@ -9,5 +9,6 @@ namespace FOCS.Common.Interfaces
         Task<List<MenuItemVariantGroup>> AssignMenuItemToVariantGroup(CreateMenuItemVariantGroupRequest request);
 
         Task<List<VariantGroupResponse>> GetVariantGroupsWithVariants(Guid menuItemId, Guid storeId);
+        Task<bool> RemoveVariantGroupsFromProduct(RemoveVariantGroupFromProduct request, Guid menuItemId, string storeId);
     }
 }
