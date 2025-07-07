@@ -7,6 +7,7 @@ using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 
 namespace FOCS.Application.Services
 {
@@ -75,6 +76,20 @@ namespace FOCS.Application.Services
             }
 
             return variantGroupResponses;
+        }
+
+        public async Task<bool> RemoveVariantGroupsFromProduct(RemoveVariantGroupFromProduct request, Guid menuItemId, string storeId)
+        {
+            try
+            {
+                var removeObjects = await _menuItemVariantGroupRepository.AsQueryable().Where(x => x.MenuItemId == menuItemId && request.VariantGroupIds.Contains(x.VariantGroupId)).ToListAsync();
+
+                _menuItemVariantGroupRepository.RemoveRange(removeObjects);
+
+                await _menuItemVariantGroupRepository.SaveChangesAsync();
+
+                return true;
+            } catch (Exception ex) { return false; }
         }
     }
 }

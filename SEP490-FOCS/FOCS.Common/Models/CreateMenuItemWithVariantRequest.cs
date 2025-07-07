@@ -50,7 +50,7 @@ namespace FOCS.Common.Models
         [JsonPropertyName("max_select")]
         public int MaxSelect { get; set; }
 
-        [JsonPropertyName("variant_ids")]
+        [JsonPropertyName("variants")]
         public List<VariantRequest> Variants {  get; set; }
     }
 

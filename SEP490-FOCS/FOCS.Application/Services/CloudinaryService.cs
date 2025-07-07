@@ -51,7 +51,7 @@ namespace FOCS.Application.Services
                 var uploadParams = new ImageUploadParams
                 {
                     File = new FileDescription(image.ImageFile.FileName, image.ImageFile.OpenReadStream()),
-                    Folder = $"stores/{storeId}/{menuItemId}",
+                    Folder = $"stores/{storeId}/menu-items/{menuItemId}",
                     PublicId = Guid.NewGuid().ToString(),
                     Transformation = new Transformation().Crop("limit").Width(800).Height(800)
                 };
@@ -103,5 +103,25 @@ namespace FOCS.Application.Services
             };
         }
 
+        public async Task<object> RemoveImageFromCloud(List<string> urls, string objectId, string storeId)
+        {
+            try
+            {
+                var listPublicIds = urls.Select(x => x.Split("/").Last().Split(".").First()).ToList();
+
+                var deletionParams = new DelResParams()
+                {
+                    PublicIds = listPublicIds,
+                    ResourceType = ResourceType.Image
+                };
+
+                var removeObjects = await _cloudinary.DeleteResourcesAsync(deletionParams);
+
+                return removeObjects.Deleted.Values.All(result => result == "deleted");
+            } catch (Exception ex)
+            {
+                return new DelResResult();
+            }
+        }
     }
 }

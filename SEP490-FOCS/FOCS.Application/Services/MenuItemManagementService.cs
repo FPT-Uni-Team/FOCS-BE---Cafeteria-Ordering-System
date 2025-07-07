@@ -100,6 +100,58 @@ namespace FOCS.Application.Services
             return true;
         }
 
+        public async Task<bool> AddVariantGroupAndVariant(AddVariantGroupAndVariant request, Guid menuItemId, string storeId)
+        {
+            try
+            {
+                // Step 1: Link each VariantGroup for MenuItem
+                var createdVariantGroups = new List<MenuItemVariantGroup>();
+
+                var assignResult = await _menuVariantGroupService.AssignMenuItemToVariantGroup(new CreateMenuItemVariantGroupRequest
+                {
+                    MenuItemId = menuItemId,
+                    VariantGroupIds = new List<Guid> { request.VariantGroupId },
+                    IsRequired = request.IsRequired,
+                    MinSelect = request.MinSelect,
+                    MaxSelect = request.MaxSelect
+                });
+
+                createdVariantGroups.AddRange(assignResult);
+
+                ConditionCheck.CheckCondition(createdVariantGroups.Any(), Errors.Variant.FailWhenAssign);
+
+                // Step 2: link MenuItemVariantGroupItem (Link with spec variant)
+                var groupItemRequests = createdVariantGroups.Select(group =>
+                {
+                    return new MenuItemVariantGroupItemRequest
+                    {
+                        MenuItemVariantGroupId = group.Id,
+                        Variants = request?.Variants ?? new List<VariantRequest>()
+                    };
+                }).ToList();
+
+                var assignVariantsResult = await _menuItemsVariantGroupItemService.AssignMenuItemVariantGroupToMenuItemVariantItemGroup(new CreateMenuItemVariantGroupItemRequest
+                {
+                    MenuItemVariantGroupItemRequests = groupItemRequests
+                });
+
+                return true;
+            } catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> RemoveVariantGroupAndVariantFromProduct(RemoveProductVariantFromProduct request, Guid menuItemId, string storeId)
+        {
+            return await _menuItemsVariantGroupItemService.RemoveVariantsFromMenuItemVariantGroup(request, menuItemId, storeId);
+        }
+
+        public async Task<bool> RemoveVariantGroupsFromProduct(RemoveVariantGroupFromProduct request, Guid menuItemId, string storeId)
+        {
+            return await _menuVariantGroupService.RemoveVariantGroupsFromProduct(request, menuItemId, storeId);
+        }
+
         public async Task<List<UploadedImageResult>> GetImagesOfProduct(Guid menuItemId, string storeId)
         {
             var images = await _menuItemImageRepository.AsQueryable().Where(x => x.MenuItemId == menuItemId).ToListAsync();

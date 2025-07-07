@@ -10,5 +10,7 @@ namespace FOCS.Common.Interfaces
     public interface IMenuItemsVariantGroupItemService
     {
         Task<bool> AssignMenuItemVariantGroupToMenuItemVariantItemGroup(CreateMenuItemVariantGroupItemRequest createMenuItemVariantGroupRequest);
+
+        Task<bool> RemoveVariantsFromMenuItemVariantGroup(RemoveProductVariantFromProduct request, Guid menuItemId, string storeId);
     }
 }

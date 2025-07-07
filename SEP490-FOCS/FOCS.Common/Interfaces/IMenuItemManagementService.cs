@@ -10,5 +10,9 @@ namespace FOCS.Common.Interfaces
         Task<bool> RemoveImageAsync(List<string> urls);
         Task<bool> UploadImagesAsync(List<IFormFile> files, List<bool> isMain, string menuItemId, string storeId);
         Task<bool> UpdateImagesAsync(List<string> urls, List<IFormFile> files, List<bool> isMainList, string storeId);
+        Task<bool> AddVariantGroupAndVariant(AddVariantGroupAndVariant request, Guid id, string storeId);
+        Task<bool> RemoveVariantGroupAndVariantFromProduct(RemoveProductVariantFromProduct request, Guid menuItemId, string storeId);
+        Task<bool> RemoveVariantGroupsFromProduct(RemoveVariantGroupFromProduct request, Guid menuItemId, string storeId);
+
     }
 }
