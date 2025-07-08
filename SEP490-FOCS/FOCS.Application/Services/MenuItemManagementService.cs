@@ -10,12 +10,15 @@ using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using MailKit;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace FOCS.Application.Services
 {
@@ -142,6 +145,72 @@ namespace FOCS.Application.Services
             }
         }
 
+        public async Task<bool> SyncMenuItemImages(List<IFormFile> files, string metadata, Guid menuItemId, string storeId)
+        {
+            try
+            {
+                var imageMetaList = JsonSerializer.Deserialize<List<ImageSycnMetaData>>(metadata, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+
+                ConditionCheck.CheckCondition(imageMetaList != null || imageMetaList.Any(), Errors.Common.NotFound);
+
+                int fileIndex = 0;
+                foreach (var imageMeta in imageMetaList)
+                {
+                    if (imageMeta.IsDeleted)
+                    {
+                        if (imageMeta.Id.HasValue)
+                        {
+                            var entity = await _menuItemImageRepository.AsQueryable().FirstOrDefaultAsync(x => x.Id == imageMeta.Id && x.CreatedBy == storeId);
+                            if (entity == null) continue;
+
+                            _menuItemImageRepository.Remove(entity);
+                            //await _cloudinaryService.RemoveImageFromCloud();
+                        }
+                    }
+                    else if (imageMeta.Id.HasValue)
+                    {
+                        var existing = await _menuItemImageRepository.AsQueryable().FirstOrDefaultAsync(x => x.Id == imageMeta.Id && x.CreatedBy == storeId);
+
+                        if (existing == null) continue;
+
+                        existing.IsMain = imageMeta.IsMain;
+                        _menuItemImageRepository.Update(existing);
+                    }
+                    else
+                    {
+                        //create
+                        var file = files[fileIndex++];
+                        var url = await _cloudinaryService.UploadImageAsync(new List<IFormFile> { file }, new List<bool> { imageMeta.IsMain }, storeId, menuItemId.ToString());
+
+                        ConditionCheck.CheckCondition(url != null, Errors.Common.NotFound);
+
+                        var newImage = new MenuItemImage
+                        {
+                            Id = Guid.NewGuid(),
+                            CreatedAt = DateTime.Now,
+                            CreatedBy = storeId,
+                            IsMain = imageMeta.IsMain,
+                            MenuItemId = menuItemId,
+                            Url = url!.FirstOrDefault()!.Url,
+                        };
+
+                        await _menuItemImageRepository.AddAsync(newImage);
+                    }
+                }
+
+                await _menuItemImageRepository.SaveChangesAsync();
+
+                return true;
+            } catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
         public async Task<bool> RemoveVariantGroupAndVariantFromProduct(RemoveProductVariantFromProduct request, Guid menuItemId, string storeId)
         {
             return await _menuItemsVariantGroupItemService.RemoveVariantsFromMenuItemVariantGroup(request, menuItemId, storeId);
@@ -161,116 +230,6 @@ namespace FOCS.Application.Services
                 IsMain = x.IsMain,
                 Url = x.Url,
             }).ToList();
-        }
-
-        public async Task<bool> UploadImagesAsync(List<IFormFile> files, List<bool> isMain, string menuItemId, string storeId)
-        {
-            try
-            {
-                var uploads = await _cloudinaryService.UploadImageAsync(files, isMain, storeId, menuItemId);
-
-                var images = uploads.Select(x => new MenuItemImage
-                {
-                    Id = Guid.NewGuid(),
-                    CreatedAt = DateTime.Now,
-                    CreatedBy = storeId,
-                    IsMain = x.IsMain,
-                    Url = x.Url,
-                    MenuItemId = Guid.Parse(menuItemId)
-                });
-
-                await _menuItemImageRepository.AddRangeAsync(images);
-                await _menuItemImageRepository.SaveChangesAsync();
-
-                return true;
-            } catch(Exception ex)
-            {
-                return false;
-            }
-        }
-
-        public async Task<bool> UpdateImagesAsync(List<string> urls, List<IFormFile> files, List<bool> isMainList, string storeId)
-        {
-            try
-            {
-                if (urls.Count != files.Count || urls.Count != isMainList.Count)
-                    return false;
-
-                var existingImages = await _menuItemImageRepository.FindAsync(i => urls.Contains(i.Url));
-                var imageDict = existingImages.ToDictionary(i => i.Url);
-
-                var uploadFiles = new List<IFormFile>();
-                var isMainFlags = new List<bool>();
-                var updateTargets = new List<(MenuItemImage image, int index)>();
-
-                for (int i = 0; i < urls.Count; i++)
-                {
-                    var url = urls[i];
-                    var file = files[i];
-                    var isMain = isMainList[i];
-
-                    if (!imageDict.TryGetValue(url, out var image))
-                        continue;
-
-                    if (file == null || file.Length == 0)
-                    {
-                        image.IsMain = isMain;
-                        image.UpdatedAt = DateTime.UtcNow;
-                        image.UpdatedBy = storeId;
-                        continue;
-                    }
-
-                    uploadFiles.Add(file);
-                    isMainFlags.Add(isMain);
-                    updateTargets.Add((image, uploadFiles.Count - 1));
-                }
-
-                if (uploadFiles.Count > 0)
-                {
-                    var menuItemId = existingImages.First().MenuItemId.ToString();
-                    var uploaded = await _cloudinaryService.UploadImageAsync(uploadFiles, isMainFlags, storeId, menuItemId);
-
-                    for (int i = 0; i < updateTargets.Count; i++)
-                    {
-                        var (image, index) = updateTargets[i];
-                        var result = uploaded[index];
-
-                        image.Url = result.Url;
-                        image.IsMain = result.IsMain;
-                        image.UpdatedAt = DateTime.UtcNow;
-                        image.UpdatedBy = storeId;
-                    }
-                }
-
-                await _menuItemImageRepository.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public async Task<bool> RemoveImageAsync(List<string> urls)
-        {
-            try
-            {
-                if (urls == null || urls.Count == 0)
-                    return false;
-
-                var images = await _menuItemImageRepository.FindAsync(x => urls.Contains(x.Url));
-
-                ConditionCheck.CheckCondition(images != null, Errors.Common.NotFound);
-
-                _menuItemImageRepository.RemoveRange(images.ToList());
-                await _menuItemImageRepository.SaveChangesAsync();
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
         }
     }
 }
