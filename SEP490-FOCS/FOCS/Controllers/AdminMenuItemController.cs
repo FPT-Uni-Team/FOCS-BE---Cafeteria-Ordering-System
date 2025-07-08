@@ -119,33 +119,15 @@ namespace FOCS.Controllers
             return Ok(images);
         }
 
-        [HttpPost("{menuItemId}/images/upload")]
-        public async Task<IActionResult> UploadImages(
-            Guid menuItemId,
-            [FromForm] List<IFormFile> files,
-            [FromForm] List<bool> isMain)
+        [HttpPost("sync-images")]
+        public async Task<IActionResult> SyncMenuItemImages([FromForm] List<IFormFile> files,
+                                                            [FromForm] string metadata, // JSON string
+                                                            [FromForm] Guid menuItemId,
+                                                            [FromHeader(Name = "StoreId")] string storeId)
         {
-            var success = await _menuManagementService.UploadImagesAsync(files, isMain, menuItemId.ToString(), StoreId);
-            return Ok(success);
+            var rs = await _menuManagementService.SyncMenuItemImages(files, metadata, menuItemId, storeId);
+            return Ok(rs);
         }
-
-        [HttpPut("images/update")]
-        public async Task<IActionResult> UpdateImages(
-            [FromForm] List<string> urls,
-            [FromForm] List<IFormFile> files,
-            [FromForm] List<bool> isMain)
-        {
-            var success = await _menuManagementService.UpdateImagesAsync(urls, files, isMain, StoreId);
-            return Ok(success);
-        }
-
-        [HttpDelete("images/delete")]
-        public async Task<IActionResult> DeleteImages([FromBody] List<string> urls)
-        {
-            var success = await _menuManagementService.RemoveImageAsync(urls);
-            return Ok(success);
-        }
-
         #endregion
     }
 }
