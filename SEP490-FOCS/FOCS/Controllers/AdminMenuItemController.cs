@@ -76,6 +76,30 @@ namespace FOCS.Controllers
             return updated ? NoContent() : NotFound();
         }
 
+        [HttpPut("active/{menuItemId}")]
+        public async Task<bool> ActivateMenuItemAsync(Guid menuItemId)
+        {
+            return await _menuManagementService.ActivateMenuItemAsync(menuItemId, UserId);
+        }
+
+        [HttpPut("deactive/{menuItemId}")]
+        public async Task<bool> DeactivateMenuItemAsync(Guid menuItemId)
+        {
+            return await _menuManagementService.DeactivateMenuItemAsync(menuItemId, UserId);
+        }
+
+        [HttpPut("enable/{menuItemId}")]
+        public async Task<bool> EnableMenuItemAsync(Guid menuItemId)
+        {
+            return await _menuManagementService.EnableMenuItemAsync(menuItemId, UserId);
+        }
+
+        [HttpPut("disable/{menuItemId}")]
+        public async Task<bool> DisableMenuItemAsync(Guid menuItemId)
+        {
+            return await _menuManagementService.DisableMenuItemAsync(menuItemId, UserId);
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {

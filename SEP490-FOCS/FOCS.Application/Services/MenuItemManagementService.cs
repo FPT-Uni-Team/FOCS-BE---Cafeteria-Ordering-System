@@ -7,9 +7,11 @@ using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
 using MailKit;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -32,8 +34,20 @@ namespace FOCS.Application.Services
         private readonly ICloudinaryService _cloudinaryService;
 
         private readonly IMenuItemCategoryService _menuItemCategoryService;
+        private readonly IRepository<MenuItem> _menuItemRepository;
+        private readonly UserManager<User> _userManager;
+        private readonly IRepository<UserStore> _userStoreRepository;
 
-        public MenuItemManagementService(IMenuItemsVariantGroupService menuVariantGroupService, IMenuItemCategoryService menuItemCategoryService, ICloudinaryService cloudinaryService, IRepository<MenuItemImage> menuItemImageRepository, IMenuItemsVariantGroupItemService menuItemsVariantGroupItemService, IAdminMenuItemService adminMenuItemService)
+        public MenuItemManagementService(
+            IMenuItemsVariantGroupService menuVariantGroupService,
+            IMenuItemCategoryService menuItemCategoryService,
+            ICloudinaryService cloudinaryService,
+            IRepository<MenuItemImage> menuItemImageRepository,
+            IMenuItemsVariantGroupItemService menuItemsVariantGroupItemService,
+            IAdminMenuItemService adminMenuItemService,
+            IRepository<MenuItem> menuItemRepository,
+            UserManager<User> userManager,
+            IRepository<UserStore> userStoreRepository)
         {
             _menuVariantGroupService = menuVariantGroupService;
             _menuItemsVariantGroupItemService = menuItemsVariantGroupItemService;
@@ -41,6 +55,9 @@ namespace FOCS.Application.Services
             _menuItemImageRepository = menuItemImageRepository;
             _cloudinaryService = cloudinaryService;
             _menuItemCategoryService = menuItemCategoryService;
+            _menuItemRepository = menuItemRepository;
+            _userManager = userManager;
+            _userStoreRepository = userStoreRepository;
         }
 
         public async Task<bool> CreateNewMenuItemWithVariant(CreateMenuItemWithVariantRequest request)
@@ -230,6 +247,74 @@ namespace FOCS.Application.Services
                 IsMain = x.IsMain,
                 Url = x.Url,
             }).ToList();
+        }
+        public async Task<bool> ActivateMenuItemAsync(Guid menuItemId, string userId)
+        {
+            return await UpdateMenuItemStatusAsync(menuItemId, userId, isActive: true,
+                condition: item => !item.IsActive,
+                error: Errors.MenuItemError.MenuItemActive,
+                fieldName: Errors.FieldName.IsActive);
+        }
+
+        public async Task<bool> DeactivateMenuItemAsync(Guid menuItemId, string userId)
+        {
+            return await UpdateMenuItemStatusAsync(menuItemId, userId, isActive: false,
+                condition: item => item.IsActive,
+                error: Errors.MenuItemError.MenuItemInactive,
+                fieldName: Errors.FieldName.IsActive);
+        }
+
+        public async Task<bool> EnableMenuItemAsync(Guid menuItemId, string userId)
+        {
+            return await UpdateMenuItemStatusAsync(menuItemId, userId, isAvailable: true,
+                condition: item => !item.IsAvailable,
+                error: Errors.MenuItemError.MenuItemAvailable,
+                fieldName: Errors.FieldName.IsAvailable);
+        }
+
+        public async Task<bool> DisableMenuItemAsync(Guid menuItemId, string userId)
+        {
+            return await UpdateMenuItemStatusAsync(menuItemId, userId, isAvailable: false,
+                condition: item => item.IsAvailable,
+                error: Errors.MenuItemError.MenuItemUnavailable,
+                fieldName: Errors.FieldName.IsAvailable);
+        }
+
+        private async Task<bool> UpdateMenuItemStatusAsync(Guid menuItemId, string userId,
+            bool? isActive = null, bool? isAvailable = null,
+            Func<MenuItem, bool> condition = null, string error = null, string fieldName = null)
+        {
+            var menuItem = await GetMenuItemAsync(menuItemId, userId);
+            if (menuItem == null) return false;
+
+            ConditionCheck.CheckCondition(condition(menuItem), error, fieldName);
+
+            if (isActive.HasValue)
+                menuItem.IsActive = isActive.Value;
+            if (isAvailable.HasValue)
+                menuItem.IsAvailable = isAvailable.Value;
+
+            menuItem.UpdatedAt = DateTime.UtcNow;
+            menuItem.UpdatedBy = userId;
+
+            await _menuItemRepository.SaveChangesAsync();
+            return true;
+        }
+
+        private async Task<MenuItem?> GetMenuItemAsync(Guid menuItemId, string userId)
+        {
+            var menuItem = await _menuItemRepository.AsQueryable()
+                                            .Where(x => x.Id == menuItemId && !x.IsDeleted).FirstOrDefaultAsync();
+            if (menuItem == null) return null;
+
+            var user = await _userManager.FindByIdAsync(userId);
+
+            var storesOfUser = (await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(userId))).Distinct().ToList();
+
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound, Errors.FieldName.UserId);
+            ConditionCheck.CheckCondition(storesOfUser.Select(x => x.StoreId).Contains(menuItem.StoreId), Errors.AuthError.UserUnauthor, Errors.FieldName.UserId);
+
+            return menuItem;
         }
     }
 }

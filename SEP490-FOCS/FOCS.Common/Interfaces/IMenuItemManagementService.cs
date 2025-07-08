@@ -12,5 +12,9 @@ namespace FOCS.Common.Interfaces
         Task<bool> RemoveVariantGroupAndVariantFromProduct(RemoveProductVariantFromProduct request, Guid menuItemId, string storeId);
         Task<bool> RemoveVariantGroupsFromProduct(RemoveVariantGroupFromProduct request, Guid menuItemId, string storeId);
         Task<bool> SyncMenuItemImages(List<IFormFile> files, string metadata, Guid menuItemId, string storeId);
+        Task<bool> ActivateMenuItemAsync(Guid menuItemId, string userId);
+        Task<bool> DeactivateMenuItemAsync(Guid menuItemId, string userId);
+        Task<bool> EnableMenuItemAsync(Guid menuItemId, string userId);
+        Task<bool> DisableMenuItemAsync(Guid menuItemId, string userId);
     }
 }
