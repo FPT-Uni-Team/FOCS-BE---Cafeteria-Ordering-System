@@ -16,6 +16,8 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public string QrCode { get; set; }
 
+        public int QrVersion { get; set; } = 0;
+
         public TableStatus Status { get; set; }
 
         public bool IsActive { get; set; }

@@ -45,6 +45,7 @@ namespace FOCS.Application.Services
 
             var table = _mapper.Map<Table>(dto);
             table.Id = Guid.NewGuid();
+            table.QrCode = "";
             table.IsDeleted = false;
             table.CreatedAt = DateTime.UtcNow;  
             table.CreatedBy = storeId;
@@ -82,6 +83,25 @@ namespace FOCS.Application.Services
                     "status" => desc ? tableQuery.OrderByDescending(t => t.Status) : tableQuery.OrderBy(t => t.Status),
                     _ => tableQuery
                 };
+            }
+
+            // Filters
+            if (query.Filters != null)
+            {
+                foreach (var filter in query.Filters)
+                {
+                    var key = filter.Key.ToLowerInvariant();
+                    var value = filter.Value;
+                    switch (key)
+                    {
+                        case "status":
+                            if (Enum.TryParse<TableStatus>(value, true, out var status))
+                            {
+                                tableQuery = tableQuery.Where(t => t.Status == status);
+                            }
+                            break;
+                    }
+                }
             }
 
             var total = await tableQuery.CountAsync();
@@ -179,7 +199,8 @@ namespace FOCS.Application.Services
                                 .FirstOrDefaultAsync(t => t.Id == tableId && t.StoreId == storeId && !t.IsDeleted);
             ConditionCheck.CheckCondition(table != null, TableConstants.TableEmpty);
 
-            var qrBytes = GenerateQrCodeForTable(tableId); // returns byte[]
+            table.QrVersion++;
+            var qrBytes = GenerateQrCodeForTable(tableId, table.QrVersion); // returns byte[]
 
             var formFile = CreateFormFileFromBytes(qrBytes, tableId.ToString(), "image/png");
 
@@ -199,9 +220,9 @@ namespace FOCS.Application.Services
             return new InMemoryFormFile(fileBytes, fileName, contentType);
         }
 
-        public byte[] GenerateQrCodeForTable(Guid tableId)
+        public byte[] GenerateQrCodeForTable(Guid tableId, int qrVersion)
         {
-            var url = $"https://focs.site/order?tableCode={tableId}";
+            var url = $"https://focs.site/order?tableCode={tableId}&v={qrVersion}";
 
             using var qrGenerator = new QRCodeGenerator();
             using var qrCodeData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
