@@ -33,5 +33,8 @@ namespace FOCS.Common.Models
         [JsonPropertyName("allow_combine_promotion_coupon")]
         public bool AllowCombinePromotionAndCoupon { get; set; } = true;
 
+        [JsonPropertyName("spending_rate")]
+        public int? SpendingRate { get; set; }
+
     }
 }

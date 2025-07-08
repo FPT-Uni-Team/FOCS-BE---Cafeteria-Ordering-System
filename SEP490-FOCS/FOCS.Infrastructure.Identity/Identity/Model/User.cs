@@ -12,6 +12,7 @@ namespace FOCS.Infrastructure.Identity.Identity.Model
     {
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
+        public int? FOCSPoint { get; set; }
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }
