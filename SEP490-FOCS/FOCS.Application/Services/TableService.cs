@@ -85,6 +85,25 @@ namespace FOCS.Application.Services
                 };
             }
 
+            // Filters
+            if (query.Filters != null)
+            {
+                foreach (var filter in query.Filters)
+                {
+                    var key = filter.Key.ToLowerInvariant();
+                    var value = filter.Value;
+                    switch (key)
+                    {
+                        case "status":
+                            if (Enum.TryParse<TableStatus>(value, true, out var status))
+                            {
+                                tableQuery = tableQuery.Where(t => t.Status == status);
+                            }
+                            break;
+                    }
+                }
+            }
+
             var total = await tableQuery.CountAsync();
             var items = await tableQuery
                 .Skip((query.Page - 1) * query.PageSize)
