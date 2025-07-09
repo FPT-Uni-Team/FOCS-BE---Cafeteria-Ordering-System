@@ -43,7 +43,7 @@ namespace FOCS.Application.Services
             _menuItemCategoryService = menuItemCategoryService;
         }
 
-        public async Task<bool> CreateNewMenuItemWithVariant(CreateMenuItemWithVariantRequest request)
+        public async Task<Guid> CreateNewMenuItemWithVariant(CreateMenuItemWithVariantRequest request)
         {
             // Step 1: Create new menu item
             var newMenuItem = await _adminMenuItemService.CreateMenuAsync(new DTOs.AdminServiceDTO.MenuItemAdminDTO
@@ -100,7 +100,7 @@ namespace FOCS.Application.Services
 
             ConditionCheck.CheckCondition(assignVariantsResult, Errors.Variant.FailWhenAssign);
 
-            return true;
+            return newMenuItem.Id.Value;
         }
 
         public async Task<bool> AddVariantGroupAndVariant(AddVariantGroupAndVariant request, Guid menuItemId, string storeId)

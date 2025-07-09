@@ -41,7 +41,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost]
-        public async Task<bool> Create([FromBody] CreateMenuItemWithVariantRequest createMenuItemWithVariantRequest)
+        public async Task<Guid> Create([FromBody] CreateMenuItemWithVariantRequest createMenuItemWithVariantRequest)
         {
             return await _menuManagementService.CreateNewMenuItemWithVariant(createMenuItemWithVariantRequest);
         }
