@@ -25,6 +25,7 @@ namespace FOCS.Common.Exceptions
             public const string CouponMaxUsed = "coupon_max_used";
             public const string CouponIds = "coupon_ids";
             public const string IsActive = "is_active";
+            public const string IsAvailable = "is_available";
             public const string StartDate = "start_date";
             public const string EndDate = "end_date";
             public const string Description = "description";
@@ -113,6 +114,14 @@ namespace FOCS.Common.Exceptions
             public const string StartDateAfterEndDate = "Start Date must be before End Date";
             public const string MaxPercentageDiscountValue = "Discount Value cannot exceed 100% for Percentage discount type";
             public const string RequireItemCondition = "Condition is required for Buy X Get Y promotion type";
+        }
+
+        public static class MenuItemError
+        {
+            public const string MenuItemActive = "Item is active now";
+            public const string MenuItemInactive = "Item is inactive now";
+            public const string MenuItemAvailable = "Item is available now";
+            public const string MenuItemUnavailable = "Item is unavailable now";
         }
     }
 }

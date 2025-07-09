@@ -20,6 +20,9 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         [JsonPropertyName("is_available")]
         public bool IsAvailable { get; set; }
 
+        [JsonPropertyName("is_active")]
+        public bool IsActive { get; set; }
+
         [JsonPropertyName("store_id")]
         public Guid StoreId { get; set; }
     }

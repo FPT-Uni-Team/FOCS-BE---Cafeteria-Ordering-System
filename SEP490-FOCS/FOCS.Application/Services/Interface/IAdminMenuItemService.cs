@@ -12,5 +12,9 @@ namespace FOCS.Application.Services.Interface
         Task<bool> DeleteMenuAsync(Guid id, string userId);
         Task<MenuItemDetailAdminDTO> GetMenuItemDetail(Guid menuItemId, string StoreId);
         Task<List<MenuItemDetailAdminDTO>> GetListMenuItemDetail(List<Guid> menuItemIds, string storeId, string userId);
+        Task<bool> ActivateMenuItemAsync(Guid menuItemId, string userId);
+        Task<bool> DeactivateMenuItemAsync(Guid menuItemId, string userId);
+        Task<bool> EnableMenuItemAsync(Guid menuItemId, string userId);
+        Task<bool> DisableMenuItemAsync(Guid menuItemId, string userId);
     }
 }

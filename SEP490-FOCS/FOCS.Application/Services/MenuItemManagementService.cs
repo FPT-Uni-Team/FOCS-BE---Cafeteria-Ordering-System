@@ -1,24 +1,15 @@
-﻿using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
-using FOCS.Application.DTOs;
-using FOCS.Application.Services.Interface;
+﻿using FOCS.Application.Services.Interface;
 using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
-using MailKit;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace FOCS.Application.Services
 {
@@ -33,7 +24,13 @@ namespace FOCS.Application.Services
 
         private readonly IMenuItemCategoryService _menuItemCategoryService;
 
-        public MenuItemManagementService(IMenuItemsVariantGroupService menuVariantGroupService, IMenuItemCategoryService menuItemCategoryService, ICloudinaryService cloudinaryService, IRepository<MenuItemImage> menuItemImageRepository, IMenuItemsVariantGroupItemService menuItemsVariantGroupItemService, IAdminMenuItemService adminMenuItemService)
+        public MenuItemManagementService(
+            IMenuItemsVariantGroupService menuVariantGroupService,
+            IMenuItemCategoryService menuItemCategoryService,
+            ICloudinaryService cloudinaryService,
+            IRepository<MenuItemImage> menuItemImageRepository,
+            IMenuItemsVariantGroupItemService menuItemsVariantGroupItemService,
+            IAdminMenuItemService adminMenuItemService)
         {
             _menuVariantGroupService = menuVariantGroupService;
             _menuItemsVariantGroupItemService = menuItemsVariantGroupItemService;
