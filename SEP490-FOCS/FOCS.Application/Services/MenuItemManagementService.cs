@@ -30,10 +30,7 @@ namespace FOCS.Application.Services
             ICloudinaryService cloudinaryService,
             IRepository<MenuItemImage> menuItemImageRepository,
             IMenuItemsVariantGroupItemService menuItemsVariantGroupItemService,
-            IAdminMenuItemService adminMenuItemService,
-            IRepository<MenuItem> menuItemRepository,
-            UserManager<User> userManager,
-            IRepository<UserStore> userStoreRepository)
+            IAdminMenuItemService adminMenuItemService)
         {
             _menuVariantGroupService = menuVariantGroupService;
             _menuItemsVariantGroupItemService = menuItemsVariantGroupItemService;
