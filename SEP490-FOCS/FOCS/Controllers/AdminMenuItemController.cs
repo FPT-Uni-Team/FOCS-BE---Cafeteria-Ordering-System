@@ -91,7 +91,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("{id}/variant-group/variants")]
-        public async Task<bool> AddVariantGroupAndVariantForProduct([FromBody] AddVariantGroupAndVariant request, Guid id, [FromHeader(Name = "StoreId")] string storeId)
+        public async Task<bool> AddVariantGroupAndVariantForProduct([FromBody] AddVariantGroupsAndVariants request, Guid id, [FromHeader(Name = "StoreId")] string storeId)
         {
             return await _menuManagementService.AddVariantGroupAndVariant(request, id, storeId);
         }

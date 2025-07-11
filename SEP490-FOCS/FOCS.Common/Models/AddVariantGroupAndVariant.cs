@@ -8,6 +8,12 @@ using System.Threading.Tasks;
 
 namespace FOCS.Common.Models
 {
+    public class AddVariantGroupsAndVariants
+    {
+        [JsonPropertyName("variant_groups_variants")]
+        public List<AddVariantGroupAndVariant> VariantGroupsAndVariants { get; set; }
+    }
+
     public class AddVariantGroupAndVariant
     {
         [JsonPropertyName("id")]
