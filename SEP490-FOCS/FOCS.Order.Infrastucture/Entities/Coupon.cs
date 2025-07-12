@@ -13,6 +13,8 @@ namespace FOCS.Order.Infrastucture.Entities
         public Guid Id { get; set; } 
 
         public string Code { get; set; }
+        public CouponType CouponType { get; set; }
+
         public string Description { get; set; }
 
         public DiscountType DiscountType { get; set; } 

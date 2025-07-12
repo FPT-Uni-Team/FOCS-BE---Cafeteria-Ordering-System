@@ -407,25 +407,48 @@ namespace FOCS.Application.Services
 
             // Check coupon code type
             ConditionCheck.CheckCondition(dto.CouponType == CouponType.Manual
-                                                     || dto.CouponType == CouponType.AutoGenerate,
-                                                        AdminCouponConstants.CheckCouponCodeType, AdminCouponConstants.FieldCouponType);
+                                       || dto.CouponType == CouponType.AutoGenerate,
+                                        AdminCouponConstants.CheckCouponCodeType,
+                                        AdminCouponConstants.FieldCouponType);
 
-            // Auto && Has Code
-            ConditionCheck.CheckCondition(dto.CouponType != CouponType.AutoGenerate || string.IsNullOrWhiteSpace(dto.Code),
-                                                        AdminCouponConstants.CheckCouponCodeForAuto, AdminCouponConstants.FieldCode);
+            // Check if coupon is On_going - only allow updating end time
+            var now = DateTime.UtcNow;
+            bool isOnGoing = now >= coupon.StartDate && now <= coupon.EndDate;
 
-            // Type 'auto' => Generate unique code
-            string couponCode = dto.CouponType == CouponType.AutoGenerate ? await GenerateUniqueCouponCodeAsync()
-                                                                         : dto.Code?.Trim() ?? "";
+            if (isOnGoing)
+            {
+                // For On_going coupons, only allow updating end time (must be in future)
+                ConditionCheck.CheckCondition(dto.EndDate > now,
+                                            AdminCouponConstants.CheckUpdateDate,
+                                            AdminCouponConstants.FieldDate);
 
-            // Check manual code empty
-            ConditionCheck.CheckCondition(dto.CouponType != CouponType.Manual
-                                                     || !string.IsNullOrWhiteSpace(couponCode),
-                                                        AdminCouponConstants.CheckCouponCodeForManual, AdminCouponConstants.FieldCode);
+                // Only update end date and other non-critical fields
+                coupon.EndDate = dto.EndDate;
+                coupon.UpdatedAt = DateTime.UtcNow;
+                coupon.UpdatedBy = userId;
+
+                await _couponRepository.SaveChangesAsync();
+                return true;
+            }
+
+            // For non-On_going coupons, proceed with normal update
+
+            // Auto type doesn't need to generate new code - keep existing one
+            if (dto.CouponType == CouponType.AutoGenerate)
+            {
+                dto.Code = coupon.Code; // Keep existing code
+            }
+            else // Manual type
+            {
+                // Check manual code empty
+                ConditionCheck.CheckCondition(!string.IsNullOrWhiteSpace(dto.Code),
+                                            AdminCouponConstants.CheckCouponCodeForManual,
+                                            AdminCouponConstants.FieldCode);
+            }
 
             // Check unique code (exclude current coupon)
             var existing = await _couponRepository.AsQueryable()
-                                                  .AnyAsync(c => c.Id != id && c.Code == dto.Code && !c.IsDeleted);
+                                                .AnyAsync(c => c.Id != id && c.Code == dto.Code && !c.IsDeleted);
             ConditionCheck.CheckCondition(!existing, AdminCouponConstants.CheckUpdateUniqueCode, AdminCouponConstants.FieldCode);
 
             // Check dates
@@ -442,7 +465,6 @@ namespace FOCS.Application.Services
 
             _mapper.Map(dto, coupon);
             coupon.StoreId = Guid.Parse(storeId);
-            coupon.Code = couponCode;
             coupon.UpdatedAt = DateTime.UtcNow;
             coupon.UpdatedBy = userId;
 
