@@ -13,51 +13,8 @@ using System.Linq.Expressions;
 
 namespace FOCS.Tests.Application.Services
 {
-    public class CreatePromotionAsyncTests
+    public class CreatePromotionAsyncTests : PromotionServiceTestBase
     {
-        private readonly Mock<IRepository<Promotion>> _promotionRepositoryMock;
-        private readonly Mock<IRepository<Coupon>> _couponRepositoryMock;
-        private readonly Mock<IRepository<UserStore>> _userStoreRepositoryMock;
-        private readonly Mock<IRepository<CouponUsage>> _couponUsageRepositoryMock;
-        private readonly Mock<IRepository<PromotionItemCondition>> _promotionItemConditionRepositoryMock;
-        private readonly Mock<IRepository<Store>> _storeRepositoryMock;
-        private readonly Mock<IRepository<MenuItem>> _menuItemRepositoryMock;
-        private readonly Mock<IMapper> _mapperMock;
-        private readonly Mock<UserManager<User>> _userManagerMock;
-        private readonly Mock<IPricingService> _pricingServiceMock;
-        private readonly PromotionService _promotionService;
-
-        public CreatePromotionAsyncTests()
-        {
-            _promotionRepositoryMock = new Mock<IRepository<Promotion>>();
-            _couponRepositoryMock = new Mock<IRepository<Coupon>>();
-            _userStoreRepositoryMock = new Mock<IRepository<UserStore>>();
-            _couponUsageRepositoryMock = new Mock<IRepository<CouponUsage>>();
-            _promotionItemConditionRepositoryMock = new Mock<IRepository<PromotionItemCondition>>();
-            _storeRepositoryMock = new Mock<IRepository<Store>>();
-            _menuItemRepositoryMock = new Mock<IRepository<MenuItem>>();
-            _mapperMock = new Mock<IMapper>();
-            _pricingServiceMock = new Mock<IPricingService>();
-
-            // Mock UserManager
-            var userStore = new Mock<IUserStore<User>>();
-            _userManagerMock = new Mock<UserManager<User>>(
-                userStore.Object, null, null, null, null, null, null, null, null);
-
-            _promotionService = new PromotionService(
-                _promotionRepositoryMock.Object,
-                _promotionItemConditionRepositoryMock.Object,
-                _storeRepositoryMock.Object,
-                _menuItemRepositoryMock.Object,
-                _couponRepositoryMock.Object,
-                _couponUsageRepositoryMock.Object,
-                _userManagerMock.Object,
-                _mapperMock.Object,
-                _userStoreRepositoryMock.Object,
-                _pricingServiceMock.Object
-            );
-        }
-
         [Fact]
         public async Task CreatePromotionAsync_ValidInput_ReturnsPromotionDTO()
         {
@@ -80,7 +37,7 @@ namespace FOCS.Tests.Application.Services
             var promotionEntity = new Promotion { Id = Guid.NewGuid(), Title = promotionDto.Title };
             var resultDto = new PromotionDTO { Id = promotionEntity.Id, Title = promotionDto.Title };
 
-            SetupValidUserAndStore(userId, storeId, user, userStore);
+            SetupValidUser(userId, storeId, user, userStore);
             SetupValidStore(storeId, store);
             SetupValidCoupon(couponId, storeId, coupon);
 
@@ -147,7 +104,7 @@ namespace FOCS.Tests.Application.Services
                 GetItemId = getItemId
             };
 
-            SetupValidUserAndStore(userId, storeId, user, userStore);
+            SetupValidUser(userId, storeId, user, userStore);
             SetupValidStore(storeId, store);
             SetupValidCoupon(couponId, storeId, coupon);
             SetupValidPromotionUniqueness(promotionDto, storeId);
@@ -223,7 +180,7 @@ namespace FOCS.Tests.Application.Services
             var user = new User { Id = userId };
             var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
 
-            SetupValidUserAndStore(userId, storeId, user, userStore);
+            SetupValidUser(userId, storeId, user, userStore);
 
             var invalidDto = new PromotionDTO
             {
@@ -257,7 +214,7 @@ namespace FOCS.Tests.Application.Services
                 IsDeleted = false
             };
 
-            SetupValidUserAndStore(userId, storeId, user, userStore);
+            SetupValidUser(userId, storeId, user, userStore);
 
 
             var promotionQueryable = new List<Promotion> { existingPromotion }.AsQueryable().BuildMockDbSet();
@@ -289,7 +246,7 @@ namespace FOCS.Tests.Application.Services
                 IsDeleted = false
             };
 
-            SetupValidUserAndStore(userId, storeId, user, userStore);
+            SetupValidUser(userId, storeId, user, userStore);
 
             // Setup two different calls to AsQueryable for title check and overlap check
             var titleCheckQueryable = new List<Promotion>().AsQueryable().BuildMockDbSet();
@@ -314,7 +271,7 @@ namespace FOCS.Tests.Application.Services
             var user = new User { Id = userId };
             var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
 
-            SetupValidUserAndStore(userId, storeId, user, userStore);
+            SetupValidUser(userId, storeId, user, userStore);
             SetupValidPromotionUniqueness(promotionDto, storeId);
 
             _storeRepositoryMock.Setup(x => x.GetByIdAsync(storeId))
@@ -345,7 +302,7 @@ namespace FOCS.Tests.Application.Services
                 PromotionId = null
             };
 
-            SetupValidUserAndStore(userId, storeId, user, userStore);
+            SetupValidUser(userId, storeId, user, userStore);
             SetupValidStore(storeId, store);
             SetupValidPromotionUniqueness(promotionDto, storeId);
 
@@ -378,7 +335,7 @@ namespace FOCS.Tests.Application.Services
                 PromotionId = Guid.NewGuid() // Already assigned to another promotion
             };
 
-            SetupValidUserAndStore(userId, storeId, user, userStore);
+            SetupValidUser(userId, storeId, user, userStore);
             SetupValidStore(storeId, store);
             SetupValidPromotionUniqueness(promotionDto, storeId);
 
@@ -403,7 +360,7 @@ namespace FOCS.Tests.Application.Services
             var user = new User { Id = userId };
             var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
 
-            SetupValidUserAndStore(userId, storeId, user, userStore);
+            SetupValidUser(userId, storeId, user, userStore);
 
             // Setup title uniqueness check - return empty list
             var titleCheckQueryable = new List<Promotion>().AsQueryable().BuildMockDbSet();
@@ -458,7 +415,7 @@ namespace FOCS.Tests.Application.Services
             };
             var resultDto = new PromotionDTO { Id = promotionEntity.Id, Title = promotionDto.Title };
 
-            SetupValidUserAndStore(userId, storeId, user, userStore);
+            SetupValidUser(userId, storeId, user, userStore);
             SetupValidStore(storeId, store);
             SetupValidCoupon(couponId, storeId, coupon);
             SetupValidPromotionUniqueness(promotionDto, storeId);
@@ -471,61 +428,6 @@ namespace FOCS.Tests.Application.Services
             // Act & Assert
             await Assert.ThrowsAsync<Exception>(() =>
                 _promotionService.CreatePromotionAsync(promotionDto, storeId, userId));
-        }
-
-        // Helper methods
-        private PromotionDTO CreateValidPromotionDTO(List<Guid> couponIds = null)
-        {
-            return new PromotionDTO
-            {
-                Id = Guid.NewGuid(),
-                Title = "Test Promotion",
-                PromotionType = PromotionType.FixedAmount,
-                StartDate = DateTime.UtcNow.AddDays(1),
-                EndDate = DateTime.UtcNow.AddDays(7),
-                DiscountValue = 100,
-                CouponIds = couponIds ?? new List<Guid>(),
-                AcceptForItems = new List<Guid>()
-            };
-        }
-
-        private void SetupValidUserAndStore(string userId, Guid storeId, User user, UserStore userStore)
-        {
-            _userManagerMock.Setup(x => x.FindByIdAsync(userId))
-                .ReturnsAsync(user);
-            _userStoreRepositoryMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<UserStore, bool>>>()))
-                .ReturnsAsync(new List<UserStore> { userStore });
-        }
-
-        private void SetupValidStore(Guid storeId, Store store)
-        {
-            _storeRepositoryMock.Setup(x => x.GetByIdAsync(storeId))
-                .ReturnsAsync(store);
-        }
-
-        private void SetupValidCoupon(Guid couponId, Guid storeId, Coupon coupon)
-        {
-            var couponQueryable = new List<Coupon> { coupon }.AsQueryable().BuildMockDbSet();
-            _couponRepositoryMock.Setup(x => x.AsQueryable())
-                .Returns(couponQueryable.Object);
-        }
-
-        private void SetupValidPromotionUniqueness(PromotionDTO dto, Guid storeId)
-        {
-            var titleCheckQueryable = new List<Promotion>().AsQueryable().BuildMockDbSet();
-            var overlapCheckQueryable = new List<Promotion>().AsQueryable().BuildMockDbSet();
-
-            _promotionRepositoryMock.SetupSequence(x => x.AsQueryable())
-                .Returns(titleCheckQueryable.Object)
-                .Returns(overlapCheckQueryable.Object);
-        }
-
-        private void SetupMapperForCreation(PromotionDTO dto, Promotion entity, PromotionDTO resultDto)
-        {
-            _mapperMock.Setup(x => x.Map<Promotion>(dto))
-                .Returns(entity);
-            _mapperMock.Setup(x => x.Map<PromotionDTO>(It.IsAny<Promotion>()))
-                .Returns(resultDto);
         }
     }
 }
