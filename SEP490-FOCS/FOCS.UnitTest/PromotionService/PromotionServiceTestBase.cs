@@ -69,6 +69,7 @@ namespace FOCS.Tests.Application.Services
                 StartDate = DateTime.UtcNow.AddDays(1),
                 EndDate = DateTime.UtcNow.AddDays(7),
                 PromotionType = PromotionType.FixedAmount,
+                DiscountValue = 10,
                 IsActive = true,
                 IsDeleted = false,
                 PromotionItemConditions = new List<PromotionItemCondition>(),
@@ -85,7 +86,8 @@ namespace FOCS.Tests.Application.Services
                 PromotionType = PromotionType.FixedAmount,
                 StartDate = DateTime.UtcNow.AddDays(1),
                 EndDate = DateTime.UtcNow.AddDays(7),
-                DiscountValue = 100,
+                DiscountValue = 10,
+                IsActive = true,
                 CouponIds = couponIds ?? new List<Guid>(),
                 AcceptForItems = new List<Guid>()
             };
@@ -98,12 +100,12 @@ namespace FOCS.Tests.Application.Services
                 .Returns(promotionQueryable.Object);
         }
 
-        protected void SetupValidUser(string userId, Guid storeId, User user, UserStore userStore)
+        protected void SetupValidUser(string userId, User user, UserStore? userStore = null)
         {
             _userManagerMock.Setup(x => x.FindByIdAsync(userId))
                 .ReturnsAsync(user);
             _userStoreRepositoryMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<UserStore, bool>>>()))
-                .ReturnsAsync(new List<UserStore> { userStore });
+                .ReturnsAsync(userStore != null ? new List<UserStore> { userStore } : []);
         }
 
         protected void SetupValidStore(Guid storeId, Store store)

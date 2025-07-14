@@ -37,7 +37,7 @@ namespace FOCS.Tests.Application.Services
             var promotionEntity = new Promotion { Id = Guid.NewGuid(), Title = promotionDto.Title };
             var resultDto = new PromotionDTO { Id = promotionEntity.Id, Title = promotionDto.Title };
 
-            SetupValidUser(userId, storeId, user, userStore);
+            SetupValidUser(userId, user, userStore);
             SetupValidStore(storeId, store);
             SetupValidCoupon(couponId, storeId, coupon);
 
@@ -104,7 +104,7 @@ namespace FOCS.Tests.Application.Services
                 GetItemId = getItemId
             };
 
-            SetupValidUser(userId, storeId, user, userStore);
+            SetupValidUser(userId, user, userStore);
             SetupValidStore(storeId, store);
             SetupValidCoupon(couponId, storeId, coupon);
             SetupValidPromotionUniqueness(promotionDto, storeId);
@@ -180,7 +180,7 @@ namespace FOCS.Tests.Application.Services
             var user = new User { Id = userId };
             var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
 
-            SetupValidUser(userId, storeId, user, userStore);
+            SetupValidUser(userId, user, userStore);
 
             var invalidDto = new PromotionDTO
             {
@@ -214,7 +214,7 @@ namespace FOCS.Tests.Application.Services
                 IsDeleted = false
             };
 
-            SetupValidUser(userId, storeId, user, userStore);
+            SetupValidUser(userId, user, userStore);
 
 
             var promotionQueryable = new List<Promotion> { existingPromotion }.AsQueryable().BuildMockDbSet();
@@ -246,7 +246,7 @@ namespace FOCS.Tests.Application.Services
                 IsDeleted = false
             };
 
-            SetupValidUser(userId, storeId, user, userStore);
+            SetupValidUser(userId, user, userStore);
 
             // Setup two different calls to AsQueryable for title check and overlap check
             var titleCheckQueryable = new List<Promotion>().AsQueryable().BuildMockDbSet();
@@ -271,7 +271,7 @@ namespace FOCS.Tests.Application.Services
             var user = new User { Id = userId };
             var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
 
-            SetupValidUser(userId, storeId, user, userStore);
+            SetupValidUser(userId, user, userStore);
             SetupValidPromotionUniqueness(promotionDto, storeId);
 
             _storeRepositoryMock.Setup(x => x.GetByIdAsync(storeId))
@@ -302,7 +302,7 @@ namespace FOCS.Tests.Application.Services
                 PromotionId = null
             };
 
-            SetupValidUser(userId, storeId, user, userStore);
+            SetupValidUser(userId, user, userStore);
             SetupValidStore(storeId, store);
             SetupValidPromotionUniqueness(promotionDto, storeId);
 
@@ -335,7 +335,7 @@ namespace FOCS.Tests.Application.Services
                 PromotionId = Guid.NewGuid() // Already assigned to another promotion
             };
 
-            SetupValidUser(userId, storeId, user, userStore);
+            SetupValidUser(userId, user, userStore);
             SetupValidStore(storeId, store);
             SetupValidPromotionUniqueness(promotionDto, storeId);
 
@@ -360,7 +360,7 @@ namespace FOCS.Tests.Application.Services
             var user = new User { Id = userId };
             var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
 
-            SetupValidUser(userId, storeId, user, userStore);
+            SetupValidUser(userId, user, userStore);
 
             // Setup title uniqueness check - return empty list
             var titleCheckQueryable = new List<Promotion>().AsQueryable().BuildMockDbSet();
@@ -415,7 +415,7 @@ namespace FOCS.Tests.Application.Services
             };
             var resultDto = new PromotionDTO { Id = promotionEntity.Id, Title = promotionDto.Title };
 
-            SetupValidUser(userId, storeId, user, userStore);
+            SetupValidUser(userId, user, userStore);
             SetupValidStore(storeId, store);
             SetupValidCoupon(couponId, storeId, coupon);
             SetupValidPromotionUniqueness(promotionDto, storeId);
