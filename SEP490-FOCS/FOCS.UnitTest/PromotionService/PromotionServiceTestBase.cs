@@ -114,14 +114,14 @@ namespace FOCS.Tests.Application.Services
                 .ReturnsAsync(store);
         }
 
-        protected void SetupValidCoupon(Guid couponId, Guid storeId, Coupon coupon)
+        protected void SetupValidCoupon(Coupon coupon)
         {
             var couponQueryable = new List<Coupon> { coupon }.AsQueryable().BuildMockDbSet();
             _couponRepositoryMock.Setup(x => x.AsQueryable())
                 .Returns(couponQueryable.Object);
         }
 
-        protected void SetupValidPromotionUniqueness(PromotionDTO dto, Guid storeId)
+        protected void SetupValidPromotionUniqueness()
         {
             var titleCheckQueryable = new List<Promotion>().AsQueryable().BuildMockDbSet();
             var overlapCheckQueryable = new List<Promotion>().AsQueryable().BuildMockDbSet();

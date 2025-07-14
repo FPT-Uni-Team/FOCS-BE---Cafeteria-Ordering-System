@@ -27,7 +27,7 @@ namespace FOCS.Tests.Application.Services
             var store = new Store { Id = storeId };
             var coupon = new Coupon
             {
-                Id = couponId,
+                Id = couponId, 
                 StoreId = storeId,
                 StartDate = promotionDto.StartDate.AddDays(1),
                 EndDate = promotionDto.EndDate.AddDays(-1),
@@ -39,9 +39,9 @@ namespace FOCS.Tests.Application.Services
 
             SetupValidUser(userId, user, userStore);
             SetupValidStore(storeId, store);
-            SetupValidCoupon(couponId, storeId, coupon);
+            SetupValidCoupon(coupon);
 
-            SetupValidPromotionUniqueness(promotionDto, storeId);
+            SetupValidPromotionUniqueness();
             SetupMapperForCreation(promotionDto, promotionEntity, resultDto);
 
             // Act
@@ -106,8 +106,8 @@ namespace FOCS.Tests.Application.Services
 
             SetupValidUser(userId, user, userStore);
             SetupValidStore(storeId, store);
-            SetupValidCoupon(couponId, storeId, coupon);
-            SetupValidPromotionUniqueness(promotionDto, storeId);
+            SetupValidCoupon(coupon);
+            SetupValidPromotionUniqueness();
             SetupMapperForCreation(promotionDto, promotionEntity, resultDto);
 
             // Setup menu items validation
@@ -272,7 +272,7 @@ namespace FOCS.Tests.Application.Services
             var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
 
             SetupValidUser(userId, user, userStore);
-            SetupValidPromotionUniqueness(promotionDto, storeId);
+            SetupValidPromotionUniqueness();
 
             _storeRepositoryMock.Setup(x => x.GetByIdAsync(storeId))
                 .ReturnsAsync((Store)null);
@@ -304,7 +304,7 @@ namespace FOCS.Tests.Application.Services
 
             SetupValidUser(userId, user, userStore);
             SetupValidStore(storeId, store);
-            SetupValidPromotionUniqueness(promotionDto, storeId);
+            SetupValidPromotionUniqueness();
 
             var couponQueryable = new List<Coupon> { coupon }.AsQueryable().BuildMockDbSet();
             _couponRepositoryMock.Setup(x => x.AsQueryable())
@@ -337,7 +337,7 @@ namespace FOCS.Tests.Application.Services
 
             SetupValidUser(userId, user, userStore);
             SetupValidStore(storeId, store);
-            SetupValidPromotionUniqueness(promotionDto, storeId);
+            SetupValidPromotionUniqueness();
 
             var couponQueryable = new List<Coupon> { coupon }.AsQueryable().BuildMockDbSet();
             _couponRepositoryMock.Setup(x => x.AsQueryable())
@@ -417,8 +417,8 @@ namespace FOCS.Tests.Application.Services
 
             SetupValidUser(userId, user, userStore);
             SetupValidStore(storeId, store);
-            SetupValidCoupon(couponId, storeId, coupon);
-            SetupValidPromotionUniqueness(promotionDto, storeId);
+            SetupValidCoupon(coupon);
+            SetupValidPromotionUniqueness();
             SetupMapperForCreation(promotionDto, promotionEntity, resultDto);
 
             // Setup invalid buy menu item
