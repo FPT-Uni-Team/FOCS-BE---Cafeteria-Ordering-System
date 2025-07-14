@@ -30,13 +30,13 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
+            var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
                 CreateValidPromotion(storeId)
             };
 
-            SetupValidUser(userId, storeId, user, userStores);
+            SetupValidUser(userId, user, userStore);
             SetupPromotionQueryable(promotions);
 
             var promotionDtos = new List<PromotionDTO>
@@ -114,13 +114,13 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
+            var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
                 CreateValidPromotion(storeId)
             };
 
-            SetupValidUser(userId, storeId, user, userStores);
+            SetupValidUser(userId, user, userStore);
             SetupPromotionQueryable(promotions);
 
             var promotionDtos = new List<PromotionDTO>
@@ -154,13 +154,13 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
+            var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
                 CreateValidPromotion(storeId)
             };
 
-            SetupValidUser(userId, storeId, user, userStores);
+            SetupValidUser(userId, user, userStore);
             SetupPromotionQueryable(promotions);
 
             var promotionDtos = new List<PromotionDTO>
@@ -194,7 +194,7 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
+            var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
 
             var aPromotion = CreateValidPromotion(storeId);
             aPromotion.Title = "A Promotion";
@@ -206,7 +206,7 @@ namespace FOCS.Tests.Application.Services
                 zPromotion
             };
 
-            SetupValidUser(userId, storeId, user, userStores);
+            SetupValidUser(userId, user, userStore);
             SetupPromotionQueryable(promotions);
 
             var promotionDtos = new List<PromotionDTO>
@@ -239,7 +239,7 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
+            var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
 
             var firstPromotion = CreateValidPromotion(storeId);
             firstPromotion.Title = "First Promotion";
@@ -251,7 +251,7 @@ namespace FOCS.Tests.Application.Services
                 secondPromotion
             };
 
-            SetupValidUser(userId, storeId, user, userStores);
+            SetupValidUser(userId, user, userStore);
             SetupPromotionQueryable(promotions);
 
             var promotionDtos = new List<PromotionDTO>
@@ -292,13 +292,13 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
+            var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
                 CreateValidPromotion(storeId)
             };
 
-            SetupValidUser(userId, storeId, user, userStores);
+            SetupValidUser(userId, user, userStore);
             SetupPromotionQueryable(promotions);
 
             var promotionDtos = new List<PromotionDTO>
@@ -343,13 +343,13 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
+            var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
                 CreateValidPromotion(storeId)
             };
 
-            SetupValidUser(userId, storeId, user, userStores);
+            SetupValidUser(userId, user, userStore);
             SetupPromotionQueryable(promotions);
 
             var promotionDtos = new List<PromotionDTO>
@@ -386,13 +386,13 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
+            var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
                 CreateValidPromotion(storeId)
             };
 
-            SetupValidUser(userId, storeId, user, userStores);
+            SetupValidUser(userId, user, userStore);
             SetupPromotionQueryable(promotions);
 
             var promotionDtos = new List<PromotionDTO>
@@ -424,13 +424,13 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
+            var userStore = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
                 CreateValidPromotion(storeId)
             };
 
-            SetupValidUser(userId, storeId, user, userStores);
+            SetupValidUser(userId, user, userStore);
             SetupPromotionQueryable(promotions);
 
             var promotionDtos = new List<PromotionDTO>
