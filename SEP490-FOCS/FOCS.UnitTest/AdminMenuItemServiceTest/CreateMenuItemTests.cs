@@ -4,7 +4,7 @@ using Moq;
 
 namespace FOCS.UnitTest.AdminMenuItemServiceTest
 {
-    public class CreateMenuAsyncTests : AdminMenuItemServiceTestBase
+    public class CreateMenuItemTests : AdminMenuItemServiceTestBase
     {
         [Fact]
         public async Task CreateMenuAsync_ShouldReturnDto_WhenInputIsValid()

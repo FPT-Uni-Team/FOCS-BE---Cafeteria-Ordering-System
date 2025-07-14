@@ -6,7 +6,7 @@ using Moq;
 
 namespace FOCS.UnitTest.AdminMenuItemServiceTest
 {
-    public class GetAllMenuItemAsyncTests : AdminMenuItemServiceTestBase
+    public class GetAllMenuItemTests : AdminMenuItemServiceTestBase
     {
         [Fact]
         public async Task GetAllMenuItemAsync_ShouldReturnPagedResult_WithCorrectProperties()
