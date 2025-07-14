@@ -1,12 +1,5 @@
-﻿using AutoMapper;
-using FOCS.Application.DTOs.AdminServiceDTO;
-using FOCS.Application.Services;
-using FOCS.Infrastructure.Identity.Common.Repositories;
-using FOCS.Infrastructure.Identity.Identity.Model;
+﻿using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Order.Infrastucture.Entities;
-using Microsoft.AspNetCore.Identity;
-using MockQueryable;
-using MockQueryable.Moq;
 using Moq;
 
 namespace FOCS.UnitTest.AdminMenuItemServiceTest
@@ -14,12 +7,13 @@ namespace FOCS.UnitTest.AdminMenuItemServiceTest
     public class CreateMenuAsyncTests : AdminMenuItemServiceTestBase
     {
         [Fact]
-        public async Task CreateMenuAsync_ValidInput_ReturnsMenuItemAdminDTO()
+        public async Task CreateMenuAsync_ShouldReturnDto_WhenInputIsValid()
         {
             // Arrange
-            var storeId = Guid.NewGuid().ToString();
+            var storeId = Guid.NewGuid();
             var dto = CreateValidMenuItemAdminDTO(storeId);
-            var menuItem = new MenuItem
+
+            var createdEntity = new MenuItem
             {
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
@@ -29,137 +23,92 @@ namespace FOCS.UnitTest.AdminMenuItemServiceTest
                 IsActive = dto.IsActive,
                 StoreId = dto.StoreId
             };
-            var expectedResult = new MenuItemAdminDTO
+
+            var expectedDto = new MenuItemAdminDTO
             {
-                Id = menuItem.Id,
-                Name = menuItem.Name,
-                Description = menuItem.Description,
-                BasePrice = menuItem.BasePrice,
-                IsAvailable = menuItem.IsAvailable,
-                IsActive = menuItem.IsActive,
-                StoreId = menuItem.StoreId
+                Id = createdEntity.Id,
+                Name = createdEntity.Name,
+                Description = createdEntity.Description,
+                BasePrice = createdEntity.BasePrice,
+                IsAvailable = createdEntity.IsAvailable,
+                IsActive = createdEntity.IsActive,
+                StoreId = createdEntity.StoreId
             };
 
             SetupMenuItemNameUniqueness(dto.Name, false);
-            SetupMapperForCreation(dto, menuItem, expectedResult);
+            SetupMapperForCreation(dto, createdEntity, expectedDto);
 
             // Act
-            var result = await _adminMenuItemService.CreateMenuAsync(dto, storeId);
+            var result = await _adminMenuItemService.CreateMenuAsync(dto, storeId.ToString());
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(expectedResult.Id, result.Id);
-            Assert.Equal(expectedResult.Name, result.Name);
-            Assert.Equal(expectedResult.Description, result.Description);
-            Assert.Equal(expectedResult.BasePrice, result.BasePrice);
-            Assert.Equal(expectedResult.IsAvailable, result.IsAvailable);
-            Assert.Equal(expectedResult.IsActive, result.IsActive);
-            Assert.Equal(expectedResult.StoreId, result.StoreId);
+            Assert.Equal(expectedDto.Id, result.Id);
+            Assert.Equal(expectedDto.Name, result.Name);
+            Assert.Equal(expectedDto.Description, result.Description);
+            Assert.Equal(expectedDto.BasePrice, result.BasePrice);
+            Assert.Equal(expectedDto.IsAvailable, result.IsAvailable);
+            Assert.Equal(expectedDto.IsActive, result.IsActive);
+            Assert.Equal(expectedDto.StoreId, result.StoreId);
 
-            _menuRepositoryMock.Verify(x => x.AddAsync(It.IsAny<MenuItem>()), Times.Once);
-            _menuRepositoryMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+            _menuRepositoryMock.Verify(r => r.AddAsync(It.IsAny<MenuItem>()), Times.Once);
+            _menuRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Once);
         }
 
         [Fact]
-        public async Task CreateMenuAsync_DuplicateName_ThrowsException()
+        public async Task CreateMenuAsync_ShouldThrowException_WhenNameAlreadyExists()
         {
             // Arrange
-            var storeId = Guid.NewGuid().ToString();
+            var storeId = Guid.NewGuid();
             var dto = CreateValidMenuItemAdminDTO(storeId);
 
             SetupMenuItemNameUniqueness(dto.Name, true);
 
             // Act & Assert
-            await Assert.ThrowsAsync<Exception>(() =>
-                _adminMenuItemService.CreateMenuAsync(dto, storeId));
+            var exception = await Assert.ThrowsAsync<Exception>(() =>
+                _adminMenuItemService.CreateMenuAsync(dto, storeId.ToString()));
+
+            Assert.Contains("name", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
-        public async Task CreateMenuAsync_InvalidModel_ThrowsException()
+        public async Task CreateMenuAsync_ShouldThrow_WhenMapperReturnsNull()
         {
             // Arrange
-            var storeId = Guid.NewGuid().ToString();
-            var invalidDto = new MenuItemAdminDTO
-            {
-                Name = null, // Explicitly set to null to force validation error
-                Description = "Test Description",
-                BasePrice = -10, // Invalid price
-                IsAvailable = true,
-                IsActive = true,
-                StoreId = Guid.NewGuid()
-            };
+            var storeId = Guid.NewGuid();
+            var dto = CreateValidMenuItemAdminDTO(storeId);
+            SetupMenuItemNameUniqueness(dto.Name, false);
 
-            // Setup mock to properly handle async operations
-            var mockMenuItems = new List<MenuItem>().AsQueryable().BuildMock();
-            _menuRepositoryMock.Setup(x => x.AsQueryable())
-                .Returns(mockMenuItems);
-
-            // Setup mapper to return null to simulate validation failure
-            _mapperMock.Setup(x => x.Map<MenuItem>(invalidDto))
-                .Returns((MenuItem)null);
+            _mapperMock.Setup(m => m.Map<MenuItem>(dto)).Returns((MenuItem)null);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<NullReferenceException>(() =>
-                _adminMenuItemService.CreateMenuAsync(invalidDto, storeId));
-
-            Assert.NotNull(exception);
+            await Assert.ThrowsAsync<NullReferenceException>(() =>
+                _adminMenuItemService.CreateMenuAsync(dto, storeId.ToString()));
         }
 
         [Fact]
-        public async Task CreateMenuAsync_ValidInput_SetsAuditFields()
+        public async Task CreateMenuAsync_ShouldSetAuditFieldsCorrectly()
         {
             // Arrange
-            var storeId = Guid.NewGuid().ToString();
+            var storeId = Guid.NewGuid();
             var dto = CreateValidMenuItemAdminDTO(storeId);
+
             var menuItem = new MenuItem();
-            var expectedResult = new MenuItemAdminDTO();
+            var expectedDto = new MenuItemAdminDTO();
 
             SetupMenuItemNameUniqueness(dto.Name, false);
-            _mapperMock.Setup(x => x.Map<MenuItem>(dto))
-                .Returns(menuItem);
-            _mapperMock.Setup(x => x.Map<MenuItemAdminDTO>(It.IsAny<MenuItem>()))
-                .Returns(expectedResult);
+            _mapperMock.Setup(m => m.Map<MenuItem>(dto)).Returns(menuItem);
+            _mapperMock.Setup(m => m.Map<MenuItemAdminDTO>(It.IsAny<MenuItem>())).Returns(expectedDto);
 
             // Act
-            var result = await _adminMenuItemService.CreateMenuAsync(dto, storeId);
+            await _adminMenuItemService.CreateMenuAsync(dto, storeId.ToString());
 
             // Assert
-            Assert.NotNull(menuItem.Id);
+            Assert.NotEqual(Guid.Empty, menuItem.Id);
             Assert.False(menuItem.IsDeleted);
             Assert.NotNull(menuItem.CreatedAt);
-            Assert.Equal(storeId, menuItem.CreatedBy);
+            Assert.Equal(storeId.ToString(), menuItem.CreatedBy);
         }
 
-        // Helper methods
-        private MenuItemAdminDTO CreateValidMenuItemAdminDTO(string storeId)
-        {
-            return new MenuItemAdminDTO
-            {
-                Name = "Test Menu Item",
-                Description = "Test Description",
-                BasePrice = 10.99,
-                IsAvailable = true,
-                IsActive = true,
-                StoreId = Guid.Parse(storeId)
-            };
-        }
-
-        private void SetupMenuItemNameUniqueness(string name, bool exists)
-        {
-            var queryable = exists
-                ? new List<MenuItem> { new MenuItem { Name = name } }.AsQueryable().BuildMockDbSet()
-                : new List<MenuItem>().AsQueryable().BuildMockDbSet();
-
-            _menuRepositoryMock.Setup(x => x.AsQueryable())
-                .Returns(queryable.Object);
-        }
-
-        private void SetupMapperForCreation(MenuItemAdminDTO dto, MenuItem entity, MenuItemAdminDTO resultDto)
-        {
-            _mapperMock.Setup(x => x.Map<MenuItem>(dto))
-                .Returns(entity);
-            _mapperMock.Setup(x => x.Map<MenuItemAdminDTO>(It.IsAny<MenuItem>()))
-                .Returns(resultDto);
-        }
     }
 }

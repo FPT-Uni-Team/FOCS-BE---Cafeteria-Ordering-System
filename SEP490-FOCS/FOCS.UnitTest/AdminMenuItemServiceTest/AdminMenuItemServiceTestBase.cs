@@ -1,10 +1,13 @@
 ﻿using AutoMapper;
+using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.AspNetCore.Identity;
+using MockQueryable.Moq;
 using Moq;
+using System.Linq.Expressions;
 
 namespace FOCS.UnitTest.AdminMenuItemServiceTest
 {
@@ -43,6 +46,85 @@ namespace FOCS.UnitTest.AdminMenuItemServiceTest
                 _menuCategoryMock.Object,
                 _menuItemImageRepositoryMock.Object
             );
+        }
+
+        protected MenuItem CreateValidMenuItem(Guid storeId)
+        {
+            return new MenuItem
+            {
+                Id = Guid.NewGuid(),
+                Name = "Test Menu Item",
+                Description = "This is a test menu item.",
+                BasePrice = 15.99,
+                IsAvailable = true,
+                IsActive = true,
+                IsDeleted = false,
+                StoreId = storeId,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = "test-user",
+                UpdatedAt = null,
+                UpdatedBy = null,
+                MenuItemVariantGroups = new List<MenuItemVariantGroup>(),
+                Images = new List<MenuItemImage>()
+            };
+        }
+
+
+        protected MenuItemAdminDTO CreateValidMenuItemAdminDTO(Guid storeId)
+        {
+            return new MenuItemAdminDTO
+            {
+                Id = Guid.NewGuid(),
+                Name = "Test Menu Item",
+                Description = "This is a test menu item.",
+                BasePrice = 15.99,
+                IsAvailable = true,
+                IsActive = true,
+                StoreId = storeId
+            };
+        }
+
+        protected void SetupValidUser(string userId, User user, UserStore? userStore = null)
+        {
+            _userManagerMock.Setup(x => x.FindByIdAsync(userId))
+                .ReturnsAsync(user);
+
+            _userStoreRepositoryMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<UserStore, bool>>>()))
+                .ReturnsAsync(userStore != null ? new List<UserStore> { userStore } : []);
+        }
+
+        protected void SetupValidStore(Guid storeId, Store store)
+        {
+            _storeRepositoryMock.Setup(x => x.GetByIdAsync(storeId))
+                .ReturnsAsync(store);
+        }
+
+        protected void SetupMenuQueryable(List<MenuItem> menuItems)
+        {
+            var mockDbSet = menuItems.AsQueryable().BuildMockDbSet();
+            _menuRepositoryMock.Setup(r => r.AsQueryable()).Returns(mockDbSet.Object);
+        }
+
+        protected void SetupMapperForCreate(MenuItemAdminDTO dto, MenuItem entity, MenuItemAdminDTO resultDto)
+        {
+            _mapperMock.Setup(m => m.Map<MenuItem>(dto)).Returns(entity);
+            _mapperMock.Setup(m => m.Map<MenuItemAdminDTO>(It.IsAny<MenuItem>())).Returns(resultDto);
+        }
+
+        protected void SetupMenuItemNameUniqueness(string name, bool exists)
+        {
+            var data = exists
+                ? new List<MenuItem> { new MenuItem { Name = name } }
+                : new List<MenuItem>();
+
+            var queryable = data.AsQueryable().BuildMockDbSet();
+            _menuRepositoryMock.Setup(x => x.AsQueryable()).Returns(queryable.Object);
+        }
+
+        protected void SetupMapperForCreation(MenuItemAdminDTO dto, MenuItem entity, MenuItemAdminDTO resultDto)
+        {
+            _mapperMock.Setup(x => x.Map<MenuItem>(dto)).Returns(entity);
+            _mapperMock.Setup(x => x.Map<MenuItemAdminDTO>(It.IsAny<MenuItem>())).Returns(resultDto);
         }
     }
 }
