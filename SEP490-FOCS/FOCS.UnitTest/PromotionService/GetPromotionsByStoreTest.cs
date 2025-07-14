@@ -15,51 +15,8 @@ using System.Linq.Expressions;
 
 namespace FOCS.Tests.Application.Services
 {
-    public class GetPromotionsByStoreTest
+    public class GetPromotionsByStoreTest : PromotionServiceTestBase
     {
-        private readonly Mock<IRepository<Promotion>> _promotionRepositoryMock;
-        private readonly Mock<IRepository<Coupon>> _couponRepositoryMock;
-        private readonly Mock<IRepository<UserStore>> _userStoreRepositoryMock;
-        private readonly Mock<IRepository<CouponUsage>> _couponUsageRepositoryMock;
-        private readonly Mock<IRepository<PromotionItemCondition>> _promotionItemConditionRepositoryMock;
-        private readonly Mock<IRepository<Store>> _storeRepositoryMock;
-        private readonly Mock<IRepository<MenuItem>> _menuItemRepositoryMock;
-        private readonly Mock<IMapper> _mapperMock;
-        private readonly Mock<UserManager<User>> _userManagerMock;
-        private readonly Mock<IPricingService> _pricingServiceMock;
-        private readonly PromotionService _promotionService;
-
-        public GetPromotionsByStoreTest()
-        {
-            _promotionRepositoryMock = new Mock<IRepository<Promotion>>();
-            _couponRepositoryMock = new Mock<IRepository<Coupon>>();
-            _userStoreRepositoryMock = new Mock<IRepository<UserStore>>();
-            _couponUsageRepositoryMock = new Mock<IRepository<CouponUsage>>();
-            _promotionItemConditionRepositoryMock = new Mock<IRepository<PromotionItemCondition>>();
-            _storeRepositoryMock = new Mock<IRepository<Store>>();
-            _menuItemRepositoryMock = new Mock<IRepository<MenuItem>>();
-            _mapperMock = new Mock<IMapper>();
-            _pricingServiceMock = new Mock<IPricingService>();
-
-            // Mock UserManager
-            var userStore = new Mock<IUserStore<User>>();
-            _userManagerMock = new Mock<UserManager<User>>(
-                userStore.Object, null, null, null, null, null, null, null, null);
-
-            _promotionService = new PromotionService(
-                _promotionRepositoryMock.Object,
-                _promotionItemConditionRepositoryMock.Object,
-                _storeRepositoryMock.Object,
-                _menuItemRepositoryMock.Object,
-                _couponRepositoryMock.Object,
-                _couponUsageRepositoryMock.Object,
-                _userManagerMock.Object,
-                _mapperMock.Object,
-                _userStoreRepositoryMock.Object,
-                _pricingServiceMock.Object
-            );
-        }
-
         [Fact]
         public async Task GetPromotionsByStoreAsync_ValidUserAndStore_ReturnsPromotions()
         {
@@ -73,23 +30,10 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new List<UserStore> { new UserStore { UserId = Guid.Parse(userId), StoreId = storeId } };
+            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
-                new Promotion
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Test Promotion",
-                    StoreId = storeId,
-                    IsDeleted = false,
-                    StartDate = DateTime.UtcNow.AddDays(-1),
-                    EndDate = DateTime.UtcNow.AddDays(1),
-                    PromotionType = PromotionType.FixedAmount,
-                    DiscountValue = 10,
-                    IsActive = true,
-                    PromotionItemConditions = new List<PromotionItemCondition>(),
-                    Coupons = new List<Coupon>()
-                }
+                CreateValidPromotion(storeId)
             };
 
             SetupValidUser(userId, storeId, user, userStores);
@@ -170,22 +114,10 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new List<UserStore> { new UserStore { UserId = Guid.Parse(userId), StoreId = storeId } };
+            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
-                new Promotion
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Test Promotion",
-                    StoreId = storeId,
-                    IsDeleted = false,
-                    StartDate = DateTime.UtcNow.AddDays(-1),
-                    EndDate = DateTime.UtcNow.AddDays(1),
-                    PromotionType = PromotionType.FixedAmount,
-                    IsActive = true,
-                    PromotionItemConditions = new List<PromotionItemCondition>(),
-                    Coupons = new List<Coupon>()
-                }
+                CreateValidPromotion(storeId)
             };
 
             SetupValidUser(userId, storeId, user, userStores);
@@ -222,22 +154,10 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new List<UserStore> { new UserStore { UserId = Guid.Parse(userId), StoreId = storeId } };
+            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
-                new Promotion
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Test Promotion",
-                    StoreId = storeId,
-                    IsDeleted = false,
-                    StartDate = DateTime.UtcNow.AddDays(-1),
-                    EndDate = DateTime.UtcNow.AddDays(1),
-                    PromotionType = PromotionType.FixedAmount,
-                    IsActive = true,
-                    PromotionItemConditions = new List<PromotionItemCondition>(),
-                    Coupons = new List<Coupon>()
-                }
+                CreateValidPromotion(storeId)
             };
 
             SetupValidUser(userId, storeId, user, userStores);
@@ -274,35 +194,16 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new List<UserStore> { new UserStore { UserId = Guid.Parse(userId), StoreId = storeId } };
+            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
+
+            var aPromotion = CreateValidPromotion(storeId);
+            aPromotion.Title = "A Promotion";
+            var zPromotion = CreateValidPromotion(storeId);
+            zPromotion.Title = "Z Promotion";
             var promotions = new List<Promotion>
             {
-                new Promotion
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "A Promotion",
-                    StoreId = storeId,
-                    IsDeleted = false,
-                    StartDate = DateTime.UtcNow.AddDays(-1),
-                    EndDate = DateTime.UtcNow.AddDays(1),
-                    PromotionType = PromotionType.FixedAmount,
-                    IsActive = true,
-                    PromotionItemConditions = new List<PromotionItemCondition>(),
-                    Coupons = new List<Coupon>()
-                },
-                new Promotion
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Z Promotion",
-                    StoreId = storeId,
-                    IsDeleted = false,
-                    StartDate = DateTime.UtcNow.AddDays(-1),
-                    EndDate = DateTime.UtcNow.AddDays(1),
-                    PromotionType = PromotionType.FixedAmount,
-                    IsActive = true,
-                    PromotionItemConditions = new List<PromotionItemCondition>(),
-                    Coupons = new List<Coupon>()
-                }
+                aPromotion,
+                zPromotion
             };
 
             SetupValidUser(userId, storeId, user, userStores);
@@ -338,35 +239,16 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new List<UserStore> { new UserStore { UserId = Guid.Parse(userId), StoreId = storeId } };
+            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
+
+            var firstPromotion = CreateValidPromotion(storeId);
+            firstPromotion.Title = "First Promotion";
+            var secondPromotion = CreateValidPromotion(storeId);
+            secondPromotion.Title = "Second Promotion";
             var promotions = new List<Promotion>
             {
-                new Promotion
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "First Promotion",
-                    StoreId = storeId,
-                    IsDeleted = false,
-                    StartDate = DateTime.UtcNow.AddDays(-1),
-                    EndDate = DateTime.UtcNow.AddDays(1),
-                    PromotionType = PromotionType.FixedAmount,
-                    IsActive = true,
-                    PromotionItemConditions = new List<PromotionItemCondition>(),
-                    Coupons = new List<Coupon>()
-                },
-                new Promotion
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Second Promotion",
-                    StoreId = storeId,
-                    IsDeleted = false,
-                    StartDate = DateTime.UtcNow.AddDays(-1),
-                    EndDate = DateTime.UtcNow.AddDays(1),
-                    PromotionType = PromotionType.FixedAmount,
-                    IsActive = true,
-                    PromotionItemConditions = new List<PromotionItemCondition>(),
-                    Coupons = new List<Coupon>()
-                }
+                firstPromotion,
+                secondPromotion
             };
 
             SetupValidUser(userId, storeId, user, userStores);
@@ -410,22 +292,10 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new List<UserStore> { new UserStore { UserId = Guid.Parse(userId), StoreId = storeId } };
+            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
-                new Promotion
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Test Promotion",
-                    StoreId = storeId,
-                    IsDeleted = false,
-                    StartDate = DateTime.UtcNow.AddDays(1), // Future date for "Incomming" status
-                    EndDate = DateTime.UtcNow.AddDays(2),
-                    PromotionType = PromotionType.Percentage,
-                    IsActive = false, // For "UnAvailable" status
-                    PromotionItemConditions = new List<PromotionItemCondition>(),
-                    Coupons = new List<Coupon>()
-                }
+                CreateValidPromotion(storeId)
             };
 
             SetupValidUser(userId, storeId, user, userStores);
@@ -473,23 +343,10 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new List<UserStore> { new UserStore { UserId = Guid.Parse(userId), StoreId = storeId } };
+            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
-                new Promotion
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Test Promotion",
-                    StoreId = storeId,
-                    IsDeleted = false,
-                    StartDate = DateTime.UtcNow.AddDays(-1),
-                    EndDate = DateTime.UtcNow.AddDays(1),
-                    PromotionType = PromotionType.FixedAmount,
-                    DiscountValue = 10,
-                    IsActive = true,
-                    PromotionItemConditions = new List<PromotionItemCondition>(),
-                    Coupons = new List<Coupon>()
-                }
+                CreateValidPromotion(storeId)
             };
 
             SetupValidUser(userId, storeId, user, userStores);
@@ -529,22 +386,10 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new List<UserStore> { new UserStore { UserId = Guid.Parse(userId), StoreId = storeId } };
+            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
-                new Promotion
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Test Promotion",
-                    StoreId = storeId,
-                    IsDeleted = false,
-                    StartDate = DateTime.UtcNow.AddDays(-1),
-                    EndDate = DateTime.UtcNow.AddDays(1),
-                    PromotionType = PromotionType.FixedAmount,
-                    IsActive = true,
-                    PromotionItemConditions = new List<PromotionItemCondition>(),
-                    Coupons = new List<Coupon>()
-                }
+                CreateValidPromotion(storeId)
             };
 
             SetupValidUser(userId, storeId, user, userStores);
@@ -579,22 +424,10 @@ namespace FOCS.Tests.Application.Services
             };
 
             var user = new User { Id = userId };
-            var userStores = new List<UserStore> { new UserStore { UserId = Guid.Parse(userId), StoreId = storeId } };
+            var userStores = new UserStore { UserId = Guid.Parse(userId), StoreId = storeId };
             var promotions = new List<Promotion>
             {
-                new Promotion
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Test Promotion",
-                    StoreId = storeId,
-                    IsDeleted = false,
-                    StartDate = DateTime.UtcNow.AddDays(-1),
-                    EndDate = DateTime.UtcNow.AddDays(1),
-                    PromotionType = PromotionType.FixedAmount,
-                    IsActive = true,
-                    PromotionItemConditions = new List<PromotionItemCondition>(),
-                    Coupons = new List<Coupon>()
-                }
+                CreateValidPromotion(storeId)
             };
 
             SetupValidUser(userId, storeId, user, userStores);
@@ -614,21 +447,6 @@ namespace FOCS.Tests.Application.Services
             // Assert
             Assert.NotNull(result);
             Assert.Single(result.Items);
-        }
-
-        private void SetupValidUser(string userId, Guid storeId, User user, List<UserStore> userStores)
-        {
-            _userManagerMock.Setup(um => um.FindByIdAsync(userId))
-                .ReturnsAsync(user);
-            _userStoreRepositoryMock.Setup(r => r.FindAsync(It.IsAny<Expression<Func<UserStore, bool>>>()))
-                .ReturnsAsync(userStores);
-        }
-
-        private void SetupPromotionQueryable(List<Promotion> promotions)
-        {
-            var promotionQueryable = promotions.AsQueryable().BuildMockDbSet();
-            _promotionRepositoryMock.Setup(r => r.AsQueryable())
-                .Returns(promotionQueryable.Object);
         }
     }
 }
