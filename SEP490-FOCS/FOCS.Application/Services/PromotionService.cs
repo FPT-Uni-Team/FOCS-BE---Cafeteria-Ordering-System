@@ -328,10 +328,9 @@ namespace FOCS.Application.Services
         private async Task ValidateUser(string userId, Guid storeId)
         {
             var user = await _userManager.FindByIdAsync(userId);
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound, Errors.FieldName.UserId);
 
             var storesOfUser = (await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(userId))).Distinct().ToList();
-
-            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound, Errors.FieldName.UserId);
             ConditionCheck.CheckCondition(storesOfUser.Select(x => x.StoreId).Contains(storeId), Errors.AuthError.UserUnauthor, Errors.FieldName.UserId);
         }
 
