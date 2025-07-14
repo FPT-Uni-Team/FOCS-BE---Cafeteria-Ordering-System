@@ -126,5 +126,22 @@ namespace FOCS.UnitTest.AdminMenuItemServiceTest
             _mapperMock.Setup(x => x.Map<MenuItem>(dto)).Returns(entity);
             _mapperMock.Setup(x => x.Map<MenuItemAdminDTO>(It.IsAny<MenuItem>())).Returns(resultDto);
         }
+
+        protected void AssertConditionException(Exception ex, string expectedMessage, string? expectedField = null)
+        {
+            Assert.NotNull(ex);
+
+            var parts = ex.Message.Split('@');
+
+            Assert.True(parts.Length >= 1, "Exception message format is invalid.");
+            Assert.Equal(expectedMessage, parts[0]);
+
+            if (expectedField != null)
+            {
+                Assert.True(parts.Length == 2, "Expected field name was not provided in exception message.");
+                Assert.Equal(expectedField, parts[1]);
+            }
+        }
+
     }
 }
