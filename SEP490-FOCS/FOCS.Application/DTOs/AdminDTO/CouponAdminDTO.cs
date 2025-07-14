@@ -1,5 +1,4 @@
 ﻿using FOCS.Common.Enums;
-using FOCS.Common.Models;
 using System.Text.Json.Serialization;
 
 namespace FOCS.Application.DTOs.AdminServiceDTO
@@ -36,7 +35,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
             get
             {
                 var now = DateTime.UtcNow;
-                if (!IsActive || CountUsed >= MaxUsage)
+                if (!IsActive)
                     return CouponStatus.UnAvailable;
                 if (now < StartDate)
                     return CouponStatus.Incomming;
@@ -49,11 +48,11 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         [JsonPropertyName("max_usage")]
         public int MaxUsage { get; set; }
 
-        [JsonPropertyName("count_used")]
-        public int CountUsed { get; set; }
+        //[JsonPropertyName("count_used")]
+        //public int CountUsed { get; set; }
 
-        [JsonPropertyName("max_usage_per_user")]
-        public int? MaxUsagePerUser { get; set; }
+        //[JsonPropertyName("max_usage_per_user")]
+        //public int? MaxUsagePerUser { get; set; }
 
         [JsonPropertyName("accept_for_items")]
         public List<string>? AcceptForItems { get; set; }
