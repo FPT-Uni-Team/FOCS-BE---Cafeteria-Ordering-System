@@ -1,15 +1,7 @@
-﻿using AutoMapper;
-using FOCS.Application.DTOs.AdminServiceDTO;
-using FOCS.Application.Services;
-using FOCS.Common.Enums;
-using FOCS.Common.Interfaces;
+﻿using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Common.Models;
-using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
-using Microsoft.AspNetCore.Identity;
-using MockQueryable;
-using MockQueryable.Moq;
 using Moq;
 using System.Linq.Expressions;
 

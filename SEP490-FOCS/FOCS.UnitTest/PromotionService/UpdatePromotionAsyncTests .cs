@@ -1,17 +1,10 @@
-﻿using AutoMapper;
-using FOCS.Application.DTOs.AdminServiceDTO;
-using FOCS.Application.Services;
+﻿using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Common.Enums;
-using FOCS.Common.Exceptions;
-using FOCS.Common.Interfaces;
-using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
-using Microsoft.AspNetCore.Identity;
 using MockQueryable.Moq;
 using Moq;
 using System.Linq.Expressions;
-using Xunit;
 
 namespace FOCS.Tests.Application.Services
 {
