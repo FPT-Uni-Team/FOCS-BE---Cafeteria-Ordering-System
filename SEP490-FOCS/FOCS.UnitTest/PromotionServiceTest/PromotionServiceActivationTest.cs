@@ -3,9 +3,9 @@ using FOCS.Order.Infrastucture.Entities;
 using Moq;
 using System.Linq.Expressions;
 
-namespace FOCS.Tests.Application.Services
+namespace FOCS.UnitTest.PromotionServiceTest
 {
-    public class PromotionServiceActivationTests : PromotionServiceTestBase
+    public class PromotionServiceActivationTest : PromotionServiceTestBase
     {
         [Fact]
         public async Task ActivatePromotionAsync_WhenPromotionNotFound_ReturnsFalse()

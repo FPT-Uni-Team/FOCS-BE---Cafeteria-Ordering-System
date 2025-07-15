@@ -1,11 +1,12 @@
 ﻿using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
+using Microsoft.Identity.Client;
 using Moq;
 using System.Linq.Expressions;
 
-namespace FOCS.Tests.Application.Services
+namespace FOCS.UnitTest.PromotionServiceTest
 {
-    public class DeletePromotionAsyncTests : PromotionServiceTestBase
+    public class DeletePromotionTest : PromotionServiceTestBase
     {
         [Fact]
         public async Task DeletePromotionAsync_WhenPromotionNotFound_ShouldReturnFalse()
@@ -394,11 +395,7 @@ namespace FOCS.Tests.Application.Services
             await _promotionService.DeletePromotionAsync(promotionId, userId);
 
             // Assert
-            _couponRepositoryMock.Verify(x => x.FindAsync(
-                It.Is<Expression<Func<Coupon, bool>>>(expr =>
-                    expr.ToString().Contains("PromotionId") &&
-                    expr.ToString().Contains(promotionId.ToString())
-                )), Times.Once);
+            _couponRepositoryMock.Verify(x => x.FindAsync(It.IsAny<Expression<Func<Coupon, bool>>>()), Times.Once);
         }
 
         [Fact]

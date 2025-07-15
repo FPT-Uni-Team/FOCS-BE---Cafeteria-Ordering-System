@@ -6,7 +6,7 @@ using FOCS.Order.Infrastucture.Entities;
 using Moq;
 using System.Linq.Expressions;
 
-namespace FOCS.Tests.Application.Services
+namespace FOCS.UnitTest.PromotionServiceTest
 {
     public class GetPromotionTest : PromotionServiceTestBase
     {
