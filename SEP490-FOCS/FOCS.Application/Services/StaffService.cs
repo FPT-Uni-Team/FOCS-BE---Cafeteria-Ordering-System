@@ -200,6 +200,101 @@ namespace FOCS.Application.Services
         }
         #endregion
 
+        #region CRUD Manager
+        public async Task<StaffProfileDTO> CreateManagerAsync(RegisterRequest request, string storeId, string managerId)
+        {
+            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid),
+                                                    Errors.Common.InvalidGuidFormat,
+                                                    Errors.FieldName.StoreId);
+            var store = await _storeRepository.GetByIdAsync(storeIdGuid);
+            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, Errors.FieldName.StoreId);
+
+            var manager = new User
+            {
+                Email = request.Email,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                UserName = request.Email,
+                PhoneNumber = request.Phone
+            };
+
+            var result = await _userManager.CreateAsync(manager, request.Password);
+            ConditionCheck.CheckCondition(result.Succeeded,
+                    string.Join("; ", result.Errors.Select(e => e.Description)));
+
+            await _userManager.AddToRoleAsync(manager, Roles.Manager);
+
+            var newUserStore = new UserStoreDTO
+            {
+                Id = Guid.NewGuid(),
+                UserId = Guid.Parse(manager.Id),
+                StoreId = storeIdGuid,
+                BlockReason = null,
+                JoinDate = DateTime.UtcNow,
+                Status = Common.Enums.UserStoreStatus.Active
+            };
+
+            await _userStoreRepository.AddAsync(_mapper.Map<UserStore>(newUserStore));
+            await _userStoreRepository.SaveChangesAsync();
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(manager);
+
+            await _emailService.SendEmailConfirmationAsync(manager.Email, token);
+
+            return _mapper.Map<StaffProfileDTO>(manager);
+        }
+
+        public async Task<PagedResult<StaffProfileDTO>> GetManagerListAsync(UrlQueryParameters query, string storeId)
+        {
+            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid),
+                                                    Errors.Common.InvalidGuidFormat,
+                                                    Errors.FieldName.StoreId);
+            var userStores = await _userStoreRepository.FindAsync(us => us.StoreId == storeIdGuid &&
+                                                                       us.Status == Common.Enums.UserStoreStatus.Active);
+            var userIds = userStores.Select(us => us.UserId.ToString()).ToList();
+
+            var allUsers = _userManager.Users.Where(u => u.IsActive && !u.IsDeleted && userIds.Contains(u.Id)).ToList();
+
+            var staff = new List<StaffProfileDTO>();
+            foreach (var user in allUsers)
+            {
+                if (await _userManager.IsInRoleAsync(user, Roles.Manager))
+                {
+                    var dto = _mapper.Map<StaffProfileDTO>(user);
+                    dto.Roles = await _userManager.GetRolesAsync(user);
+                    staff.Add(dto);
+                }
+            }
+
+            var staffQuery = staff.AsQueryable();
+
+            staffQuery = ApplyFilters(staffQuery, query);
+            staffQuery = ApplySearch(staffQuery, query);
+            staffQuery = ApplySort(staffQuery, query);
+
+            var total = staffQuery.Count();
+            var items = staffQuery
+                .Skip((query.Page - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .ToList();
+
+            return new PagedResult<StaffProfileDTO>(items, total, query.Page, query.PageSize);
+        }
+
+        public async Task<bool> DeleteManagerAsync(string staffId, string managerId)
+        {
+            var staff = await ValidatePermissionAsync(staffId, managerId, true);
+
+            staff.IsActive = false;
+            staff.IsDeleted = true;
+            staff.UpdatedAt = DateTime.UtcNow;
+            staff.UpdatedBy = staffId;
+
+            await _userManager.UpdateAsync(staff);
+            return true;
+        }
+        #endregion
+
         #region Private Helper Methods
 
         private async Task<User> ValidatePermissionAsync(string staffId, string managerId, bool checkAdmin = false)
