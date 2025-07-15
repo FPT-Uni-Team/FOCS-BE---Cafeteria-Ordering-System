@@ -181,6 +181,18 @@ namespace FOCS.Application.Services
             return true;
         }
 
+        public async Task<bool> ChangeStaffPasswordAsync(ChangeStaffPasswordRequest request, string managerId)
+        {
+            var staff = await ValidatePermissionAsync(request.StaffId, managerId, checkStaff: true);
+
+            await _userManager.RemovePasswordAsync(staff);
+            var changePasswordResult = await _userManager.AddPasswordAsync(staff, request.NewPassword);
+            ConditionCheck.CheckCondition(changePasswordResult.Succeeded,
+                string.Join("; ", changePasswordResult.Errors.Select(e => e.Description)));
+
+            return true;
+        }
+
         public async Task<bool> AddStaffRoleAsync(string role, string staffId, string managerId)
         {
             var staff = await ValidatePermissionAsync(staffId, managerId);
