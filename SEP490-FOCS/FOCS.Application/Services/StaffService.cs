@@ -130,7 +130,7 @@ namespace FOCS.Application.Services
 
         public async Task<StaffProfileDTO> UpdateStaffProfileAsync(StaffProfileDTO dto, string staffId, string managerId)
         {
-            var staff = await ValidatePermissionAsync(staffId, managerId);
+            var staff = await ValidatePermissionAsync(staffId, managerId, checkStaff: true);
 
             dto.Email = staff.Email;
             _mapper.Map(dto, staff);
@@ -146,7 +146,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> ActiveStaffAsync(string staffId, string managerId)
         {
-            var staff = await ValidatePermissionAsync(staffId, managerId);
+            var staff = await ValidatePermissionAsync(staffId, managerId, checkStaff: true);
 
             staff.IsActive = true;
             staff.UpdatedAt = DateTime.UtcNow;
@@ -158,7 +158,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> DeactiveStaffAsync(string staffId, string managerId)
         {
-            var staff = await ValidatePermissionAsync(staffId, managerId);
+            var staff = await ValidatePermissionAsync(staffId, managerId, checkStaff: true);
 
             staff.IsActive = false;
             staff.UpdatedAt = DateTime.UtcNow;
@@ -170,7 +170,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> DeleteStaffAsync(string staffId, string managerId)
         {
-            var staff = await ValidatePermissionAsync(staffId, managerId);
+            var staff = await ValidatePermissionAsync(staffId, managerId, checkStaff: true);
 
             staff.IsActive = false;
             staff.IsDeleted = true;
@@ -283,7 +283,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> DeleteManagerAsync(string staffId, string managerId)
         {
-            var staff = await ValidatePermissionAsync(staffId, managerId, true);
+            var staff = await ValidatePermissionAsync(staffId, managerId, checkAdmin: true);
 
             staff.IsActive = false;
             staff.IsDeleted = true;
@@ -297,10 +297,15 @@ namespace FOCS.Application.Services
 
         #region Private Helper Methods
 
-        private async Task<User> ValidatePermissionAsync(string staffId, string managerId, bool checkAdmin = false)
+        private async Task<User> ValidatePermissionAsync(string staffId, string managerId, bool checkStaff = false, bool checkAdmin = false)
         {
             var staff = await _userManager.FindByIdAsync(staffId);
             ConditionCheck.CheckCondition(staff != null, Errors.Common.UserNotFound, Errors.FieldName.UserId);
+            if (checkStaff)
+            {
+                ConditionCheck.CheckCondition(await _userManager.IsInRoleAsync(staff, Roles.Staff) ||
+                    await _userManager.IsInRoleAsync(staff, Roles.KitchenStaff), Errors.AuthError.UserUnauthor);
+            }
 
             var manager = await _userManager.FindByIdAsync(managerId);
             ConditionCheck.CheckCondition(manager != null, Errors.AuthError.UserUnauthor);
