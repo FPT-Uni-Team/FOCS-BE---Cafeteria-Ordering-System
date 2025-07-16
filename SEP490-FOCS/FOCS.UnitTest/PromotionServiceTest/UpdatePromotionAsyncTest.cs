@@ -6,9 +6,9 @@ using MockQueryable.Moq;
 using Moq;
 using System.Linq.Expressions;
 
-namespace FOCS.Tests.Application.Services
+namespace FOCS.UnitTest.PromotionServiceTest
 {
-    public class UpdatePromotionAsyncTests : PromotionServiceTestBase
+    public class UpdatePromotionAsyncTest : PromotionServiceTestBase
     {
         [Fact]
         public async Task UpdatePromotionAsync_WhenPromotionIdDoesNotMatchDtoId_ShouldThrowException()

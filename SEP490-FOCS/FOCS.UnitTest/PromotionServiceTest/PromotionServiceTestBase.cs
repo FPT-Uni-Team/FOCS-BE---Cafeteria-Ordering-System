@@ -11,7 +11,7 @@ using MockQueryable.Moq;
 using Moq;
 using System.Linq.Expressions;
 
-namespace FOCS.Tests.Application.Services
+namespace FOCS.UnitTest.PromotionServiceTest
 {
     public class PromotionServiceTestBase
     {
