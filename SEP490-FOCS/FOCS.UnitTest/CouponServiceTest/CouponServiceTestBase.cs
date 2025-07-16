@@ -1,13 +1,14 @@
 ﻿using AutoMapper;
+using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using MockQueryable.Moq;
 using Moq;
 using System.Linq.Expressions;
-using MockQueryable.Moq;
 
 namespace FOCS.UnitTest.CouponServiceTest
 {
@@ -47,6 +48,15 @@ namespace FOCS.UnitTest.CouponServiceTest
                 _promotionRepositoryMock.Object,
                 _mapperMock.Object
             );
+        }
+
+        protected void SetupCouponQueryable(List<Coupon> coupons)
+        {
+            _couponRepositoryMock.Setup(r => r.AsQueryable())
+                .Returns(coupons.AsQueryable().BuildMockDbSet().Object);
+
+            _mapperMock.Setup(m => m.Map<List<CouponAdminDTO>>(It.IsAny<List<Coupon>>()))
+                .Returns((List<Coupon> src) => src.Select(c => new CouponAdminDTO { Code = c.Code }).ToList());
         }
 
         protected void SetupValidUser(string userId, User user, List<UserStore>? userStores = null)
@@ -99,5 +109,34 @@ namespace FOCS.UnitTest.CouponServiceTest
                 Assert.Equal(expectedField, parts[1]);
             }
         }
+
+        protected Coupon SetupNonOngoingCoupon(Guid id, out DateTime now, string storeId, Guid? promoId = null)
+        {
+            now = DateTime.UtcNow;
+            var coupon = new Coupon
+            {
+                Id = id,
+                IsDeleted = false,
+                StartDate = now.AddDays(1),
+                EndDate = now.AddDays(5),
+                PromotionId = promoId,
+                StoreId = Guid.Parse(storeId)
+            };
+            _couponRepositoryMock.Setup(r => r.GetByIdAsync(id)).ReturnsAsync(coupon);
+            SetupCouponQueryable(new List<Coupon> { coupon });
+            return coupon;
+        }
+
+        protected async Task AssertPromotionExceptionAsync(Guid couponId, CouponAdminDTO dto, string expectedError, string expectedField, List<Promotion> promos)
+        {
+            _promotionRepositoryMock
+              .Setup(r => r.AsQueryable())
+              .Returns(promos.AsQueryable().BuildMockDbSet().Object);
+
+            var ex = await Assert.ThrowsAsync<Exception>(
+                () => _adminCouponService.UpdateCouponAsync(couponId, dto, "user", dto.StoreId));
+            AssertConditionException(ex, expectedError, expectedField);
+        }
+
     }
 }

@@ -8,7 +8,7 @@ using FOCS.UnitTest.CouponServiceTest;
 using MockQueryable.Moq;
 using Moq;
 
-namespace FOCS.UnitTest.AdminCouponServiceTest
+namespace FOCS.UnitTest.CouponServiceTest
 {
     public class CreateCouponTests : CouponServiceTestBase
     {
