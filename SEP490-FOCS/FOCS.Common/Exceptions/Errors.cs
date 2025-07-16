@@ -32,6 +32,7 @@ namespace FOCS.Common.Exceptions
             public const string DiscountValue = "discount_value";
             public const string MaxDiscountValue = "max_discount_value";
             public const string PromotionItemCondition = "promotion_item_condition";
+            public const string Role = "role";
         }
 
         public static class SystemError

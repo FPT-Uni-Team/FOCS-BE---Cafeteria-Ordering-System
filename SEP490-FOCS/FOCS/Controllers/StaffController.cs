@@ -44,7 +44,13 @@ namespace FOCS.Controllers
         public async Task<StaffProfileDTO> UpdateStaffProfileAsync(StaffProfileDTO dto, string staffId)
         {
             return await _staffService.UpdateStaffProfileAsync(dto, staffId, UserId);
-        }   
+        }
+
+        [HttpPut("{staffId}")]
+        public async Task<bool> ChangeStaffPasswordAsync(ChangeStaffPasswordRequest request)
+        {
+            return await _staffService.ChangeStaffPasswordAsync(request, UserId);
+        }
 
         [HttpDelete("{staffId}")]
         public async Task<IActionResult> DeleteStaffProfileAsync(string staffId)

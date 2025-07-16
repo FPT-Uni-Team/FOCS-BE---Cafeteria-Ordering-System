@@ -11,8 +11,12 @@ namespace FOCS.Application.Services.Interface
         Task<PagedResult<StaffProfileDTO>> GetStaffListAsync(UrlQueryParameters query, string storeId);
         Task<StaffProfileDTO> GetStaffProfileAsync(string staffId, string managerId);
         Task<StaffProfileDTO> UpdateStaffProfileAsync(StaffProfileDTO dto, string staffId, string managerId);
+        Task<bool> ChangeStaffPasswordAsync(ChangeStaffPasswordRequest request, string managerId);
         Task<bool> DeleteStaffAsync(string staffId, string managerId);
         Task<bool> AddStaffRoleAsync(string role, string staffId, string managerId);
         Task<bool> RemoveStaffRoleAsync(string role, string staffId, string managerId);
+        Task<StaffProfileDTO> CreateManagerAsync(RegisterRequest request, string StoreId, string managerId);
+        Task<PagedResult<StaffProfileDTO>> GetManagerListAsync(UrlQueryParameters query, string storeId);
+        Task<bool> DeleteManagerAsync(string staffId, string managerId);
     }
 }
