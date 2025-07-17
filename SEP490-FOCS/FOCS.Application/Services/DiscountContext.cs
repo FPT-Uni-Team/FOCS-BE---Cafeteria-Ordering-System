@@ -26,7 +26,7 @@ namespace FOCS.Application.Services
             _promotionService = promotionService;
         }
 
-        public async Task<DiscountResultDTO> CalculateDiscountAsync(CreateOrderRequest order, string? couponCode, DiscountStrategy discountStrategy)
+        public async Task<DiscountResultDTO> CalculateDiscountAsync(ApplyDiscountOrderRequest order, string? couponCode, DiscountStrategy discountStrategy)
         {
             IDiscountStrategyService strategyInstance = discountStrategy switch
             {

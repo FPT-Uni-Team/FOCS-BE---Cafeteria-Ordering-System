@@ -4,6 +4,23 @@ namespace FOCS.Realtime.Hubs
 {
     public class OrderHub : Hub
     {
+
+        // Called when a client connects
+        public override async Task OnConnectedAsync()
+        {
+            // Optional: add to default group (e.g., cashier group)
+            await Groups.AddToGroupAsync(Context.ConnectionId, "cashiers");
+            await base.OnConnectedAsync();
+        }
+
+        // Called when a client disconnects
+        public override async Task OnDisconnectedAsync(Exception exception)
+        {
+            // Optional: remove from group
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "cashiers");
+            await base.OnDisconnectedAsync(exception);
+        }
+
         //Send notify to all client
         public async Task BroadcastOrderWrapUpdate(object orderWrap)
         {

@@ -17,15 +17,18 @@ namespace FOCS.Common.Interfaces
 
         Task<OrderDTO> GetOrderByCodeAsync(string orderCode);
 
-        Task<DiscountResultDTO> VerifyCouponAsGuestAsync(string couponCode, Guid storeId);
+        Task<DiscountResultDTO> ApplyDiscountForOrder(ApplyDiscountOrderRequest request, string userId);
+
 
         #endregion
 
         #region user
 
-        Task<IEnumerable<OrderSummaryDTO>> GetUserOrdersAsync(Guid userId);
 
         Task<OrderDTO> GetUserOrderDetailAsync(Guid userId, Guid orderId);
+        Task<PagedResult<OrderDTO>> GetListOrders(UrlQueryParameters queryParameters, string storeId, string userId);
+        Task<bool> CancelOrderAsync(Guid orderId, string userId, string storeId);
+        Task<bool> DeleteOrderAsync(Guid orderId, string userId, string storeId);
 
         #endregion
     }

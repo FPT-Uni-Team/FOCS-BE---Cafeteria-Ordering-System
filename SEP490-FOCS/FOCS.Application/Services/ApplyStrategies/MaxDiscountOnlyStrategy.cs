@@ -30,7 +30,7 @@ namespace FOCS.Application.Services.ApplyStrategy
             _pricingService = pricingService;
         }
 
-        public async Task<DiscountResultDTO> ApplyDiscountAsync(CreateOrderRequest order, string? couponCode = null)
+        public async Task<DiscountResultDTO> ApplyDiscountAsync(ApplyDiscountOrderRequest order, string? couponCode = null)
         {
             var discountApplyCoupon = await _couponOnlyStrategy.ApplyDiscountAsync(order, couponCode);
             var discountApplyPromotion = await _promotionOnlyStrategy.ApplyDiscountAsync(order, couponCode);

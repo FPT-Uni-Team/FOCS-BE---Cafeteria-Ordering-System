@@ -39,84 +39,15 @@ namespace FOCS.Application.Services
         #region CRUD Staff
         public async Task<StaffProfileDTO> CreateStaffAsync(RegisterRequest request, string storeId, string managerId)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid),
-                                                    Errors.Common.InvalidGuidFormat,
-                                                    Errors.FieldName.StoreId);
-            var store = await _storeRepository.GetByIdAsync(storeIdGuid);
-            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, Errors.FieldName.StoreId);
-
-            var staff = new User
-            {
-                Email = request.Email,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                UserName = request.Email,
-                PhoneNumber = request.Phone,
-                IsActive = true
-            };
-
-            var result = await _userManager.CreateAsync(staff, request.Password);
-            ConditionCheck.CheckCondition(result.Succeeded,
-                    string.Join("; ", result.Errors.Select(e => e.Description)));
-
+            var staff = await CreateStaffWithoutRoleAsync(request, storeId, managerId);
             await _userManager.AddToRoleAsync(staff, Roles.Staff);
-
-            var newUserStore = new UserStoreDTO
-            {
-                Id = Guid.NewGuid(),
-                UserId = Guid.Parse(staff.Id),
-                StoreId = storeIdGuid,
-                BlockReason = null,
-                JoinDate = DateTime.UtcNow,
-                Status = Common.Enums.UserStoreStatus.Active
-            };
-
-            await _userStoreRepository.AddAsync(_mapper.Map<UserStore>(newUserStore));
-            await _userStoreRepository.SaveChangesAsync();
-
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(staff);
-
-            await _emailService.SendEmailConfirmationAsync(staff.Email, token);
-
             return _mapper.Map<StaffProfileDTO>(staff);
         }
 
         public async Task<PagedResult<StaffProfileDTO>> GetStaffListAsync(UrlQueryParameters query, string storeId)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid),
-                                                    Errors.Common.InvalidGuidFormat,
-                                                    Errors.FieldName.StoreId);
-            var userStores = await _userStoreRepository.FindAsync(us => us.StoreId == storeIdGuid &&
-                                                                       us.Status == Common.Enums.UserStoreStatus.Active);
-            var userIds = userStores.Select(us => us.UserId.ToString()).ToList();
-
-            var allUsers = _userManager.Users.Where(u => u.IsActive && !u.IsDeleted && userIds.Contains(u.Id)).ToList();
-
-            var staff = new List<StaffProfileDTO>();
-            foreach (var user in allUsers)
-            {
-                if (await _userManager.IsInRoleAsync(user, Roles.Staff) || 
-                    await _userManager.IsInRoleAsync(user, Roles.KitchenStaff))
-                {
-                    var dto = _mapper.Map<StaffProfileDTO>(user);
-                    dto.Roles = await _userManager.GetRolesAsync(user);
-                    staff.Add(dto);
-                }
-            }
-
-            var staffQuery = staff.AsQueryable();
-
-            staffQuery = ApplyFilters(staffQuery, query);
-            staffQuery = ApplySearch(staffQuery, query);
-            staffQuery = ApplySort(staffQuery, query);
-
-            var total = staffQuery.Count();
-            var items = staffQuery
-                .Skip((query.Page - 1) * query.PageSize)
-                .Take(query.PageSize)
-                .ToList();
-
-            return new PagedResult<StaffProfileDTO>(items, total, query.Page, query.PageSize);
+            var roleToGet = new List<string> { Roles.Staff, Roles.KitchenStaff };
+            return await GetStaffListByRoleAsync(query, storeId, roleToGet);
         }
 
         public async Task<StaffProfileDTO> GetStaffProfileAsync(string staffId, string managerId)
@@ -171,14 +102,7 @@ namespace FOCS.Application.Services
         public async Task<bool> DeleteStaffAsync(string staffId, string managerId)
         {
             var staff = await ValidatePermissionAsync(staffId, managerId, checkStaff: true);
-
-            staff.IsActive = false;
-            staff.IsDeleted = true;
-            staff.UpdatedAt = DateTime.UtcNow;
-            staff.UpdatedBy = staffId;
-
-            await _userManager.UpdateAsync(staff);
-            return true;
+            return await DeleteStaffAsync(staff, managerId);
         }
 
         public async Task<bool> ChangeStaffPasswordAsync(ChangeStaffPasswordRequest request, string managerId)
@@ -215,31 +139,62 @@ namespace FOCS.Application.Services
         #region CRUD Manager
         public async Task<StaffProfileDTO> CreateManagerAsync(RegisterRequest request, string storeId, string managerId)
         {
+            var manager = await CreateStaffWithoutRoleAsync(request, storeId, managerId);
+            await _userManager.AddToRoleAsync(manager, Roles.Staff);
+            return _mapper.Map<StaffProfileDTO>(manager);
+        }
+
+        public async Task<PagedResult<StaffProfileDTO>> GetManagerListAsync(UrlQueryParameters query, string storeId)
+        {
+            var roleToGet = new List<string> { Roles.Manager };
+            return await GetStaffListByRoleAsync(query, storeId, roleToGet);
+        }
+
+        public async Task<bool> DeleteManagerAsync(string managerId, string adminId)
+        {
+            var staff = await ValidatePermissionAsync(managerId, adminId, checkAdmin: true);
+            return await DeleteStaffAsync(staff, adminId);
+        }
+        #endregion
+
+        #region Private Helper Methods
+        public async Task<User> CreateStaffWithoutRoleAsync(RegisterRequest request, string storeId, string managerId)
+        {
+            //check valid store
             ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid),
                                                     Errors.Common.InvalidGuidFormat,
                                                     Errors.FieldName.StoreId);
             var store = await _storeRepository.GetByIdAsync(storeIdGuid);
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, Errors.FieldName.StoreId);
 
-            var manager = new User
+            //check valid manager
+            var managerStoreId = await _userStoreRepository.AsQueryable()
+                .Where(us => us.UserId.ToString().Equals(managerId))
+                .ToListAsync();
+            ConditionCheck.CheckCondition(
+                !managerStoreId.Equals(null) && managerStoreId.Select(x => x.StoreId).Contains(storeIdGuid),
+                Errors.AuthError.UserUnauthor);
+
+            //create staff
+            var staff = new User
             {
                 Email = request.Email,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 UserName = request.Email,
-                PhoneNumber = request.Phone
+                PhoneNumber = request.Phone,
+                IsActive = true
             };
 
-            var result = await _userManager.CreateAsync(manager, request.Password);
+            var result = await _userManager.CreateAsync(staff, request.Password);
             ConditionCheck.CheckCondition(result.Succeeded,
                     string.Join("; ", result.Errors.Select(e => e.Description)));
 
-            await _userManager.AddToRoleAsync(manager, Roles.Manager);
-
+            //create UserStore
             var newUserStore = new UserStoreDTO
             {
                 Id = Guid.NewGuid(),
-                UserId = Guid.Parse(manager.Id),
+                UserId = Guid.Parse(staff.Id),
                 StoreId = storeIdGuid,
                 BlockReason = null,
                 JoinDate = DateTime.UtcNow,
@@ -249,14 +204,25 @@ namespace FOCS.Application.Services
             await _userStoreRepository.AddAsync(_mapper.Map<UserStore>(newUserStore));
             await _userStoreRepository.SaveChangesAsync();
 
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(manager);
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(staff);
 
-            await _emailService.SendEmailConfirmationAsync(manager.Email, token);
+            await _emailService.SendEmailConfirmationAsync(staff.Email, token);
 
-            return _mapper.Map<StaffProfileDTO>(manager);
+            return staff;
         }
 
-        public async Task<PagedResult<StaffProfileDTO>> GetManagerListAsync(UrlQueryParameters query, string storeId)
+        public async Task<bool> DeleteStaffAsync(User staff, string managerId)
+        {
+            staff.IsActive = false;
+            staff.IsDeleted = true;
+            staff.UpdatedAt = DateTime.UtcNow;
+            staff.UpdatedBy = managerId;
+
+            await _userManager.UpdateAsync(staff);
+            return true;
+        }
+
+        public async Task<PagedResult<StaffProfileDTO>> GetStaffListByRoleAsync(UrlQueryParameters query, string storeId, List<string> RolesToGet)
         {
             ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid),
                                                     Errors.Common.InvalidGuidFormat,
@@ -268,12 +234,14 @@ namespace FOCS.Application.Services
             var allUsers = _userManager.Users.Where(u => u.IsActive && !u.IsDeleted && userIds.Contains(u.Id)).ToList();
 
             var staff = new List<StaffProfileDTO>();
+
             foreach (var user in allUsers)
             {
-                if (await _userManager.IsInRoleAsync(user, Roles.Manager))
+                var userRoles = await _userManager.GetRolesAsync(user);
+                if (userRoles.Any(role => RolesToGet.Contains(role)))
                 {
                     var dto = _mapper.Map<StaffProfileDTO>(user);
-                    dto.Roles = await _userManager.GetRolesAsync(user);
+                    dto.Roles = userRoles;
                     staff.Add(dto);
                 }
             }
@@ -292,22 +260,6 @@ namespace FOCS.Application.Services
 
             return new PagedResult<StaffProfileDTO>(items, total, query.Page, query.PageSize);
         }
-
-        public async Task<bool> DeleteManagerAsync(string staffId, string managerId)
-        {
-            var staff = await ValidatePermissionAsync(staffId, managerId, checkAdmin: true);
-
-            staff.IsActive = false;
-            staff.IsDeleted = true;
-            staff.UpdatedAt = DateTime.UtcNow;
-            staff.UpdatedBy = staffId;
-
-            await _userManager.UpdateAsync(staff);
-            return true;
-        }
-        #endregion
-
-        #region Private Helper Methods
 
         private async Task<User> ValidatePermissionAsync(string staffId, string managerId, bool checkStaff = false, bool checkAdmin = false)
         {

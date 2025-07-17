@@ -11,6 +11,7 @@ namespace FOCS.Realtime.Hubs
         public class Method
         {
             public const string ReceiveOrderWrapUpdate = "ReceiveOrderWrapUpdate";
+            public const string OrderCreated = "Order Created";
         }
     }
 }
