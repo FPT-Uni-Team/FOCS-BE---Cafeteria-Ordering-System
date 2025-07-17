@@ -34,7 +34,6 @@ namespace FOCS.Application.Services
             _mapper = mapper;
             _emailService = emailService;
             _storeRepository = storeRepository;
-            _userStoreRepository = userStoreRepository;
         }
 
         #region CRUD Staff
@@ -52,7 +51,8 @@ namespace FOCS.Application.Services
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 UserName = request.Email,
-                PhoneNumber = request.Phone
+                PhoneNumber = request.Phone,
+                IsActive = true
             };
 
             var result = await _userManager.CreateAsync(staff, request.Password);
