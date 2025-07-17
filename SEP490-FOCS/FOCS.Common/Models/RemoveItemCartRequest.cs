@@ -14,5 +14,8 @@ namespace FOCS.Common.Models
 
         [JsonPropertyName("variant_id")]
         public Guid? VariantId { get; set; }
+
+        [JsonPropertyName("quantity")]
+        public int Quantity {  get; set; }
     }
 }

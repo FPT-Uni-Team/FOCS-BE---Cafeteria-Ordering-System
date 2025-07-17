@@ -13,11 +13,11 @@ namespace FOCS.Common.Constants
         public static string Cashier(Guid storeid, Guid tableId) => $"Cashier_{storeid}_{tableId}";
         public static string Admin(Guid storeid) => $"Admin_{storeid}";
 
-        public static string User(Guid storeId, Guid tableId, Guid userId) => $"User/store:{storeId}/table:{tableId}/user:{userId}";
+        public static string User(Guid storeId, Guid tableId, Guid userId) => $"storeId={storeId}&tableId={tableId}&actorId={userId}";
         
         public static class ActionHub
-        {
-            public static string UpdateCart = "Update Cart";
+        {   
+            public static string UpdateCart = "UpdateCart";
         }
     }
 

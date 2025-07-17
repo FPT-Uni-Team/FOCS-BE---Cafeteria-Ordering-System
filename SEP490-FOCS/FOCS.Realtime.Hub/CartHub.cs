@@ -13,10 +13,11 @@ namespace FOCS.Realtime.Hubs
         {
             var storeId = Context.GetHttpContext()?.Request.Query["storeId"];
             var tableId = Context.GetHttpContext()?.Request.Query["tableId"];
+            var actorId = Context.GetHttpContext()?.Request.Query["actorId"];
 
             if (!string.IsNullOrEmpty(storeId) && !string.IsNullOrEmpty(tableId))
             {
-                string group = $"store:{storeId}:table:{tableId}";
+                string group = $"storeId={storeId}&tableId={tableId}&actorId={actorId}";
                 await Groups.AddToGroupAsync(Context.ConnectionId, group);
             }
 

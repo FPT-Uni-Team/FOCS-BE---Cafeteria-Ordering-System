@@ -29,8 +29,14 @@ namespace FOCS.Application.Services
         public async Task SendToGroupAsync<THub, TData>(string group, string method, TData data)
             where THub : Hub
         {
-            var hubContext = _serviceProvider.GetRequiredService<IHubContext<THub>>();
-            await hubContext.Clients.Group(group).SendAsync(method, data);
+            try
+            {
+                var hubContext = _serviceProvider.GetRequiredService<IHubContext<THub>>();
+                await hubContext.Clients.Group(group).SendAsync(method, data);
+            } catch(Exception ex)
+            {
+                throw;
+            }
         }
     }
 }
