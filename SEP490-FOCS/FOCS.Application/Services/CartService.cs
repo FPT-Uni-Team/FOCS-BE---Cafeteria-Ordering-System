@@ -35,13 +35,15 @@ namespace FOCS.Application.Services
                            IRepository<MenuItemVariant> menuItemVariantRepository, 
                            IMapper mapper, 
                            ILogger<CartService> logger,
-                           IRedisCacheService redisCacheService)
+                           IRedisCacheService redisCacheService,
+                           IHubContext<CartHub> orderHubContext)
         {
             _menuItemVariantRepository = menuItemVariantRepository;
             _mapper = mapper;
             _logger = logger;
             _menuItemRepository = menuItemRepository;
             _redisCacheService = redisCacheService;
+            _orderHubContext = orderHubContext;
         }
 
         public async Task AddOrUpdateItemAsync(Guid tableId, string actorId, CartItemRedisModel item, string storeId)
@@ -68,7 +70,7 @@ namespace FOCS.Application.Services
             await _redisCacheService.SetAsync(key, cart, _cacheExpiry);
 
             //Send data realtime to client
-            await _orderHubContext.Clients.Group(SignalRGroups.User(Guid.Parse(storeId), tableId)).SendAsync(SignalRGroups.ActionHub.UpdateCart, cart);
+            await _orderHubContext.Clients.Group(SignalRGroups.User(Guid.Parse(storeId), tableId, Guid.Parse(actorId))).SendAsync(SignalRGroups.ActionHub.UpdateCart, cart);
         }
 
         public async Task ClearCartAsync(Guid tableId, string storeId, string actorId)
@@ -77,7 +79,7 @@ namespace FOCS.Application.Services
 
             await _redisCacheService.RemoveAsync(key);
 
-            await _orderHubContext.Clients.Group(SignalRGroups.User(Guid.Parse(actorId), tableId))
+            await _orderHubContext.Clients.Group(SignalRGroups.User(Guid.Parse(storeId), tableId, Guid.Parse(actorId)))
                                           .SendAsync(SignalRGroups.ActionHub.UpdateCart, new List<CartItemRedisModel>());
         }
 
@@ -104,7 +106,7 @@ namespace FOCS.Application.Services
                 cartItems.Remove(itemToRemove);
                 await _redisCacheService.SetAsync(key, cartItems, _cacheExpiry);
 
-                await _orderHubContext.Clients.Group(SignalRGroups.User(Guid.Parse(actorId), tableId))
+                await _orderHubContext.Clients.Group(SignalRGroups.User(Guid.Parse(actorId), tableId, Guid.Parse(actorId)))
                                               .SendAsync(SignalRGroups.ActionHub.UpdateCart, cartItems);
             }
 

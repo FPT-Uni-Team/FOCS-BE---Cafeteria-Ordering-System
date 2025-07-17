@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using MimeKit.Cryptography;
 using StackExchange.Redis;
 using System.ComponentModel.DataAnnotations;
+using System.Formats.Asn1;
 namespace FOCS.Application.Services
 {
     public class PromotionService : IPromotionService
@@ -25,6 +26,7 @@ namespace FOCS.Application.Services
         private readonly IRepository<CouponUsage> _couponUsageRepository;
         private readonly IRepository<PromotionItemCondition> _promotionItemConditionRepository;
         private readonly IRepository<Store> _storeRepository;
+        private readonly IRepository<StoreSetting> _storeSettingRepository;
         private readonly IRepository<MenuItem> _menuItemRepository;
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
@@ -39,6 +41,7 @@ namespace FOCS.Application.Services
             IRepository<CouponUsage> couponUsageRepository,
             UserManager<User> userManager,
             IMapper mapper,
+            IRepository<StoreSetting> storeSettingRepository,
             IRepository<UserStore> userStoreRepository,
             IPricingService pricingService)
         {
@@ -47,6 +50,7 @@ namespace FOCS.Application.Services
             _storeRepository = storeRepository;
             _menuItemRepository = menuItemRepository;
             _couponRepository = couponRepository;
+            _storeSettingRepository = storeSettingRepository;
             _couponUsageRepository = couponUsageRepository;
             _userManager = userManager;
             _mapper = mapper;

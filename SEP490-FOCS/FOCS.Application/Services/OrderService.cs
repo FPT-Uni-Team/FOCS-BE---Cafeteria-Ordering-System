@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Azure.Core;
+using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
 using FOCS.Common.Enums;
@@ -9,6 +10,7 @@ using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
+using FOCS.Realtime.Hubs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.Extensions.Logging;
@@ -19,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static Org.BouncyCastle.Asn1.Cmp.Challenge;
 
 namespace FOCS.Application.Services
@@ -39,11 +42,13 @@ namespace FOCS.Application.Services
         private readonly DiscountContext _discountContext;
         private readonly IStoreSettingService _storeSettingService;
 
-        private readonly ILogger<string> _logger;
+        private readonly IRealtimeService _realtimeService;
+
+        private readonly ILogger<OrderService> _logger;
         private readonly IMapper _mapper;
 
         public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository, 
-                            ILogger<string> logger, 
+                            ILogger<OrderService> logger, 
                             IRepository<OrderDetail> orderDetailRepository, 
                             IPricingService pricingService, 
                             IRepository<Coupon> couponRepository, 
@@ -54,15 +59,17 @@ namespace FOCS.Application.Services
                             IRepository<MenuItem> menuRepository, 
                             IRepository<MenuItemVariant> variantRepository, 
                             IPromotionService promotionService,
-                            IMapper mapper)
+                            IMapper mapper,
+                            IRealtimeService realtimeService)
         {
             _orderRepository = orderRepository;
+            _realtimeService = realtimeService;
             _logger = logger;
             _pricingService = pricingService;
             _orderDetailRepository = orderDetailRepository;
             _couponRepository = couponRepository;
             _storeRepository = storeRepository;
-            this._discountContext = discountContext;
+            _discountContext = discountContext;
             _menuItemRepository = menuRepository;
             _storeSettingService = storeSettingService;
             _variantRepository = variantRepository;
@@ -85,17 +92,56 @@ namespace FOCS.Application.Services
             var storeSettings = await _storeSettingService.GetStoreSettingAsync(order.StoreId, userId); 
             ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.StoreNotFound);
 
-            // Validate promotion and coupon
-            await _promotionService.IsValidPromotionCouponAsync(order.CouponCode, userId, order.StoreId);
+            if(order.DiscountResult == null)
+            {
+                order.DiscountResult = new DiscountResultDTO();
 
-            // Pricing
-            ConditionCheck.CheckCondition(!storeSettings!.DiscountStrategy.Equals(null), Errors.StoreSetting.DiscountStrategyNotConfig);
-            var discountResult = await _discountContext.CalculateDiscountAsync(order, order.CouponCode, (DiscountStrategy)storeSettings.DiscountStrategy);
-            
+                var dictPrice = order.Items
+                   .Distinct()
+                   .Select(x => (x.MenuItemId, x.VariantId))
+                   .ToDictionary();
+
+                var price = await _pricingService.CalculatePriceOfProducts(dictPrice, store!.Id.ToString());
+
+                order.DiscountResult.TotalPrice = (decimal)price;
+            }
+
             //save order and order detail
-            await SaveOrderAsync(order, discountResult, tableInStore.FirstOrDefault(), store, userId);
+            await SaveOrderAsync(order, tableInStore.FirstOrDefault(), store, userId);
 
-            return discountResult;
+            return order.DiscountResult;
+        }
+
+        public async Task<DiscountResultDTO> ApplyDiscountForOrder(ApplyDiscountOrderRequest orderRequest, string userId)
+        {
+            ConditionCheck.CheckCondition(orderRequest.CouponCode != null, Errors.Common.NotFound);
+
+            await _promotionService.IsValidPromotionCouponAsync(orderRequest.CouponCode!, userId.ToString(), orderRequest.StoreId);
+
+            var storeSettings = await _storeSettingService.GetStoreSettingAsync(orderRequest.StoreId);
+
+            ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.NotFound);
+            ConditionCheck.CheckCondition(!storeSettings!.DiscountStrategy.Equals(null), Errors.StoreSetting.DiscountStrategyNotConfig);
+
+            return await _discountContext.CalculateDiscountAsync(orderRequest, orderRequest.CouponCode, storeSettings.DiscountStrategy);
+        }
+
+        public async Task<PagedResult<OrderDTO>> GetListOrders(UrlQueryParameters queryParameters, string storeId, string userId)
+        {
+            var ordersQuery = _orderRepository.AsQueryable().Where(x => x.StoreId == Guid.Parse(storeId) && x.UserId == Guid.Parse(userId) && !x.IsDeleted);
+
+            ordersQuery = ApplyFilters(ordersQuery, queryParameters);
+            ordersQuery = ApplySearch(ordersQuery, queryParameters);
+            ordersQuery = ApplySort(ordersQuery, queryParameters);
+
+            var total = await ordersQuery.CountAsync();
+            var items = await ordersQuery
+                .Skip((queryParameters.Page - 1) * queryParameters.PageSize)
+                .Take(queryParameters.PageSize)
+            .ToListAsync();
+
+            var mapped = _mapper.Map<List<OrderDTO>>(items);
+            return new PagedResult<OrderDTO>(mapped, total, queryParameters.Page, queryParameters.PageSize);
         }
 
         public async Task<OrderDTO> GetOrderByCodeAsync(string orderCode)
@@ -119,33 +165,17 @@ namespace FOCS.Application.Services
             return _mapper.Map<OrderDTO>(orderByUser);
         }
 
-        public Task<IEnumerable<OrderSummaryDTO>> GetUserOrdersAsync(Guid userId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<DiscountResultDTO> VerifyCouponAsGuestAsync(string couponCode, Guid storeId)
-        {
-            throw new NotImplementedException();
-        }
-
-
         #region private methods
-        private async Task<bool> IsValidApplyCoupon(string? couponCode)
-        {
-            throw new NotImplementedException();
-        }
-
-        private async Task SaveOrderAsync(CreateOrderRequest order, DiscountResultDTO discountResult, Table table, Store store, string userId)
+        private async Task SaveOrderAsync(CreateOrderRequest order, Table table, Store store, string userId)
         {
             Random randomNum = new Random();
 
             try
             {
                 Guid? couponCurrent = null;
-                if (!string.IsNullOrEmpty(discountResult.AppliedCouponCode))
+                if (!string.IsNullOrEmpty(order.DiscountResult.AppliedCouponCode))
                 {
-                    var coupon = await _couponRepository.FindAsync(x => x.Code == discountResult.AppliedCouponCode);
+                    var coupon = await _couponRepository.FindAsync(x => x.Code == order.DiscountResult.AppliedCouponCode);
                     couponCurrent = coupon.FirstOrDefault()?.Id;
                 }
 
@@ -156,10 +186,10 @@ namespace FOCS.Application.Services
                     UserId = string.IsNullOrEmpty(userId) ? null : Guid.Parse(userId),
                     OrderStatus = OrderStatus.Pending,
                     OrderType = order.OrderType,
-                    SubTotalAmout = (double)(discountResult.TotalPrice + discountResult.TotalDiscount),
+                    SubTotalAmout = (double)(order.DiscountResult.TotalPrice + order.DiscountResult.TotalDiscount),
                     TaxAmount = store.CustomTaxRate ?? 0,
-                    DiscountAmount = (double)discountResult.TotalDiscount,
-                    TotalAmount = (double)((double)discountResult.TotalPrice + store.CustomTaxRate ?? 0),
+                    DiscountAmount = (double)order.DiscountResult.TotalDiscount,
+                    TotalAmount = (double)((double)order.DiscountResult.TotalPrice + store.CustomTaxRate ?? 0),
                     CustomerNote = order.Note ?? "",
                     StoreId = order.StoreId,
                     CouponId = couponCurrent,
@@ -172,9 +202,9 @@ namespace FOCS.Application.Services
                 };
 
                 var ordersDetailCreate = new List<OrderDetail>();
-                if(discountResult.ItemDiscountDetails != null)
+                if(order.DiscountResult.ItemDiscountDetails != null)
                 {
-                    foreach (var item in discountResult.ItemDiscountDetails)
+                    foreach (var item in order.DiscountResult.ItemDiscountDetails)
                     {
                         var itemCodes = item.ItemCode?.Split("_");
                         if (itemCodes == null || itemCodes.Length == 0)
@@ -215,10 +245,64 @@ namespace FOCS.Application.Services
                 _tableRepository.Update(table);
                 await _tableRepository.SaveChangesAsync();
 
+                //code order for payment hook
+                order.DiscountResult.OrderCode = orderCreate.OrderCode;
+
+                //send notify to casher
+                await _realtimeService.SendToGroupAsync<OrderHub, Order.Infrastucture.Entities.Order>(SignalRGroups.Cashier(store.Id, table.Id), Constants.Method.OrderCreated, orderCreate);
             }
             catch (Exception ex)
             {
                 _logger.LogError("Error when saving order: " + ex.Message);
+            }
+        }
+
+        public async Task<bool> DeleteOrderAsync(Guid orderId, string userId, string storeId)
+        {
+            try
+            {
+                var order = await _orderRepository.GetByIdAsync(orderId);
+
+                ConditionCheck.CheckCondition(order != null, Errors.Common.NotFound);
+
+                var orderDetails = _orderDetailRepository.AsQueryable().Where(x => x.OrderId == order.Id).ToList();
+
+                if(orderDetails.Any() && orderDetails != null)
+                {
+                    _orderDetailRepository.RemoveRange(orderDetails);
+                }
+
+                _orderRepository.Remove(order);
+                await _orderRepository.SaveChangesAsync();
+
+                return true;
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+        }
+
+        public async Task<bool> CancelOrderAsync(Guid orderId, string userId, string storeId)
+        {
+            try
+            {
+
+                var order = await _orderRepository.GetByIdAsync(orderId);
+
+                ConditionCheck.CheckCondition(order != null, Errors.Common.NotFound);
+
+                order!.OrderStatus = OrderStatus.Canceled;
+                order!.UpdatedAt = DateTime.UtcNow;
+
+                _orderRepository.Update(order);
+                await _orderRepository.SaveChangesAsync();
+
+                return true;
+            } catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
             }
         }
 
@@ -237,6 +321,77 @@ namespace FOCS.Application.Services
                 if (item.VariantId.HasValue)
                     ConditionCheck.CheckCondition(existingVariants.Any(x => x.Id == item.VariantId), Errors.OrderError.MenuItemNotFound);
             }
+        }
+
+        private static IQueryable<Order.Infrastucture.Entities.Order> ApplyFilters(IQueryable<Order.Infrastucture.Entities.Order> query, UrlQueryParameters parameters)
+        {
+            if (parameters.Filters?.Any() != true) return query;
+
+            foreach (var (key, value) in parameters.Filters)
+            {
+                query = key.ToLowerInvariant() switch
+                {
+                  /*  "promotion_type" when Enum.TryParse<PromotionType>(value, true, out var promotionType) =>
+                        query.Where(p => p.PromotionType == promotionType),
+                    "start_date" => query.Where(p => p.StartDate >= DateTime.Parse(value)),
+                    "end_date" => query.Where(p => p.EndDate <= DateTime.Parse(value)),
+                    "status" when Enum.TryParse<PromotionStatus>(value, true, out var status) =>
+                        status switch
+                        {
+                            PromotionStatus.Incomming => query.Where(p => p.StartDate > DateTime.UtcNow),
+                            PromotionStatus.OnGoing => query.Where(p => p.StartDate <= DateTime.UtcNow && p.EndDate >= DateTime.UtcNow),
+                            PromotionStatus.Expired => query.Where(p => p.EndDate < DateTime.UtcNow),
+                            PromotionStatus.UnAvailable => query.Where(p => p.IsActive == false),
+                            _ => query
+                        },
+                    _ => query*/
+                };
+            }
+
+            return query;
+        }
+
+        private static IQueryable<Order.Infrastucture.Entities.Order> ApplySearch(IQueryable<Order.Infrastucture.Entities.Order> query, UrlQueryParameters parameters)
+        {
+            if (string.IsNullOrWhiteSpace(parameters.SearchBy) || string.IsNullOrWhiteSpace(parameters.SearchValue))
+                return query;
+
+            var searchValue = parameters.SearchValue.ToLowerInvariant();
+
+            return parameters.SearchBy.ToLowerInvariant() switch
+            {
+                //"title" => query.Where(p => p.Title.ToLower().Contains(searchValue)),
+                //_ => query
+            };
+        }
+
+        private static IQueryable<Order.Infrastucture.Entities.Order> ApplySort(IQueryable<Order.Infrastucture.Entities.Order> query, UrlQueryParameters parameters)
+        {
+            //if (string.IsNullOrWhiteSpace(parameters.SortBy)) return query.OrderBy(p => p.StartDate);
+
+            //var isDescending = string.Equals(parameters.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+
+            //return parameters.SortBy.ToLowerInvariant() switch
+            //{
+            //    "title" => isDescending
+            //        ? query.OrderByDescending(p => p.Title)
+            //        : query.OrderBy(p => p.Title),
+            //    "end_date" => isDescending
+            //        ? query.OrderByDescending(p => p.EndDate)
+            //        : query.OrderBy(p => p.EndDate),
+            //    "start_date" => isDescending
+            //        ? query.OrderByDescending(p => p.StartDate)
+            //        : query.OrderBy(p => p.StartDate),
+            //    "promotion_type" => isDescending
+            //        ? query.OrderByDescending(p => p.PromotionType)
+            //        : query.OrderBy(p => p.PromotionType),
+            //    "discount_value" => isDescending
+            //        ? query.OrderByDescending(p => p.DiscountValue)
+            //        : query.OrderBy(p => p.DiscountValue),
+            //    _ => query.OrderBy(p => p.StartDate)
+            //};
+
+            return query;
         }
 
 

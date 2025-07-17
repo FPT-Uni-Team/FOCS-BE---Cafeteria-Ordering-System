@@ -45,5 +45,20 @@ namespace FOCS.Application.Services
             };
         }
 
+        public async Task<double> CalculatePriceOfProducts(Dictionary<Guid, Guid?> products, string storeId)
+        {
+            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeGuid), Errors.Common.InvalidGuidFormat);
+
+            double totalPrice = 0;
+
+            foreach (var product in products)
+            {
+                var price = await GetPriceByProduct(product.Key, product.Value, storeGuid);
+                totalPrice += price.ProductPrice + price.VariantPrice ?? 0;
+            }
+
+            return totalPrice;
+        }
+
     }
 }

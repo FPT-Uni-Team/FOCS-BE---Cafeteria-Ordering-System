@@ -10,5 +10,7 @@ namespace FOCS.Common.Interfaces
     public interface IPricingService
     {
         Task<PricingDTO> GetPriceByProduct(Guid productId, Guid? variantId, Guid? storeId);
+
+        Task<double> CalculatePriceOfProducts(Dictionary<Guid, Guid?> products, string storeId);
     }
 }

@@ -19,7 +19,7 @@ namespace FOCS.Application.Services.ApplyStrategy
             _promotionOnlyStrategy = promotionOnlyStrategy;
         }
 
-        public async Task<DiscountResultDTO> ApplyDiscountAsync(CreateOrderRequest order, string? couponCode = null)
+        public async Task<DiscountResultDTO> ApplyDiscountAsync(ApplyDiscountOrderRequest order, string? couponCode = null)
         {
             var discountApplyCoupon = await _couponOnlyStrategy.ApplyDiscountAsync(order, couponCode);
 
