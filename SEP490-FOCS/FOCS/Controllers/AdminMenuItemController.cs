@@ -41,7 +41,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost]
-        public async Task<bool> Create([FromBody] CreateMenuItemWithVariantRequest createMenuItemWithVariantRequest)
+        public async Task<Guid> Create([FromBody] CreateMenuItemWithVariantRequest createMenuItemWithVariantRequest)
         {
             return await _menuManagementService.CreateNewMenuItemWithVariant(createMenuItemWithVariantRequest);
         }
@@ -76,6 +76,30 @@ namespace FOCS.Controllers
             return updated ? NoContent() : NotFound();
         }
 
+        [HttpPut("active/{menuItemId}")]
+        public async Task<bool> ActivateMenuItemAsync(Guid menuItemId)
+        {
+            return await _menuService.ActivateMenuItemAsync(menuItemId, UserId);
+        }
+
+        [HttpPut("deactive/{menuItemId}")]
+        public async Task<bool> DeactivateMenuItemAsync(Guid menuItemId)
+        {
+            return await _menuService.DeactivateMenuItemAsync(menuItemId, UserId);
+        }
+
+        [HttpPut("enable/{menuItemId}")]
+        public async Task<bool> EnableMenuItemAsync(Guid menuItemId)
+        {
+            return await _menuService.EnableMenuItemAsync(menuItemId, UserId);
+        }
+
+        [HttpPut("disable/{menuItemId}")]
+        public async Task<bool> DisableMenuItemAsync(Guid menuItemId)
+        {
+            return await _menuService.DisableMenuItemAsync(menuItemId, UserId);
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -91,7 +115,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("{id}/variant-group/variants")]
-        public async Task<bool> AddVariantGroupAndVariantForProduct([FromBody] AddVariantGroupAndVariant request, Guid id, [FromHeader(Name = "StoreId")] string storeId)
+        public async Task<bool> AddVariantGroupAndVariantForProduct([FromBody] AddVariantGroupsAndVariants request, Guid id, [FromHeader(Name = "StoreId")] string storeId)
         {
             return await _menuManagementService.AddVariantGroupAndVariant(request, id, storeId);
         }

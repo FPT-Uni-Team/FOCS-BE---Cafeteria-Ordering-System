@@ -4,6 +4,7 @@ using FOCS.Order.Infrastucture.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FOCS.Order.Infrastucture.Migrations
 {
     [DbContext(typeof(OrderDbContext))]
-    partial class OrderDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250708160401_add_menuitem_active")]
+    partial class add_menuitem_active
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -173,9 +176,6 @@ namespace FOCS.Order.Infrastucture.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("CountUsed")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CouponType")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -544,9 +544,6 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Property<double>("DiscountAmount")
                         .HasColumnType("float");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("OrderCode")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -907,9 +904,6 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Property<string>("QrCode")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("QrVersion")
-                        .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");

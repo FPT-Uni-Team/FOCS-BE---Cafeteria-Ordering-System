@@ -1,24 +1,15 @@
-﻿using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
-using FOCS.Application.DTOs;
-using FOCS.Application.Services.Interface;
+﻿using FOCS.Application.Services.Interface;
 using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
-using MailKit;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace FOCS.Application.Services
 {
@@ -33,7 +24,13 @@ namespace FOCS.Application.Services
 
         private readonly IMenuItemCategoryService _menuItemCategoryService;
 
-        public MenuItemManagementService(IMenuItemsVariantGroupService menuVariantGroupService, IMenuItemCategoryService menuItemCategoryService, ICloudinaryService cloudinaryService, IRepository<MenuItemImage> menuItemImageRepository, IMenuItemsVariantGroupItemService menuItemsVariantGroupItemService, IAdminMenuItemService adminMenuItemService)
+        public MenuItemManagementService(
+            IMenuItemsVariantGroupService menuVariantGroupService,
+            IMenuItemCategoryService menuItemCategoryService,
+            ICloudinaryService cloudinaryService,
+            IRepository<MenuItemImage> menuItemImageRepository,
+            IMenuItemsVariantGroupItemService menuItemsVariantGroupItemService,
+            IAdminMenuItemService adminMenuItemService)
         {
             _menuVariantGroupService = menuVariantGroupService;
             _menuItemsVariantGroupItemService = menuItemsVariantGroupItemService;
@@ -43,7 +40,7 @@ namespace FOCS.Application.Services
             _menuItemCategoryService = menuItemCategoryService;
         }
 
-        public async Task<bool> CreateNewMenuItemWithVariant(CreateMenuItemWithVariantRequest request)
+        public async Task<Guid> CreateNewMenuItemWithVariant(CreateMenuItemWithVariantRequest request)
         {
             // Step 1: Create new menu item
             var newMenuItem = await _adminMenuItemService.CreateMenuAsync(new DTOs.AdminServiceDTO.MenuItemAdminDTO
@@ -100,49 +97,52 @@ namespace FOCS.Application.Services
 
             ConditionCheck.CheckCondition(assignVariantsResult, Errors.Variant.FailWhenAssign);
 
-            return true;
+            return newMenuItem.Id.Value;
         }
 
-        public async Task<bool> AddVariantGroupAndVariant(AddVariantGroupAndVariant request, Guid menuItemId, string storeId)
+        public async Task<bool> AddVariantGroupAndVariant(AddVariantGroupsAndVariants variants, Guid menuItemId, string storeId)
         {
-            try
+            foreach(var request in variants.VariantGroupsAndVariants)
             {
-                // Step 1: Link each VariantGroup for MenuItem
-                var createdVariantGroups = new List<MenuItemVariantGroup>();
-
-                var assignResult = await _menuVariantGroupService.AssignMenuItemToVariantGroup(new CreateMenuItemVariantGroupRequest
+                try
                 {
-                    MenuItemId = menuItemId,
-                    VariantGroupIds = new List<Guid> { request.VariantGroupId },
-                    IsRequired = request.IsRequired,
-                    MinSelect = request.MinSelect,
-                    MaxSelect = request.MaxSelect
-                });
+                    // Step 1: Link each VariantGroup for MenuItem
+                    var createdVariantGroups = new List<MenuItemVariantGroup>();
 
-                createdVariantGroups.AddRange(assignResult);
-
-                ConditionCheck.CheckCondition(createdVariantGroups.Any(), Errors.Variant.FailWhenAssign);
-
-                // Step 2: link MenuItemVariantGroupItem (Link with spec variant)
-                var groupItemRequests = createdVariantGroups.Select(group =>
-                {
-                    return new MenuItemVariantGroupItemRequest
+                    var assignResult = await _menuVariantGroupService.AssignMenuItemToVariantGroup(new CreateMenuItemVariantGroupRequest
                     {
-                        MenuItemVariantGroupId = group.Id,
-                        Variants = request?.Variants ?? new List<VariantRequest>()
-                    };
-                }).ToList();
+                        MenuItemId = menuItemId,
+                        VariantGroupIds = new List<Guid> { request.VariantGroupId },
+                        IsRequired = request.IsRequired,
+                        MinSelect = request.MinSelect,
+                        MaxSelect = request.MaxSelect
+                    });
 
-                var assignVariantsResult = await _menuItemsVariantGroupItemService.AssignMenuItemVariantGroupToMenuItemVariantItemGroup(new CreateMenuItemVariantGroupItemRequest
+                    createdVariantGroups.AddRange(assignResult);
+
+                    ConditionCheck.CheckCondition(createdVariantGroups.Any(), Errors.Variant.FailWhenAssign);
+
+                    // Step 2: link MenuItemVariantGroupItem (Link with spec variant)
+                    var groupItemRequests = createdVariantGroups.Select(group =>
+                    {
+                        return new MenuItemVariantGroupItemRequest
+                        {
+                            MenuItemVariantGroupId = group.Id,
+                            Variants = request?.Variants ?? new List<VariantRequest>()
+                        };
+                    }).ToList();
+
+                    var assignVariantsResult = await _menuItemsVariantGroupItemService.AssignMenuItemVariantGroupToMenuItemVariantItemGroup(new CreateMenuItemVariantGroupItemRequest
+                    {
+                        MenuItemVariantGroupItemRequests = groupItemRequests
+                    });
+                }
+                catch (Exception ex)
                 {
-                    MenuItemVariantGroupItemRequests = groupItemRequests
-                });
-
-                return true;
-            } catch (Exception ex)
-            {
-                return false;
+                    return false;
+                }
             }
+            return true;
         }
 
         public async Task<bool> SyncMenuItemImages(List<IFormFile> files, string metadata, Guid menuItemId, string storeId)

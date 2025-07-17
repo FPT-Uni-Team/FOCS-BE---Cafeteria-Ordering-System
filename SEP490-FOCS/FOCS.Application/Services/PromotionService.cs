@@ -131,7 +131,7 @@ namespace FOCS.Application.Services
             }
             else
             {
-                var coupons = await ValidateCoupons(dto.CouponIds, dto.StartDate, dto.EndDate, storeId);
+                var coupons = await ValidateCoupons(dto.CouponIds, dto.StartDate, dto.EndDate, storeId, promotionId);
                 promotion.Coupons = coupons;
                 _mapper.Map(dto, promotion);
             }
@@ -332,10 +332,9 @@ namespace FOCS.Application.Services
         private async Task ValidateUser(string userId, Guid storeId)
         {
             var user = await _userManager.FindByIdAsync(userId);
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound, Errors.FieldName.UserId);
 
             var storesOfUser = (await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(userId))).Distinct().ToList();
-
-            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound, Errors.FieldName.UserId);
             ConditionCheck.CheckCondition(storesOfUser.Select(x => x.StoreId).Contains(storeId), Errors.AuthError.UserUnauthor, Errors.FieldName.UserId);
         }
 
@@ -382,7 +381,7 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, Errors.FieldName.StoreId);
         }
 
-        private async Task<ICollection<Coupon>> ValidateCoupons(List<Guid> couponIds, DateTime startDate, DateTime endDate, Guid storeId)
+        private async Task<ICollection<Coupon>> ValidateCoupons(List<Guid> couponIds, DateTime startDate, DateTime endDate, Guid storeId, Guid? promotionId = null)
         {
             var coupons = await _couponRepository.AsQueryable()
                             .Where(c => c.StoreId == storeId &&
@@ -390,7 +389,7 @@ namespace FOCS.Application.Services
                             .ToListAsync();
 
             ConditionCheck.CheckCondition(!coupons.Any(c => c.StartDate < startDate || c.EndDate > endDate), Errors.PromotionError.InvalidPeriodDatetime, Errors.FieldName.CouponIds);
-            ConditionCheck.CheckCondition(!coupons.Any(c => c.PromotionId != null), Errors.PromotionError.CouponAssigned, Errors.FieldName.CouponIds);
+            ConditionCheck.CheckCondition(coupons.All(c => c.PromotionId == null || c.PromotionId == promotionId), Errors.PromotionError.CouponAssigned, Errors.FieldName.CouponIds);
 
             return coupons;
         }
