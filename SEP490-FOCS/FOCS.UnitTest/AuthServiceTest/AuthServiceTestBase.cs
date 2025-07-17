@@ -5,9 +5,12 @@ using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using System.Linq.Expressions;
 
@@ -42,13 +45,18 @@ namespace FOCS.UnitTest.AuthServiceTest
             _storeRepositoryMock = new Mock<IRepository<Store>>();
             _loggerMock = new Mock<ILogger<AuthService>>();
             _userStoreRepositoryMock = new Mock<IRepository<UserStore>>();
-
-            // Create a simple SignInManager mock or use null since it's not used in LoginAsync
-            var signInManagerMock = CreateSignInManagerMock();
+            _signInManagerMock = new Mock<SignInManager<User>>(
+                    _userManagerMock.Object,
+                    new Mock<IHttpContextAccessor>().Object,
+                    new Mock<IUserClaimsPrincipalFactory<User>>().Object,
+                    new Mock<IOptions<IdentityOptions>>().Object,
+                    new Mock<ILogger<SignInManager<User>>>().Object,
+                    new Mock<IAuthenticationSchemeProvider>().Object
+                );
 
             _authService = new AuthService(
                 _userManagerMock.Object,
-                signInManagerMock,
+                _signInManagerMock.Object,
                 _configurationMock.Object,
                 _mapperMock.Object,
                 _emailServiceMock.Object,
@@ -58,29 +66,6 @@ namespace FOCS.UnitTest.AuthServiceTest
                 _loggerMock.Object,
                 _userStoreRepositoryMock.Object
             );
-        }
-
-        private SignInManager<User> CreateSignInManagerMock()
-        {
-            // Create a minimal SignInManager mock that doesn't cause constructor issues
-            var httpContextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
-            var userPrincipalFactory = new Mock<IUserClaimsPrincipalFactory<User>>();
-
-            try
-            {
-                var signInManager = new Mock<SignInManager<User>>(
-                    _userManagerMock.Object,
-                    httpContextAccessor.Object,
-                    userPrincipalFactory.Object,
-                    null, null, null, null
-                );
-                return signInManager.Object;
-            }
-            catch
-            {
-                // If mocking fails, return null since SignInManager is not used in LoginAsync
-                return null;
-            }
         }
 
         // Helper methods for creating test data
