@@ -29,7 +29,7 @@ namespace FOCS.Application.Services.ApplyStrategy
             _pricingService = pricingService;
         }
 
-        public async Task<DiscountResultDTO> ApplyDiscountAsync(CreateOrderRequest order, string? couponCode = null)
+        public async Task<DiscountResultDTO> ApplyDiscountAsync(ApplyDiscountOrderRequest order, string? couponCode = null)
         {
             var result = new DiscountResultDTO
             {
@@ -89,9 +89,12 @@ namespace FOCS.Application.Services.ApplyStrategy
             double totalDiscount = 0;
             foreach (var item in order.Items)
             {
-                bool isItemAccepted = acceptedItems == null || acceptedItems.Contains(item.MenuItemId);
-                if (!isItemAccepted)
-                    continue;
+                if(acceptedItems != null && acceptedItems.Count > 0)
+                {
+                    bool isItemAccepted = acceptedItems == null || acceptedItems.Contains(item.MenuItemId);
+                    if (!isItemAccepted)
+                        continue;
+                }
 
                 if (coupon.MinimumItemQuantity.HasValue && item.Quantity < coupon.MinimumItemQuantity)
                     continue;

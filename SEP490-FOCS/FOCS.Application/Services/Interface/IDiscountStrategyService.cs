@@ -9,7 +9,7 @@ namespace FOCS.Application.Services.Interface
 {
     public interface IDiscountStrategyService
     {
-        Task<DiscountResultDTO> ApplyDiscountAsync(CreateOrderRequest order, string? couponCode = null);
+        Task<DiscountResultDTO> ApplyDiscountAsync(ApplyDiscountOrderRequest order, string? couponCode = null);
 
     }
 }

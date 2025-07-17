@@ -28,6 +28,7 @@ namespace FOCS.Order.Infrastucture.Entities
         public double DiscountAmount {  get; set; } // discount follow promotion
         public double TotalAmount { get; set; } // total after apply tax and promotion
 
+        public bool IsDeleted { get; set; } = false;
         public string CustomerNote { get; set; }
 
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
