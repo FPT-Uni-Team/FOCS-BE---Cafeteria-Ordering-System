@@ -23,9 +23,9 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<AuthResult> LoginAsync(LoginRequest loginRequest)
+        public async Task<AuthResult> LoginAsync(LoginRequest loginRequest, [FromHeader] string storeId)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
+            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
             return await _authService.LoginAsync(loginRequest, storeIdGuid);
         }
 

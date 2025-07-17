@@ -103,6 +103,9 @@ namespace FOCS.Application.Services
                     "base_price" => descending ? menuQuery.OrderByDescending(m => m.BasePrice) : menuQuery.OrderBy(m => m.BasePrice),
                     _ => menuQuery
                 };
+            } else
+            {
+                menuQuery.OrderBy(x => x.IsAvailable);
             }
 
             // total count
