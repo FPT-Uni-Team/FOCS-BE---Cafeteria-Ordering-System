@@ -120,7 +120,7 @@ namespace FOCS.Application.Services
 
             var table = await _tableRepository.GetByIdAsync(id);
 
-            ConditionCheck.CheckCondition(table != null && table.IsDeleted, Errors.Common.NotFound, "id");
+            ConditionCheck.CheckCondition(table != null && !table.IsDeleted, Errors.Common.NotFound, "id");
 
             return _mapper.Map<TableDTO>(table);
         }
