@@ -192,7 +192,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> RegisterAsync(RegisterRequest request, Guid StoreId)
         {
-            var store = _storeRepository.GetByIdAsync(StoreId);
+            var store = await _storeRepository.GetByIdAsync(StoreId);
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
 
             var user = new User
@@ -244,7 +244,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> ChangePassword(ChangePasswordRequest request, string email)
         {
-            ConditionCheck.CheckCondition(request.OldPassword != request.NewPassword, Errors.AuthError.PasswordReuse);
+            ConditionCheck.CheckCondition(request.OldPassword != request.NewPassword, Errors.AuthError.PasswordReuse, Errors.FieldName.NewPassword);
 
             var user = await _userManager.FindByEmailAsync(email);
             ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
