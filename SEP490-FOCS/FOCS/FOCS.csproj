@@ -31,15 +31,4 @@
     <ProjectReference Include="..\FOCS.Order.Infrastucture\FOCS.Order.Infrastucture.csproj" />
     <ProjectReference Include="..\FOCS.Realtime.Hub\FOCS.Realtime.Hubs.csproj" />
   </ItemGroup>
-
-	<ItemGroup>
-		<None Update="appsettings.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="appsettings.Development.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
-
-
 </Project>
