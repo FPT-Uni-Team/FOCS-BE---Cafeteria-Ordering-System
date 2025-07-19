@@ -66,16 +66,24 @@ namespace FOCS.Application.Services
                 {
                     var user = await _userManager.FindByIdAsync(userId);
 
-                    ConditionCheck.CheckCondition(user != null, Errors.Common.NotFound);
-                    
-                    ConditionCheck.CheckCondition(user!.FOCSPoint < applyDiscountOrderRequest.Point, Errors.OrderError.NotEnoughPoint);
+                    //if guest
+                    if(user != null)
+                    {
+                        ConditionCheck.CheckCondition(user!.FOCSPoint < applyDiscountOrderRequest.Point, Errors.OrderError.NotEnoughPoint);
 
-                    var spendingRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.SpendingRate;
+                        var spendingRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.SpendingRate;
 
-                    var discountAmountBasedOnPoint = (decimal)applyDiscountOrderRequest.Point * (decimal)spendingRate;
+                        var discountAmountBasedOnPoint = (decimal)applyDiscountOrderRequest.Point * (decimal)spendingRate;
 
-                    finalDiscountResult.TotalDiscount += discountAmountBasedOnPoint;
-                    finalDiscountResult.TotalPrice = finalDiscountResult.TotalPrice -= discountAmountBasedOnPoint < 0 ? 0 : finalDiscountResult.TotalPrice -= discountAmountBasedOnPoint;
+                        finalDiscountResult.TotalDiscount += discountAmountBasedOnPoint;
+                        finalDiscountResult.TotalPrice = finalDiscountResult.TotalPrice -= discountAmountBasedOnPoint < 0 ? 0 : finalDiscountResult.TotalPrice -= discountAmountBasedOnPoint;
+
+                        finalDiscountResult.IsUsePoint = true;
+                        finalDiscountResult.Point = applyDiscountOrderRequest.Point;
+                    }
+
+                    finalDiscountResult.IsUsePoint = false;
+                    finalDiscountResult.Point = 0;
                 }
             }
 
