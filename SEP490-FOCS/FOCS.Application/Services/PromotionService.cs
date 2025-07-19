@@ -462,10 +462,10 @@ namespace FOCS.Application.Services
                     "status" when Enum.TryParse<PromotionStatus>(value, true, out var status) =>
                         status switch
                         {
-                            PromotionStatus.Incomming => query.Where(p => p.StartDate > DateTime.UtcNow),
-                            PromotionStatus.OnGoing => query.Where(p => p.StartDate <= DateTime.UtcNow && p.EndDate >= DateTime.UtcNow),
-                            PromotionStatus.Expired => query.Where(p => p.EndDate < DateTime.UtcNow),
-                            PromotionStatus.UnAvailable => query.Where(p => p.IsActive == false),
+                            PromotionStatus.Incomming => query.Where(p => p.IsActive && p.StartDate > DateTime.UtcNow),
+                            PromotionStatus.OnGoing => query.Where(p => p.IsActive && p.StartDate <= DateTime.UtcNow && p.EndDate >= DateTime.UtcNow),
+                            PromotionStatus.Expired => query.Where(p => p.IsActive && p.EndDate < DateTime.UtcNow),
+                            PromotionStatus.UnAvailable => query.Where(p => !p.IsActive),
                             _ => query
                         },
                     _ => query
