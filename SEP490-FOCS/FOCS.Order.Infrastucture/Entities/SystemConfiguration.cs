@@ -10,6 +10,8 @@ namespace FOCS.Order.Infrastucture.Entities
 {
     public class SystemConfiguration : IAuditable
     {
+        public Guid Id { get; set; }
+
         public double EarningRate { get; set; }
 
         public double SpendingRate { get; set; }
