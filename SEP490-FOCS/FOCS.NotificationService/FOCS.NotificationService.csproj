@@ -23,4 +23,15 @@
 			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
+
+  <ItemGroup>
+    <None Remove="appsettings.json" />
+    <None Remove="appsettings.Development.json" />
+  </ItemGroup>
+
+  <Target Name="RemoveConfigFiles" AfterTargets="Publish">
+    <Delete Files="$(PublishDir)appsettings.json" />
+    <Delete Files="$(PublishDir)appsettings.Development.json" />
+  </Target>
+
 </Project>
