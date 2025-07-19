@@ -42,7 +42,7 @@ namespace FOCS.Order.Infrastucture.Entities
 
         //Coupon
         public Guid? CouponId {  get; set; }
-        public Coupon Coupon {  get; set; }
+        public Coupon Coupon {  get; set; } 
 
         //Order wrap 
         public Guid? OrderWrapId { get; set; }
