@@ -55,11 +55,11 @@ namespace FOCS.Order.Infrastucture.Context
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<MenuItem>()
-                 .HasOne(mi => mi.Store)
-                 .WithMany(s => s.MenuItems) 
-                 .HasForeignKey(mi => mi.StoreId)
-                 .OnDelete(DeleteBehavior.Restrict);
+            //modelBuilder.Entity<MenuItem>()
+            //     .HasOne(mi => mi.Store)
+            //     .WithMany(s => s.MenuItems) 
+            //     .HasForeignKey(mi => mi.StoreId)
+            //     .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<PromotionItemCondition>()
                 .HasOne(pic => pic.BuyItem)

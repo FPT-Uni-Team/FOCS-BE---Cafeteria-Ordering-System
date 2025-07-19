@@ -14,6 +14,7 @@ using FOCS.Order.Infrastucture.Context;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Order.Infrastucture.Interfaces;
 using FOCS.Realtime.Hubs;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -109,7 +110,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IRepository<MenuItemImage>, Repository<MenuItemImage, OrderDbContext>>()
                 .AddScoped<IRepository<SystemConfiguration>, Repository<SystemConfiguration, OrderDbContext>>()
                 .AddSingleton<ICloudinaryService, CloudinaryService>()
-                .AddSingleton<IRedisCacheService>(sp => new RedisCacheService("localhost:6379"));
+                .AddSingleton<IRedisCacheService, RedisCacheService>();
 ;
 //builder.Services.AddHostedService<OrderBatchingService>();
 //builder.Services.AddHostedService<CartFlushBackgroundService>();
@@ -130,7 +131,6 @@ builder.Services.AddDbContext<OrderDbContext>(options =>
 
 //auto mapper
 builder.Services.AddAutoMapper(typeof(MappingProfiles).Assembly);
-
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -229,7 +229,29 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddSignalR();
+builder.Services.AddMassTransit(x =>
+{
+    // Nếu bạn có consumer trong FOCS.API, khai báo tại đây
+    // x.AddConsumer<MyConsumer>();
+
+    x.UsingRabbitMq((ctx, cfg) =>
+    {
+        cfg.Host("103.173.228.119", 5672, "/", h =>
+        {
+            h.Username("guest");
+            h.Password("guest");
+        });
+
+        // Nếu có consumer, cần cấu hình receive endpoint
+        // cfg.ReceiveEndpoint("some-queue", e =>
+        // {
+        //     e.ConfigureConsumer<MyConsumer>(ctx);
+        // });
+    });
+});
+
+
+builder.Services.AddSignalR().AddStackExchangeRedis("localhost:6379");
 
 builder.Services.AddAuthentication();
 
@@ -243,8 +265,9 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("AllowFrontend");
 
 //SignalR
-app.MapHub<OrderHub>("/orderHubs");
-app.MapHub<CartHub>("/cartHubs");
+app.MapHub<OrderHub>("/hubs/order");
+app.MapHub<CartHub>("/hubs/cart");
+app.MapHub<NotifyHub>("/hubs/notify");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -7,11 +7,14 @@ using FOCS.Common.Enums;
 using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
+using FOCS.Common.Models.CartModels;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Infrastructure.Identity.Identity.Model;
+using FOCS.NotificationService.Models;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Realtime.Hubs;
+using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
@@ -51,6 +54,8 @@ namespace FOCS.Application.Services
         private readonly ILogger<OrderService> _logger;
         private readonly IMapper _mapper;
 
+        private readonly IPublishEndpoint _publishEndpoint;
+
         private readonly UserManager<User> _userManager;
 
         public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository, 
@@ -68,7 +73,8 @@ namespace FOCS.Application.Services
                             IMapper mapper,
                             IRealtimeService realtimeService,
                             UserManager<User> userManager,
-                            IRepository<SystemConfiguration> systemConfig)
+                            IRepository<SystemConfiguration> systemConfig,
+                            IPublishEndpoint publishEndpoint)
         {
             _orderRepository = orderRepository;
             _realtimeService = realtimeService;
@@ -85,6 +91,7 @@ namespace FOCS.Application.Services
             _userManager = userManager;
             _tableRepository = tableRepo;
             _mapper = mapper;
+            _publishEndpoint = publishEndpoint;
             _systemConfig = systemConfig;
         }
 
@@ -273,7 +280,25 @@ namespace FOCS.Application.Services
                 order.DiscountResult.OrderCode = orderCreate.OrderCode;
 
                 //send notify to casher
-                await _realtimeService.SendToGroupAsync<OrderHub, Order.Infrastucture.Entities.Order>(SignalRGroups.Cashier(store.Id, table.Id), Constants.Method.OrderCreated, orderCreate);
+                await _publishEndpoint.Publish(new NotifyEvent
+                {
+                    Title = "Có đơn mới",
+                    Message = $"Bàn {order.TableId} vừa tạo đơn",
+                    TargetGroups = new[] { SignalRGroups.Cashier(store.Id, table.Id) },
+                    storeId = store.Id.ToString(),
+                    tableId = table.Id.ToString()
+
+                });
+
+                var orderDataExchangeRealtime = order.Items.Select(x => new OrderRedisModel
+                {
+                    MenuItemId = x.MenuItemId,
+                    VariantId = x.VariantId,
+                    Quantity = x.Quantity,
+                    Note = x.Note
+                }).ToList();
+
+                await _realtimeService.SendToGroupAsync<OrderHub, List<OrderRedisModel>>(SignalRGroups.User(store.Id, table.Id, Guid.Parse(userId)), Constants.Method.OrderCreated, orderDataExchangeRealtime);
             }
             catch (Exception ex)
             {

@@ -1,4 +1,5 @@
 ﻿using FOCS.Common.Interfaces;
+using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -13,8 +14,11 @@ namespace FOCS.Application.Services
     {
         private readonly IDatabase _database;
 
-        public RedisCacheService(string connectionString)
+        public RedisCacheService(IConfiguration configuration)
         {
+            var connectionString = configuration.GetConnectionString("Redis")
+                            ?? configuration["Redis:ConnectionString"];
+
             var redis = ConnectionMultiplexer.Connect(connectionString);
             _database = redis.GetDatabase();
         }
