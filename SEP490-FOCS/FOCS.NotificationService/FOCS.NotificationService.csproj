@@ -14,14 +14,16 @@
     <PackageReference Include="MassTransit.RabbitMQ" Version="8.5.1" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
- <ItemGroup>
-  <None Remove="appsettings.json" />
-  <None Remove="appsettings.Development.json" />
-</ItemGroup>
+  </ItemGroup>
 
-<Target Name="RemoveConfigFiles" AfterTargets="Publish">
-  <Delete Files="$(PublishDir)appsettings.json" />
-  <Delete Files="$(PublishDir)appsettings.Development.json" />
-</Target>
+  <ItemGroup>
+    <None Remove="appsettings.json" />
+    <None Remove="appsettings.Development.json" />
+  </ItemGroup>
+
+  <Target Name="RemoveConfigFiles" AfterTargets="Publish">
+    <Delete Files="$(PublishDir)appsettings.json" />
+    <Delete Files="$(PublishDir)appsettings.Development.json" />
+  </Target>
 
 </Project>
