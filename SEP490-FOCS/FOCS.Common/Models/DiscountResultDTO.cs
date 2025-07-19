@@ -32,6 +32,12 @@ namespace FOCS.Common.Models
 
         [JsonPropertyName("order_code")]
         public string? OrderCode { get; set; }
+
+        [JsonPropertyName("is_use_point")]
+        public bool? IsUsePoint {  get; set; }
+
+        [JsonPropertyName("point")]
+        public int? Point {  get; set; }
     }
     public class DiscountItemDetail
     {

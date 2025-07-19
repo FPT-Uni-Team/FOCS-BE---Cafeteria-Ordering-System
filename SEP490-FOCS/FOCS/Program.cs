@@ -107,6 +107,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IMenuItemCategoryService, MenuItemCategoryService>()
                 .AddScoped<IRepository<MenuItemVariantGroup>, Repository<MenuItemVariantGroup, OrderDbContext>>()
                 .AddScoped<IRepository<MenuItemImage>, Repository<MenuItemImage, OrderDbContext>>()
+                .AddScoped<IRepository<SystemConfiguration>, Repository<SystemConfiguration, OrderDbContext>>()
                 .AddSingleton<ICloudinaryService, CloudinaryService>()
                 .AddSingleton<IRedisCacheService>(sp => new RedisCacheService("localhost:6379"));
 ;
