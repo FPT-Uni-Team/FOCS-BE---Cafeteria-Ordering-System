@@ -48,6 +48,8 @@ namespace FOCS.Order.Infrastucture.Context
         public DbSet<Store> Stores { get; set; }
         public DbSet<StoreSetting> StoreSettings { get; set; }
 
+        public DbSet<SystemConfiguration> SystemConfigurations { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

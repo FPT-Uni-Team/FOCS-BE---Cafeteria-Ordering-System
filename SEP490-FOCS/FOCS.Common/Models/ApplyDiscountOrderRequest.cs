@@ -24,6 +24,12 @@ namespace FOCS.Common.Models
 
         [JsonPropertyName("coupon_code")]
         public string? CouponCode { get; set; }
+
+        [JsonPropertyName("point")]
+        public int? Point { get; set; }
+
+        [JsonPropertyName("is_use_point")]
+        public bool? IsUseLoyatyPoint { get; set; }
     }
 
     public class CreateOrderRequest

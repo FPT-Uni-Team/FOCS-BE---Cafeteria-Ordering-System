@@ -9,8 +9,10 @@ using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Realtime.Hubs;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.Extensions.Logging;
@@ -19,6 +21,7 @@ using Org.BouncyCastle.Utilities.Collections;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -40,12 +43,15 @@ namespace FOCS.Application.Services
 
         private readonly IPromotionService _promotionService;
         private readonly DiscountContext _discountContext;
+        private readonly IRepository<SystemConfiguration> _systemConfig;
         private readonly IStoreSettingService _storeSettingService;
 
         private readonly IRealtimeService _realtimeService;
 
         private readonly ILogger<OrderService> _logger;
         private readonly IMapper _mapper;
+
+        private readonly UserManager<User> _userManager;
 
         public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository, 
                             ILogger<OrderService> logger, 
@@ -60,7 +66,9 @@ namespace FOCS.Application.Services
                             IRepository<MenuItemVariant> variantRepository, 
                             IPromotionService promotionService,
                             IMapper mapper,
-                            IRealtimeService realtimeService)
+                            IRealtimeService realtimeService,
+                            UserManager<User> userManager,
+                            IRepository<SystemConfiguration> systemConfig)
         {
             _orderRepository = orderRepository;
             _realtimeService = realtimeService;
@@ -74,8 +82,10 @@ namespace FOCS.Application.Services
             _storeSettingService = storeSettingService;
             _variantRepository = variantRepository;
             _promotionService = promotionService;
+            _userManager = userManager;
             _tableRepository = tableRepo;
             _mapper = mapper;
+            _systemConfig = systemConfig;
         }
 
         public async Task<DiscountResultDTO> CreateOrderAsync(CreateOrderRequest order, string userId)
@@ -123,7 +133,7 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.NotFound);
             ConditionCheck.CheckCondition(!storeSettings!.DiscountStrategy.Equals(null), Errors.StoreSetting.DiscountStrategyNotConfig);
 
-            return await _discountContext.CalculateDiscountAsync(orderRequest, orderRequest.CouponCode, storeSettings.DiscountStrategy);
+            return await _discountContext.CalculateDiscountAsync(orderRequest, orderRequest.CouponCode, storeSettings.DiscountStrategy, userId);
         }
 
         public async Task<PagedResult<OrderDTO>> GetListOrders(UrlQueryParameters queryParameters, string storeId, string userId)
@@ -235,14 +245,28 @@ namespace FOCS.Application.Services
                     }
                 }
 
+                if (order.DiscountResult.IsUsePoint.HasValue && order.DiscountResult.IsUsePoint == true)
+                {
+                    var user = await _userManager.FindByIdAsync(userId);
+                    ConditionCheck.CheckCondition(user != null, Errors.Common.NotFound);
+
+                    var systemConfigEarningRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.EarningRate;
+
+                    user!.FOCSPoint -= order.DiscountResult.Point;
+                    user!.FOCSPoint += (int)order.DiscountResult.TotalPrice / (int)systemConfigEarningRate;
+
+                    await _userManager.UpdateAsync(user);
+                }
+
+                table.Status = TableStatus.Occupied;
+                _tableRepository.Update(table);
+
                 await _orderRepository.AddAsync(orderCreate);
                 await _orderRepository.SaveChangesAsync();
 
                 await _orderDetailRepository.AddRangeAsync(ordersDetailCreate);
                 await _orderDetailRepository.SaveChangesAsync();
 
-                table.Status = TableStatus.Occupied;
-                _tableRepository.Update(table);
                 await _tableRepository.SaveChangesAsync();
 
                 //code order for payment hook
