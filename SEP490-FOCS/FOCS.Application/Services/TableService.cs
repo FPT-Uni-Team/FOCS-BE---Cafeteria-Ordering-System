@@ -195,33 +195,40 @@ namespace FOCS.Application.Services
 
         public async Task<string> GenerateQrCodeForTableAsync(string? actionType, Guid tableId, string userId, Guid storeId)
         {
-            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), TableConstants.UserIdEmpty);
+            ConditionCheck.CheckCondition(!string.IsNullOrWhiteSpace(userId), TableConstants.UserIdEmpty);
+
+            if (string.Equals(actionType, "Add", StringComparison.OrdinalIgnoreCase))
+            {
+                var qrAddBytes = GenerateQrCodeForTable(tableId, 1); // Generate QR code bytes
+                var formFileAdd = CreateFormFileFromBytes(qrAddBytes, tableId.ToString(), "image/png");
+
+                var uploadResult = await _cloudinaryService.UploadQrCodeForTable(formFileAdd, storeId.ToString(), tableId.ToString());
+
+                return uploadResult.Url;
+            }
 
             var table = await _tableRepository
                                 .AsQueryable()
                                 .FirstOrDefaultAsync(t => t.Id == tableId && t.StoreId == storeId && !t.IsDeleted);
+
             ConditionCheck.CheckCondition(table != null, TableConstants.TableEmpty);
 
-            table.QrVersion++;
-            var qrBytes = GenerateQrCodeForTable(tableId, table.QrVersion); // returns byte[]
+            table!.QrVersion++;
 
+            var qrBytes = GenerateQrCodeForTable(tableId, table.QrVersion);
             var formFile = CreateFormFileFromBytes(qrBytes, tableId.ToString(), "image/png");
 
-            var uploadResult = await _cloudinaryService.UploadQrCodeForTable(formFile, storeId.ToString(), table!.Id.ToString());
+            var uploadResultUpdate = await _cloudinaryService.UploadQrCodeForTable(formFile, storeId.ToString(), table.Id.ToString());
 
-            if (actionType == "Add")
-            {
-                return uploadResult.Url;
-            }
-
-            table!.QrCode = uploadResult.Url;
+            table.QrCode = uploadResultUpdate.Url;
             table.UpdatedAt = DateTime.UtcNow;
             table.UpdatedBy = userId;
 
             await _tableRepository.SaveChangesAsync();
 
-            return table.QrCode; 
+            return table.QrCode;
         }
+
 
         private IFormFile CreateFormFileFromBytes(byte[] fileBytes, string fileName, string contentType)
         {
