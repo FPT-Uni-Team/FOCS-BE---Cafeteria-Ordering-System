@@ -29,7 +29,7 @@ namespace FOCS.Application.Services
         public async Task<UserProfileDTO> GetUserProfileAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
-            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound, Errors.FieldName.UserId);
 
             return _mapper.Map<UserProfileDTO>(user);
         }
@@ -37,7 +37,7 @@ namespace FOCS.Application.Services
         public async Task<UserProfileDTO> UpdateUserProfileAsync(UserProfileDTO dto, string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
-            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound, Errors.FieldName.UserId);
 
             dto.Email = user.Email; 
             _mapper.Map(dto, user);
@@ -51,7 +51,7 @@ namespace FOCS.Application.Services
         public async Task<bool> DeleteUserProfileAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
-            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound, Errors.FieldName.UserId);
 
             user.IsActive = false;
             user.IsDeleted = true;
