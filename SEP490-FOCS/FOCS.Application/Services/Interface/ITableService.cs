@@ -6,12 +6,12 @@ namespace FOCS.Application.Services.Interface
 {
     public interface ITableService
     {
-        Task<TableDTO> CreateTableAsync(TableDTO dto, string storeId);
+        Task<TableDTO> CreateTableAsync(TableDTO dto, string storeId, string? userId = null);
         Task<PagedResult<TableDTO>> GetAllTablesAsync(UrlQueryParameters query, string userId, Guid storeId);
         Task<TableDTO> GetTableByIdAsync(Guid id, string userId);
         Task<bool> UpdateTableAsync(Guid id, TableDTO dto, string userId);
         Task<bool> DeleteTableAsync(Guid id, string userId);
         Task<bool> SetTableStatusAsync(Guid tableId, TableStatus status, string userId, Guid storeId);
-        Task<string> GenerateQrCodeForTableAsync(Guid tableId, string userId, Guid storeId);
+        Task<string> GenerateQrCodeForTableAsync(string? actionType, Guid tableId, string userId, Guid storeId);
     }
 }

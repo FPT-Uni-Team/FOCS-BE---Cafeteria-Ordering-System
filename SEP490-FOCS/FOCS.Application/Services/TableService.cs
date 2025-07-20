@@ -31,7 +31,7 @@ namespace FOCS.Application.Services
             _cloudinaryService = cloudinaryService;
         }
 
-        public async Task<TableDTO> CreateTableAsync(TableDTO dto, string storeId)
+        public async Task<TableDTO> CreateTableAsync(TableDTO dto, string storeId, string? userId = null)
         {
             // Check userId
             ConditionCheck.CheckCondition(!string.IsNullOrEmpty(storeId), TableConstants.UserIdEmpty);
@@ -42,11 +42,14 @@ namespace FOCS.Application.Services
             // Unique table number
             ConditionCheck.CheckCondition(!exists, TableConstants.UniqueTableNumber);
 
+            var tableId = Guid.NewGuid();
+
+            var qrImage = await GenerateQrCodeForTableAsync("Add", tableId, userId, Guid.Parse(storeId));
 
             var table = _mapper.Map<Table>(dto);
-            table.Id = Guid.NewGuid();
-            table.QrCode = "";
-            table.IsDeleted = false;
+            table.Id = tableId;
+            table.QrCode = qrImage;
+            table.IsDeleted = false;    
             table.CreatedAt = DateTime.UtcNow;  
             table.CreatedBy = storeId;
 
@@ -190,7 +193,7 @@ namespace FOCS.Application.Services
             return true;
         }
 
-        public async Task<string> GenerateQrCodeForTableAsync(Guid tableId, string userId, Guid storeId)
+        public async Task<string> GenerateQrCodeForTableAsync(string? actionType, Guid tableId, string userId, Guid storeId)
         {
             ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), TableConstants.UserIdEmpty);
 
@@ -205,6 +208,11 @@ namespace FOCS.Application.Services
             var formFile = CreateFormFileFromBytes(qrBytes, tableId.ToString(), "image/png");
 
             var uploadResult = await _cloudinaryService.UploadQrCodeForTable(formFile, storeId.ToString(), table!.Id.ToString());
+
+            if (actionType == "Add")
+            {
+                return uploadResult.Url;
+            }
 
             table!.QrCode = uploadResult.Url;
             table.UpdatedAt = DateTime.UtcNow;
