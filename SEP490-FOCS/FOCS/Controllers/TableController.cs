@@ -27,7 +27,7 @@ namespace FOCS.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var created = await _tableService.CreateTableAsync(dto, StoreId);
+            var created = await _tableService.CreateTableAsync(dto, StoreId, UserId);
             return Ok(created);
         }
 
@@ -88,7 +88,7 @@ namespace FOCS.Controllers
         {
             try
             {
-                var qrCodeBase64 = await _tableService.GenerateQrCodeForTableAsync(tableId, UserId, storeId);
+                var qrCodeBase64 = await _tableService.GenerateQrCodeForTableAsync("update", tableId, UserId, storeId);
 
                 return Ok(new
                 {
