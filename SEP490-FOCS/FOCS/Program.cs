@@ -251,7 +251,7 @@ builder.Services.AddMassTransit(x =>
 });
 
 
-builder.Services.AddSignalR().AddStackExchangeRedis("localhost:6379");
+builder.Services.AddSignalR().AddStackExchangeRedis("103.173.228.119:6379");
 
 builder.Services.AddAuthentication();
 
