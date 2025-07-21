@@ -10,6 +10,7 @@ using FOCS.Infrastructure.Identity.Common.UnitOfWorks;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Infrastructure.Identity.Persistance;
 using FOCS.Middlewares;
+using FOCS.NotificationService.Consumers;
 using FOCS.Order.Infrastucture.Context;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Order.Infrastucture.Interfaces;
@@ -231,8 +232,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddMassTransit(x =>
 {
-    // Nếu bạn có consumer trong FOCS.API, khai báo tại đây
-    // x.AddConsumer<MyConsumer>();
+     x.AddConsumer<NotifyConsumer>();
 
     x.UsingRabbitMq((ctx, cfg) =>
     {
@@ -242,16 +242,16 @@ builder.Services.AddMassTransit(x =>
             h.Password("guest");
         });
 
-        // Nếu có consumer, cần cấu hình receive endpoint
-        // cfg.ReceiveEndpoint("some-queue", e =>
-        // {
-        //     e.ConfigureConsumer<MyConsumer>(ctx);
-        // });
+        // Config receive endpoint
+        cfg.ReceiveEndpoint("notify-consumer", e =>
+        {
+            e.ConfigureConsumer<NotifyConsumer>(ctx);
+        });
     });
 });
 
 
-builder.Services.AddSignalR().AddStackExchangeRedis("localhost:6379");
+builder.Services.AddSignalR().AddStackExchangeRedis("103.173.228.119:6379");
 
 builder.Services.AddAuthentication();
 
