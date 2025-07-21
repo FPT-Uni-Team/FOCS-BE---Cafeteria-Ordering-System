@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using FOCS.NotificationService.Models;
+using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +10,9 @@ namespace FOCS.Realtime.Hubs
 {
     public class NotifyHub : Hub
     {
-        public async Task SendToGroup(string groupName, object data)
+        public async Task NewNotify(string group, NotifyEvent payload)
         {
-            await Clients.Group(groupName).SendAsync("ReceiveNotify", data);
+            await Clients.Group(group).SendAsync("ReceiveNotify", payload);
         }
 
         public override async Task OnConnectedAsync()

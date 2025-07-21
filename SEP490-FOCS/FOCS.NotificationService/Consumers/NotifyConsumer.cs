@@ -1,6 +1,9 @@
 ﻿using FirebaseAdmin.Messaging;
+using FOCS.NotificationService.Constants;
 using FOCS.NotificationService.Models;
+using FOCS.Realtime.Hubs;
 using MassTransit;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
@@ -12,36 +15,36 @@ namespace FOCS.NotificationService.Consumers
 {
     public class NotifyConsumer : IConsumer<NotifyEvent>
     {
+        private readonly IHubContext<NotifyHub> _notifyHub;
+
+        public NotifyConsumer(IHubContext<NotifyHub> notifyHub)
+        {
+            _notifyHub = notifyHub;
+        }
+
         public async Task Consume(ConsumeContext<NotifyEvent> context)
         {
-            var msg = context.Message;
+            var payload = context.Message;
 
-            var storeId = msg.storeId;
+            var storeId = payload.storeId;
+            var tableId = payload.tableId;
 
-            // Gửi Web/POS qua SignalR
-            var conn = new HubConnectionBuilder()
-                .WithUrl($"https://focs.site/hubs/notify?storeId={storeId}")
-                .Build();
-            await conn.StartAsync();
-
-            foreach (var group in msg.TargetGroups)
+            foreach (var group in payload.TargetGroups)
             {
-                await conn.InvokeAsync("NewNotify", group, new { msg.Title, msg.Message });
+                await _notifyHub.Clients.Group(group).SendAsync(ActionHub.NewNotification, payload);
             }
 
-            await conn.StopAsync();
-
             // Gửi Mobile qua Firebase
-            if (msg.MobileTokens != null && msg.MobileTokens.Any())
+            if (payload.MobileTokens != null && payload.MobileTokens.Any())
             {
                 var fcm = FirebaseMessaging.DefaultInstance;
                 var message = new MulticastMessage()
                 {
-                    Tokens = msg.MobileTokens.ToList(),
+                    Tokens = payload.MobileTokens.ToList(),
                     Notification = new Notification()
                     {
-                        Title = msg.Title,
-                        Body = msg.Message
+                        Title = payload.Title,
+                        Body = payload.Message
                     }
                 };
                 await fcm.SendMulticastAsync(message);
