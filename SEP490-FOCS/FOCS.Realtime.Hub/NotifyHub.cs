@@ -10,11 +10,6 @@ namespace FOCS.Realtime.Hubs
 {
     public class NotifyHub : Hub
     {
-        public async Task NewNotify(string group, NotifyEvent payload)
-        {
-            await Clients.Group(group).SendAsync("ReceiveNotify", payload);
-        }
-
         public override async Task OnConnectedAsync()
         {
             var storeId = Context.GetHttpContext()?.Request.Query["storeId"]; 
