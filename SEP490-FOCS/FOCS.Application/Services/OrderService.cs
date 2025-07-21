@@ -283,7 +283,7 @@ namespace FOCS.Application.Services
                 await _publishEndpoint.Publish(new NotifyEvent
                 {
                     Title = "Có đơn mới",
-                    Message = $"Bàn {order.TableId} vừa tạo đơn",
+                    Message = $"Bàn {table.TableNumber} vừa tạo đơn",
                     TargetGroups = new[] { SignalRGroups.Cashier(store.Id, table.Id) },
                     storeId = store.Id.ToString(),
                     tableId = table.Id.ToString()
