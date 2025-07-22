@@ -1,6 +1,7 @@
 ﻿using FOCS.Application.Mappings;
 using FOCS.Application.Services;
 using FOCS.Application.Services.ApplyStrategy;
+using FOCS.Application.Services.BackgroundServices;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Helpers;
 using FOCS.Common.Interfaces;
@@ -114,7 +115,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddSingleton<ICloudinaryService, CloudinaryService>()
                 .AddSingleton<IRedisCacheService, RedisCacheService>();
 ;
-//builder.Services.AddHostedService<OrderBatchingService>();
+builder.Services.AddHostedService<OrderBatchingService>();
 //builder.Services.AddHostedService<CartFlushBackgroundService>();
 
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));

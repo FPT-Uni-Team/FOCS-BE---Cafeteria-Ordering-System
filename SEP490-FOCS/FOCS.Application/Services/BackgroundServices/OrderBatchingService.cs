@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace FOCS.Application.Services
+namespace FOCS.Application.Services.BackgroundServices
 {
     public class OrderBatchingService : BackgroundService
     {
@@ -35,7 +35,7 @@ namespace FOCS.Application.Services
                         var kitchenService = scope.ServiceProvider.GetRequiredService<IKitchenService>();
 
                         _logger.LogInformation("Fetching pending order...");
-                        var pendingOrders = await orderService.GetPendingOrdersAsync();
+                        var pendingOrders = await orderService.GetPendingOrdersInDayAsync();
 
                         if (pendingOrders.Any())
                         {

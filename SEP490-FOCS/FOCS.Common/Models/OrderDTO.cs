@@ -61,6 +61,6 @@ namespace FOCS.Common.Models
 
         [JsonPropertyName("order_details")]
         //Order details
-        public ICollection<OrderDetailDTO> OrderDetails { get; set; } = new List<OrderDetailDTO>();
+        public List<OrderDetailDTO> OrderDetails { get; set; } = new List<OrderDetailDTO>();
     }
 }

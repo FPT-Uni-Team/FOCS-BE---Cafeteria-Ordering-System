@@ -149,7 +149,7 @@ namespace FOCS.Application.Services
             table.UpdatedAt = DateTime.UtcNow;
             table.UpdatedBy = userId;
 
-            await _tableRepository.SaveChangesAsync();
+                await _tableRepository.SaveChangesAsync();
             return true;
         }
 
