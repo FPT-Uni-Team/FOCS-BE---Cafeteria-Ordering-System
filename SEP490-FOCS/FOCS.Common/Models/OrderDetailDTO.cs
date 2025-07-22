@@ -14,6 +14,18 @@ namespace FOCS.Common.Models
         [JsonPropertyName("id")]
         public Guid Id { get; set; }
 
+        [JsonPropertyName("menu_item_id")]
+        public Guid MenuItemId { get; set; }
+
+        [JsonPropertyName("menu_item_name")]
+        public string MenuItemName { get; set; }
+
+        [JsonPropertyName("variant_id")]
+        public Guid VariantId { get; set; }
+
+        [JsonPropertyName("variant_name")]
+        public string VariantName { get; set; }
+
         [JsonPropertyName("quantity")]
         public int Quantity { get; set; }
 
@@ -25,8 +37,5 @@ namespace FOCS.Common.Models
 
         [JsonPropertyName("note")]
         public string Note { get; set; }
-
-        [JsonPropertyName("variants")]
-        public string Variants { get; set; } // save with string format or json format. exmaple: "size L, trung" -> after that split(",") -> List variants and check with db variants list
     }
 }

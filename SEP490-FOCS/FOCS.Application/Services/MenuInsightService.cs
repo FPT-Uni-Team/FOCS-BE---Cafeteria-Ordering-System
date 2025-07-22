@@ -40,7 +40,37 @@ namespace FOCS.Application.Services
                                     .SelectMany(order => order.OrderDetails)
                                     .ToList();
 
+<<<<<<< HEAD
+            return GroupProductInsignt(allOrderDetails, topN);
+        }
+
+        public Task<List<MenuItemInsightResponse>> GetProductsBasedOnBestPromotionAsync(string storeId, int topN = 10)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<List<MenuItemInsightResponse>> GetProductOrderNearingWithCurrent(Guid userId, int topN = 1)
+        {
+            var orders = await _orderRepository.AsQueryable().Include(x => x.OrderDetails)
+                                                                .ThenInclude(x => x.MenuItem)
+                                                                    .ThenInclude(x => x.Images)
+                                                             .Where(x => x.UserId == userId && !x.IsDeleted)
+                                                             .OrderByDescending(x => x.CreatedAt)
+                                                             .Take(topN)
+                                                             .ToListAsync();
+
+            var allOrdersDetail = orders.SelectMany(x => x.OrderDetails).ToList();
+
+            return GroupProductInsignt(allOrdersDetail, topN);
+        }
+
+        #region private method
+        public List<MenuItemInsightResponse> GroupProductInsignt(List<OrderDetail> orderDetails, int topN = 1)
+        {
+            var grouped = orderDetails.GroupBy(od => new { od.MenuItemId, od.VariantId })
+=======
             var grouped = allOrderDetails.GroupBy(od => new { od.MenuItemId, od.VariantId })
+>>>>>>> main
                                                     .Select(g => new {
                                                         MenuItemId = g.Key.MenuItemId,
                                                         VariantId = g.Key.VariantId,
@@ -52,7 +82,11 @@ namespace FOCS.Application.Services
                                                     .Take(topN)
                                                     .ToList();
 
+<<<<<<< HEAD
+            return grouped.Select(g => new MenuItemInsightResponse
+=======
             var result = grouped.Select(g => new MenuItemInsightResponse
+>>>>>>> main
             {
                 MenuItemId = g.MenuItemId,
                 Name = g.MenuItem.Name,
@@ -66,6 +100,10 @@ namespace FOCS.Application.Services
                 },
                 Image = g.MenuItem.Images.FirstOrDefault()?.Url ?? ""
             }).ToList();
+<<<<<<< HEAD
+        }
+        #endregion
+=======
 
             return result;
         }
@@ -79,5 +117,6 @@ namespace FOCS.Application.Services
         {
             throw new NotImplementedException();
         }
+>>>>>>> main
     }
 }

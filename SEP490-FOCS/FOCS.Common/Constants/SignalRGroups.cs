@@ -9,7 +9,7 @@ namespace FOCS.Common.Constants
 {
     public static class SignalRGroups
     {
-        public static string Kitchen(Guid storeid) => $"Kitchen_{storeid}";
+        public static string Kitchen(Guid storeid) => $"Kitchen_storeId={storeid}";
         public static string Cashier(Guid storeid, Guid tableId) => $"storeId={storeid}&tableId={tableId}";
         public static string Admin(Guid storeid) => $"Admin_{storeid}";
 

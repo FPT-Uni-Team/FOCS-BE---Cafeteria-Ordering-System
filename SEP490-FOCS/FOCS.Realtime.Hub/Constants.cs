@@ -14,5 +14,11 @@ namespace FOCS.Realtime.Hubs
             public const string OrderCreated = "OrderCreated";
             public const string NewNotifyTest = "NewNotifyTest";
         }
+
+        public class ActionTitle
+        {
+            public const string NewOrderd = $"Có đơn mới";
+            public static string NewOrderAtTable(int tableId) => $"Bàn {tableId} vừa tạo đơn mới";
+        }
     }
 }

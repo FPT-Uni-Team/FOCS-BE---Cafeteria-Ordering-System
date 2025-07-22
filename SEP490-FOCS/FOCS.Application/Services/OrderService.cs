@@ -168,9 +168,40 @@ namespace FOCS.Application.Services
             return orderCode == null ? new OrderDTO { } : _mapper.Map<OrderDTO>(orderByCode);
         }
 
-        public Task<List<OrderDTO>> GetPendingOrdersAsync()
+        public async Task<List<OrderDTO>> GetPendingOrdersInDayAsync()
         {
-            throw new NotImplementedException();
+            var timeSince = DateTime.UtcNow.Subtract(TimeSpan.FromDays(1));
+
+            var ordersPending = await _orderRepository.AsQueryable()
+                                                      .Include(x => x.OrderDetails)
+                                                      .ThenInclude(x => x.Variant)
+                                                      .Where(x => x.OrderStatus == OrderStatus.Pending
+                                                              && !x.IsDeleted
+                                                              && x.PaymentStatus == PaymentStatus.Paid
+                                                              && x.CreatedAt >= timeSince)
+                                                      .ToListAsync();
+
+            var mappingOrders = _mapper.Map<List<OrderDTO>>(ordersPending);
+
+
+            foreach (var dto in mappingOrders)
+            {
+                var original = ordersPending.FirstOrDefault(x => x.Id == dto.Id);
+                if (original != null && original.OrderDetails.Any())
+                {
+                    var firstMenuItemId = original.OrderDetails.First().MenuItemId;
+
+                    var menuItem = await _menuItemRepository.GetByIdAsync(firstMenuItemId);
+                    var menuItemName = menuItem?.Name;
+
+                    dto.OrderDetails.ForEach(detail =>
+                    {
+                        detail.MenuItemName = menuItemName;
+                    });
+                }
+            }
+
+            return mappingOrders;
         }
 
         public async Task<OrderDTO> GetUserOrderDetailAsync(Guid userId, Guid orderId)
@@ -215,7 +246,9 @@ namespace FOCS.Application.Services
                         PaymentType.CASH => PaymentStatus.Unpaid,
                         PaymentType.BANK_TRANSFER or PaymentType.ONLINE_PAYMENT => PaymentStatus.Waiting,
                         _ => PaymentStatus.Unpaid
-                    }
+                    },
+                    CreatedBy = userId,
+                    TableId = table.Id
                 };
 
                 var ordersDetailCreate = new List<OrderDetail>();
@@ -282,8 +315,8 @@ namespace FOCS.Application.Services
                 //send notify to casher
                 var notifyEventModel = new NotifyEvent
                 {
-                    Title = "Có đơn mới",
-                    Message = $"Bàn {table.TableNumber} vừa tạo đơn",
+                    Title = Constants.ActionTitle.NewOrderd,
+                    Message = Constants.ActionTitle.NewOrderAtTable(table.TableNumber),
                     TargetGroups = new[] { SignalRGroups.Cashier(store.Id, table.Id) },
                     storeId = store.Id.ToString(),
                     tableId = table.Id.ToString()
@@ -298,8 +331,6 @@ namespace FOCS.Application.Services
                     Quantity = x.Quantity,
                     Note = x.Note
                 }).ToList();
-
-                await _realtimeService.SendToGroupAsync<NotifyHub, NotifyEvent>(SignalRGroups.Cashier(store.Id, table.Id), Constants.Method.NewNotifyTest, notifyEventModel);
                 await _realtimeService.SendToGroupAsync<OrderHub, List<OrderRedisModel>>(SignalRGroups.User(store.Id, table.Id, Guid.Parse(userId)), Constants.Method.OrderCreated, orderDataExchangeRealtime);
             }
             catch (Exception ex)

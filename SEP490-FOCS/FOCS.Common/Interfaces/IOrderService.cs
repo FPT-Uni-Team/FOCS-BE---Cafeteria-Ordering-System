@@ -9,7 +9,7 @@ namespace FOCS.Common.Interfaces
 {
     public interface IOrderService
     {
-        Task<List<OrderDTO>> GetPendingOrdersAsync();
+        Task<List<OrderDTO>> GetPendingOrdersInDayAsync();
 
         #region guest
 
