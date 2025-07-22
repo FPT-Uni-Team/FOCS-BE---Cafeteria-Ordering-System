@@ -222,6 +222,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins("http://127.0.0.1:5500",
+                           "http://127.0.0.1:3000",
                            "https://adminfocssite.vercel.app")
               .AllowAnyHeader()
               .AllowAnyMethod()
