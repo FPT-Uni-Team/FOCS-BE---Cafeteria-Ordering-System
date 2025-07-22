@@ -287,8 +287,8 @@ namespace FOCS.Application.Services
                     TargetGroups = new[] { SignalRGroups.Cashier(store.Id, table.Id) },
                     storeId = store.Id.ToString(),
                     tableId = table.Id.ToString()
-
                 };
+
                 await _publishEndpoint.Publish(notifyEventModel);
 
                 var orderDataExchangeRealtime = order.Items.Select(x => new OrderRedisModel

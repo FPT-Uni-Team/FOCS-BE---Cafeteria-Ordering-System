@@ -12,12 +12,13 @@ namespace FOCS.Realtime.Hubs
     {
         public override async Task OnConnectedAsync()
         {
-            var storeId = Context.GetHttpContext()?.Request.Query["storeId"]; 
+            var storeId = Context.GetHttpContext()?.Request.Query["storeId"];
+            var tableId = Context.GetHttpContext()?.Request.Query["tableId"];
             //var group = Context.GetHttpContext()?.Request.Query["group"];
 
             if (!string.IsNullOrEmpty(storeId))
             {
-                string group = $"storeId={storeId}";
+                string group = $"storeId={storeId}&tableId={tableId}";
                 await Groups.AddToGroupAsync(Context.ConnectionId, group);
             }
             await base.OnConnectedAsync();
