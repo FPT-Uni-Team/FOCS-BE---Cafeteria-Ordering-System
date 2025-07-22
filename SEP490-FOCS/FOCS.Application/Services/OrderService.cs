@@ -288,7 +288,7 @@ namespace FOCS.Application.Services
                     storeId = store.Id.ToString(),
                     tableId = table.Id.ToString()
                 };
-
+                
                 await _publishEndpoint.Publish(notifyEventModel);
 
                 var orderDataExchangeRealtime = order.Items.Select(x => new OrderRedisModel
