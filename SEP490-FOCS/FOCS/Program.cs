@@ -95,6 +95,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IDiscountStrategyService, CouponOnlyStrategy>()
                 .AddScoped<IDiscountStrategyService, PromotionOnlyStrategy>()
                 .AddScoped<ICartService, CartService>()
+                .AddScoped<IMenuInsightService, MenuInsightService>()
                 .AddScoped<ICashierService, CashierService>()
                 .AddScoped<IRepository<CartItem>, Repository<CartItem, OrderDbContext>>()
                 .AddScoped<IRepository<CouponUsage>, Repository<CouponUsage, OrderDbContext>>()
@@ -240,6 +241,7 @@ builder.Services.AddMassTransit(x =>
         {
             h.Username("guest");
             h.Password("guest");
+            h.Heartbeat(TimeSpan.FromSeconds(60));
         });
 
         // Config receive endpoint

@@ -52,6 +52,7 @@ namespace FOCS.Application.Mappings
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
             // Mappings for Table
             CreateMap<Table, TableDTO>().ReverseMap()
+                .ForMember(dest => dest.QrCode, opt => opt.Ignore())
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
 
             CreateMap<Brand, CreateAdminBrandRequest>().ReverseMap()

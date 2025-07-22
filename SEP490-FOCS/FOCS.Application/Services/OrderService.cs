@@ -280,7 +280,7 @@ namespace FOCS.Application.Services
                 order.DiscountResult.OrderCode = orderCreate.OrderCode;
 
                 //send notify to casher
-                await _publishEndpoint.Publish(new NotifyEvent
+                var notifyEventModel = new NotifyEvent
                 {
                     Title = "Có đơn mới",
                     Message = $"Bàn {table.TableNumber} vừa tạo đơn",
@@ -288,7 +288,8 @@ namespace FOCS.Application.Services
                     storeId = store.Id.ToString(),
                     tableId = table.Id.ToString()
 
-                });
+                };
+                await _publishEndpoint.Publish(notifyEventModel);
 
                 var orderDataExchangeRealtime = order.Items.Select(x => new OrderRedisModel
                 {
@@ -298,6 +299,7 @@ namespace FOCS.Application.Services
                     Note = x.Note
                 }).ToList();
 
+                await _realtimeService.SendToGroupAsync<NotifyHub, NotifyEvent>(SignalRGroups.Cashier(store.Id, table.Id), Constants.Method.NewNotifyTest, notifyEventModel);
                 await _realtimeService.SendToGroupAsync<OrderHub, List<OrderRedisModel>>(SignalRGroups.User(store.Id, table.Id, Guid.Parse(userId)), Constants.Method.OrderCreated, orderDataExchangeRealtime);
             }
             catch (Exception ex)
