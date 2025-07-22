@@ -15,15 +15,37 @@ namespace FOCS.Realtime.Hubs
 
         public override async Task OnConnectedAsync()
         {
+            var dept = Context.GetHttpContext()?.Request.Query["dept"];
+
             var storeId = Context.GetHttpContext()?.Request.Query["storeId"];
             var tableId = Context.GetHttpContext()?.Request.Query["tableId"];
             var actorId = Context.GetHttpContext()?.Request.Query["actorId"];
 
-            if (!string.IsNullOrEmpty(storeId) && !string.IsNullOrEmpty(tableId))
+            string group = string.Empty;
+
+            switch (dept)
             {
-                string group = $"storeId={storeId}&tableId={tableId}&actorId={actorId}";
-                await Groups.AddToGroupAsync(Context.ConnectionId, group);
+                case "kitchen":
+                    if (!string.IsNullOrEmpty(storeId))
+                    {
+                        group = $"dept={dept}&storeId={storeId}";
+                    }
+                    break;
+                case "cashier":
+                    if (!string.IsNullOrEmpty(storeId) && !string.IsNullOrEmpty(tableId))
+                    {
+                        group = $"dept={dept}&storeId={storeId}&tableId={tableId}";
+                    }
+                    break;
+                case "user":
+                    if (!string.IsNullOrEmpty(storeId) && !string.IsNullOrEmpty(tableId) && !string.IsNullOrEmpty(actorId))
+                    {
+                        group = $"dept={dept}&storeId={storeId}&tableId={tableId}&actorId={actorId}";
+                    }
+                    break;
             }
+
+            await Groups.AddToGroupAsync(Context.ConnectionId, group);
 
             await base.OnConnectedAsync();
         }
