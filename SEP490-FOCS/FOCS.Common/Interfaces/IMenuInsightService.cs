@@ -21,11 +21,7 @@ namespace FOCS.Common.Interfaces
         /// </summary>
         /// <param name="userId">ID user</param>
         /// <param name="topN">Count of suggest product</param>
-<<<<<<< HEAD
         Task<List<MenuItemInsightResponse>> GetProductOrderNearingWithCurrent(Guid userId, int topN = 10);
-=======
-        Task<List<MenuItemInsightResponse>> GetSuggestedProductsBasedOnHistoryAsync(Guid userId, int topN = 10);
->>>>>>> main
 
         /// <summary>
         /// Suggest based on the best current promotion
