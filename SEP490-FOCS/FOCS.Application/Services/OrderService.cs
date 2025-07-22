@@ -313,14 +313,16 @@ namespace FOCS.Application.Services
                 order.DiscountResult.OrderCode = orderCreate.OrderCode;
 
                 //send notify to casher
-                await _publishEndpoint.Publish(new NotifyEvent
+                var notifyEventModel = new NotifyEvent
                 {
                     Title = Constants.ActionTitle.NewOrderd,
                     Message = Constants.ActionTitle.NewOrderAtTable(table.TableNumber),
                     TargetGroups = new[] { SignalRGroups.Cashier(store.Id, table.Id) },
                     storeId = store.Id.ToString(),
                     tableId = table.Id.ToString()
-                });
+                };
+                
+                await _publishEndpoint.Publish(notifyEventModel);
 
                 var orderDataExchangeRealtime = order.Items.Select(x => new OrderRedisModel
                 {
