@@ -6,6 +6,7 @@ using Google.Apis.Auth.OAuth2;
 using MassTransit;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using FOCS.NotificationService.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -46,6 +47,8 @@ catch (Exception ex)
 {
     logger.LogError(ex, "Failed to initialize Firebase.");
 }
+
+builder.Services.AddSingleton<FirebaseService>();
 
 builder.Services.AddHostedService<Worker>();
 
