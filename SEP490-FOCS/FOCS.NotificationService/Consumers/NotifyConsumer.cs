@@ -2,6 +2,7 @@
 using FirebaseAdmin.Messaging;
 using FOCS.NotificationService.Constants;
 using FOCS.NotificationService.Models;
+using FOCS.NotificationService.Services;
 using FOCS.Realtime.Hubs;
 using MassTransit;
 using Microsoft.AspNetCore.SignalR;
@@ -19,11 +20,13 @@ namespace FOCS.NotificationService.Consumers
     {
         private readonly IHubContext<NotifyHub> _notifyHub;
         private readonly ILogger<NotifyConsumer> _notifyLogger;
+        private readonly FirebaseService _firebaseService;
 
-        public NotifyConsumer(IHubContext<NotifyHub> notifyHub, ILogger<NotifyConsumer> notifyLogger)
+        public NotifyConsumer(IHubContext<NotifyHub> notifyHub, ILogger<NotifyConsumer> notifyLogger, FirebaseService firebaseService)
         {
             _notifyHub = notifyHub;
             _notifyLogger = notifyLogger;
+            _firebaseService = firebaseService;
         }
 
         public async Task Consume(ConsumeContext<NotifyEvent> context)
@@ -41,36 +44,26 @@ namespace FOCS.NotificationService.Consumers
             // Send notify to Firebase
             if (payload.MobileTokens != null && payload.MobileTokens.Any())
             {
-                var app = FirebaseApp.DefaultInstance;
-                if (app == null)
+               if (_firebaseService.Messaging == null)
                 {
-                    _notifyLogger.LogError("FirebaseApp.DefaultInstance is null — cannot get FirebaseMessaging");
+                    _notifyLogger.LogError("❌ FirebaseMessaging is null in NotifyConsumer");
                     return;
                 }
-
-                var fcm = FirebaseMessaging.GetMessaging(app);
-
-                if (fcm == null)
-                {
-                    _notifyLogger.LogError("FirebaseMessaging instance is null after GetMessaging()");
-                    return;
-                }
-
+                
                 _notifyLogger.LogInformation("✅ FirebaseMessaging instance acquired.");
-
+                
                 var message = new MulticastMessage()
                 {
                     Tokens = payload.MobileTokens.ToList(),
-                    Notification = new Notification()
+                    Notification = new Notification
                     {
                         Title = payload.Title,
                         Body = payload.Message
                     }
                 };
                 
-                var response = await fcm.SendMulticastAsync(message);
-                _notifyLogger.LogInformation($"✅ FCM multicast sent: {response.SuccessCount}/{payload.MobileTokens}");
-
+                var result = await _firebaseService.Messaging.SendMulticastAsync(message);
+                _notifyLogger.LogInformation("✅ Push sent to {Count} devices, success: {Success}", payload.MobileTokens, result.SuccessCount);
             }
         }
     }

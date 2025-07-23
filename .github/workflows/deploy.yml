@@ -3,7 +3,7 @@ name: CI/CD Deploy .NET API
 on:
   push:
     branches:
-      - deploy-main
+      - main
 
 jobs:
   build-and-deploy:
