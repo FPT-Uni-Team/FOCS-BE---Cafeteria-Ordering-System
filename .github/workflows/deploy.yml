@@ -3,7 +3,7 @@ name: CI/CD Deploy .NET API
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   build-and-deploy:
@@ -25,6 +25,13 @@ jobs:
         run: dotnet build FOCS.sln --configuration Release --no-restore
         working-directory: ./SEP490-FOCS
 
+      - name: Create firebase-service-account.json for NotificationService
+        run: |
+          echo "$FIREBASE_CREDENTIAL" | base64 -d > firebase-service-account.json
+        env:
+          FIREBASE_CREDENTIAL: ${{ secrets.FIREBASE_CREDENTIAL }}
+        working-directory: ./SEP490-FOCS/FOCS.NotificationService
+        
       - name: Publish project
         run: dotnet publish FOCS/FOCS.csproj --configuration Release --output ./publish --no-build
         working-directory: ./SEP490-FOCS
