@@ -10,6 +10,9 @@ namespace FOCS.Common.Models
 {
     public class SendOrderWrapDTO
     {
+        [JsonPropertyName("order_wrap_id")]
+        public Guid OrderWrapId { get; set; }
+
         [JsonPropertyName("menu_item_id")]
         public Guid MenuItemId { get; set; }
 
