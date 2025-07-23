@@ -16,10 +16,12 @@ namespace FOCS.NotificationService.Consumers
     public class NotifyConsumer : IConsumer<NotifyEvent>
     {
         private readonly IHubContext<NotifyHub> _notifyHub;
+        private readonly ILogger<NotifyConsumer> _notifyLogger;
 
-        public NotifyConsumer(IHubContext<NotifyHub> notifyHub)
+        public NotifyConsumer(IHubContext<NotifyHub> notifyHub, ILogger<NotifyConsumer> notifyLogger)
         {
             _notifyHub = notifyHub;
+            _notifyLogger = notifyLogger;
         }
 
         public async Task Consume(ConsumeContext<NotifyEvent> context)
@@ -47,6 +49,9 @@ namespace FOCS.NotificationService.Consumers
                         Body = payload.Message
                     }
                 };
+
+                _notifyLogger.LogInformation(fcm is null ? "fcm is null" : $"fcm not null: {fcm.ToString()}");
+
                 await fcm.SendMulticastAsync(message);
             }
         }
