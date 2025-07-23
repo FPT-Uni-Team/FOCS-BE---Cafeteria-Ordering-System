@@ -1,10 +1,12 @@
-﻿using FirebaseAdmin.Messaging;
+﻿using FirebaseAdmin;
+using FirebaseAdmin.Messaging;
 using FOCS.NotificationService.Constants;
 using FOCS.NotificationService.Models;
 using FOCS.Realtime.Hubs;
 using MassTransit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,10 +18,12 @@ namespace FOCS.NotificationService.Consumers
     public class NotifyConsumer : IConsumer<NotifyEvent>
     {
         private readonly IHubContext<NotifyHub> _notifyHub;
+        private readonly ILogger<NotifyConsumer> _notifyLogger;
 
-        public NotifyConsumer(IHubContext<NotifyHub> notifyHub)
+        public NotifyConsumer(IHubContext<NotifyHub> notifyHub, ILogger<NotifyConsumer> notifyLogger)
         {
             _notifyHub = notifyHub;
+            _notifyLogger = notifyLogger;
         }
 
         public async Task Consume(ConsumeContext<NotifyEvent> context)
@@ -37,7 +41,23 @@ namespace FOCS.NotificationService.Consumers
             // Send notify to Firebase
             if (payload.MobileTokens != null && payload.MobileTokens.Any())
             {
-                var fcm = FirebaseMessaging.DefaultInstance;
+                var app = FirebaseApp.DefaultInstance;
+                if (app == null)
+                {
+                    _notifyLogger.LogError("FirebaseApp.DefaultInstance is null — cannot get FirebaseMessaging");
+                    return;
+                }
+
+                var fcm = FirebaseMessaging.GetMessaging(app);
+
+                if (fcm == null)
+                {
+                    _notifyLogger.LogError("FirebaseMessaging instance is null after GetMessaging()");
+                    return;
+                }
+
+                _notifyLogger.LogInformation("✅ FirebaseMessaging instance acquired.");
+
                 var message = new MulticastMessage()
                 {
                     Tokens = payload.MobileTokens.ToList(),
@@ -47,7 +67,10 @@ namespace FOCS.NotificationService.Consumers
                         Body = payload.Message
                     }
                 };
-                await fcm.SendMulticastAsync(message);
+                
+                var response = await fcm.SendMulticastAsync(message);
+                _notifyLogger.LogInformation($"✅ FCM multicast sent: {response.SuccessCount}/{payload.MobileTokens}");
+
             }
         }
     }
