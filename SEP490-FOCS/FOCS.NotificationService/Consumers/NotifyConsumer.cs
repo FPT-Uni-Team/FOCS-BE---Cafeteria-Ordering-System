@@ -58,7 +58,6 @@ namespace FOCS.NotificationService.Consumers
 
                 _notifyLogger.LogInformation("✅ FirebaseMessaging instance acquired.");
 
-                // Proceed with sending
                 var message = new MulticastMessage()
                 {
                     Tokens = payload.MobileTokens.ToList(),
@@ -68,7 +67,7 @@ namespace FOCS.NotificationService.Consumers
                         Body = payload.Message
                     }
                 };
-
+                
                 var response = await fcm.SendMulticastAsync(message);
                 _notifyLogger.LogInformation($"✅ FCM multicast sent: {response.SuccessCount}/{payload.MobileTokens}");
 
