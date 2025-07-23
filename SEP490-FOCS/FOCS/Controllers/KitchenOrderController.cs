@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FOCS.Common.Interfaces;
+using FOCS.Common.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
@@ -7,16 +9,17 @@ namespace FOCS.Controllers
     [ApiController]
     public class KitchenOrderController : ControllerBase
     {
-        [HttpGet("wrap-orders")]
-        public async Task<IActionResult> GetWrapOrdersRealtime()
+        private readonly IOrderWrapService _orderWrapService;
+
+        public KitchenOrderController(IOrderWrapService orderWrapService)
         {
-            return Ok();
+            _orderWrapService = orderWrapService;
         }
 
-        [HttpPut("mark-done")]
-        public async Task<IActionResult> MarkDishAsCompleted(/*[FromBody] DishStatusDto dto*/)
+        [HttpPut("change-status")]
+        public async Task<bool> ChangeStatusProductionOrder([FromBody] UpdateStatusProductionOrderRequest dto)
         {
-            return Ok();
+            return await _orderWrapService.ChangeStatusProductionOrder(dto);
         }
     }
 }

@@ -14,11 +14,12 @@ namespace FOCS.Realtime.Hubs
         {
             var storeId = Context.GetHttpContext()?.Request.Query["storeId"];
             var tableId = Context.GetHttpContext()?.Request.Query["tableId"];
+            var dept = Context.GetHttpContext()?.Request.Query["dept"];
             //var group = Context.GetHttpContext()?.Request.Query["group"];
 
             if (!string.IsNullOrEmpty(storeId))
             {
-                string group = $"storeId={storeId}&tableId={tableId}";
+                string group = $"dept={dept}&storeId={storeId}&tableId={tableId}";
                 await Groups.AddToGroupAsync(Context.ConnectionId, group);
             }
             await base.OnConnectedAsync();

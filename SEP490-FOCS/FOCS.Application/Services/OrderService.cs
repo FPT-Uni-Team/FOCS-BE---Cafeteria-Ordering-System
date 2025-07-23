@@ -42,6 +42,8 @@ namespace FOCS.Application.Services
         private readonly IRepository<Coupon> _couponRepository;
         private readonly IRepository<OrderDetail> _orderDetailRepository;
 
+        private readonly IMobileTokenSevice _mobileTokenService;
+
         private readonly IPricingService _pricingService;
 
         private readonly IPromotionService _promotionService;
@@ -74,7 +76,8 @@ namespace FOCS.Application.Services
                             IRealtimeService realtimeService,
                             UserManager<User> userManager,
                             IRepository<SystemConfiguration> systemConfig,
-                            IPublishEndpoint publishEndpoint)
+                            IPublishEndpoint publishEndpoint,
+                            IMobileTokenSevice mobileTokenService)
         {
             _orderRepository = orderRepository;
             _realtimeService = realtimeService;
@@ -93,6 +96,7 @@ namespace FOCS.Application.Services
             _mapper = mapper;
             _publishEndpoint = publishEndpoint;
             _systemConfig = systemConfig;
+            _mobileTokenService = mobileTokenService;
         }
 
         public async Task<DiscountResultDTO> CreateOrderAsync(CreateOrderRequest order, string userId)
@@ -231,7 +235,7 @@ namespace FOCS.Application.Services
                 {
                     Id = Guid.NewGuid(),
                     OrderCode = "ORD" + randomNum.Next(1000, 9999),
-                    UserId = string.IsNullOrEmpty(userId) ? null : Guid.Parse(userId),
+                    UserId = Guid.Parse(userId),
                     OrderStatus = OrderStatus.Pending,
                     OrderType = order.OrderType,
                     SubTotalAmout = (double)(order.DiscountResult.TotalPrice + order.DiscountResult.TotalDiscount),
@@ -312,12 +316,15 @@ namespace FOCS.Application.Services
                 //code order for payment hook
                 order.DiscountResult.OrderCode = orderCreate.OrderCode;
 
+                var tokenDeviceMobile = await _mobileTokenService.GetMobileToken(Guid.Parse(userId));
+
                 //send notify to casher
                 var notifyEventModel = new NotifyEvent
                 {
                     Title = Constants.ActionTitle.NewOrderd,
                     Message = Constants.ActionTitle.NewOrderAtTable(table.TableNumber),
                     TargetGroups = new[] { SignalRGroups.Cashier(store.Id, table.Id) },
+                    MobileTokens = new[] { tokenDeviceMobile.Token }, 
                     storeId = store.Id.ToString(),
                     tableId = table.Id.ToString()
                 };

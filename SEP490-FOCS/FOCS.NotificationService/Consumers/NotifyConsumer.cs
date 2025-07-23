@@ -34,7 +34,7 @@ namespace FOCS.NotificationService.Consumers
                 await _notifyHub.Clients.Group(group).SendAsync(ActionHub.NewNotification, payload);
             }
 
-            // Gửi Mobile qua Firebase
+            // Send notify to Firebase
             if (payload.MobileTokens != null && payload.MobileTokens.Any())
             {
                 var fcm = FirebaseMessaging.DefaultInstance;

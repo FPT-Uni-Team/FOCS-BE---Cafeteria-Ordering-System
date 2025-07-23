@@ -12,7 +12,6 @@ namespace FOCS.Realtime.Hubs
         {
             public const string ReceiveOrderWrapUpdate = "ReceiveOrderWrapUpdate";
             public const string OrderCreated = "OrderCreated";
-            public const string NewNotifyTest = "NewNotifyTest";
         }
 
         public class ActionTitle

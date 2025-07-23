@@ -16,7 +16,6 @@ namespace FOCS.Controllers
     public class AuthController : FocsController
     {
         private readonly IAuthService _authService;
-
         public AuthController(IAuthService authService)
         {
             _authService = authService;
@@ -95,6 +94,12 @@ namespace FOCS.Controllers
 
             ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
             return await _authService.RefreshTokenAsync(refreshToken, storeIdGuid);
+        }
+
+        [HttpPost("mobile-token")]
+        public async Task<bool> AddOrUpdateMobileToken(MobileTokenRequest request)
+        {
+            return await _authService.CreateOrUpdateMobileToken(request);
         }
     }
 }
