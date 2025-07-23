@@ -12,6 +12,7 @@ using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Infrastructure.Identity.Persistance;
 using FOCS.Middlewares;
 using FOCS.NotificationService.Consumers;
+using FOCS.NotificationService.Services;
 using FOCS.Order.Infrastucture.Context;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Order.Infrastucture.Interfaces;
@@ -97,6 +98,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IDiscountStrategyService, CouponOnlyStrategy>()
                 .AddScoped<IDiscountStrategyService, PromotionOnlyStrategy>()
                 .AddScoped<ICartService, CartService>()
+                .AddSingleton<FirebaseService>()
                 .AddScoped<IMenuInsightService, MenuInsightService>()
                 .AddScoped<IRepository<MobileTokenDevice>,  Repository<MobileTokenDevice, OrderDbContext>>()
                 .AddScoped<IMobileTokenSevice, MobileTokenSevice>()
