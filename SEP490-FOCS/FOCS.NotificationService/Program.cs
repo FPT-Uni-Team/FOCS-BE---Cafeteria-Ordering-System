@@ -49,24 +49,24 @@ catch (Exception ex)
 
 builder.Services.AddHostedService<Worker>();
 
-builder.Services.AddMassTransit(x =>
-{
-    x.AddConsumer<NotifyConsumer>();
+//builder.Services.AddMassTransit(x =>
+//{
+//    x.AddConsumer<NotifyConsumer>();
 
-    x.UsingRabbitMq((ctx, cfg) =>
-    {
-        cfg.Host("rabbitmq", "/", h =>
-        {
-            h.Username("guest");
-            h.Password("guest");
-        });
+//    x.UsingRabbitMq((ctx, cfg) =>
+//    {
+//        cfg.Host("rabbitmq", "/", h =>
+//        {
+//            h.Username("guest");
+//            h.Password("guest");
+//        });
 
-        cfg.ReceiveEndpoint("notify-queue", e =>
-        {
-            e.ConfigureConsumer<NotifyConsumer>(ctx);
-        });
-    });
-});
+//        cfg.ReceiveEndpoint("notify-queue", e =>
+//        {
+//            e.ConfigureConsumer<NotifyConsumer>(ctx);
+//        });
+//    });
+//});
 
 var host = builder.Build();
 host.Run();
