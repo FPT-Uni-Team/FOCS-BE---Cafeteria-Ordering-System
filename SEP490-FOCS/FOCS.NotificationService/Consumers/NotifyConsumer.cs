@@ -39,6 +39,8 @@ namespace FOCS.NotificationService.Consumers
             // Send notify to Firebase
             if (payload.MobileTokens != null && payload.MobileTokens.Any())
             {
+                _notifyLogger.LogInformation("join send notify for mobile app");
+
                 var fcm = FirebaseMessaging.DefaultInstance;
                 var message = new MulticastMessage()
                 {
