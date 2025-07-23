@@ -16,9 +16,12 @@ namespace FOCS.Controllers
     public class AuthController : FocsController
     {
         private readonly IAuthService _authService;
-        public AuthController(IAuthService authService)
+        private readonly IConfiguration _configuration;
+
+        public AuthController(IAuthService authService, IConfiguration configuration)
         {
             _authService = authService;
+            _configuration = configuration;
         }
 
         [HttpPost("login")]
@@ -71,7 +74,7 @@ namespace FOCS.Controllers
             var result = await _authService.ConfirmEmailAsync(email, token);
             if (result)
             {
-                return Ok(new { message = "Email confirmed successfully!" });
+                return Redirect(_configuration["applicationProductUrl:BaseWebUrl"] + "/login");
             }
             else
             {
