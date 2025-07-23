@@ -44,10 +44,24 @@ namespace FOCS.NotificationService.Consumers
             // Send notify to Firebase
             if (payload.MobileTokens != null && payload.MobileTokens.Any())
             {
-                if (_firebaseService.Messaging == null)
+               if (_firebaseService.Messaging == null)
                 {
                     _notifyLogger.LogError("❌ FirebaseMessaging is null in NotifyConsumer");
+                    return;
                 }
+                
+                _notifyLogger.LogInformation("✅ FirebaseMessaging instance acquired.");
+                
+                var message = new MulticastMessage()
+                {
+                    Tokens = payload.MobileTokens.ToList(),
+                    Notification = new Notification
+                    {
+                        Title = payload.Title,
+                        Body = payload.Message
+                    }
+                };
+                
                 var result = await _firebaseService.Messaging.SendMulticastAsync(message);
                 _notifyLogger.LogInformation("✅ Push sent to {Count} devices, success: {Success}", payload.MobileTokens, result.SuccessCount);
             }
