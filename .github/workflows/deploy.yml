@@ -3,7 +3,7 @@ name: CI/CD Deploy .NET API
 on:
   push:
     branches:
-      - main  
+      - main
 
 jobs:
   build-and-deploy:
@@ -35,6 +35,13 @@ jobs:
 
       - name: Rename Dockerfile.txt to Dockerfile
         run: mv Dockerfile.txt Dockerfile
+        working-directory: ./SEP490-FOCS
+
+      - name: Create firebase-service-account.json from GitHub Secret
+        run: |
+          echo "$FIREBASE_CREDENTIAL" | base64 -d > firebase-service-account.json
+        env:
+          FIREBASE_CREDENTIAL: ${{ secrets.FIREBASE_CREDENTIAL }}
         working-directory: ./SEP490-FOCS
 
       - name: Deploy - restart container
