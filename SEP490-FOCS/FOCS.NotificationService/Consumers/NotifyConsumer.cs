@@ -50,7 +50,9 @@ namespace FOCS.NotificationService.Consumers
                     return;
                 }
 
-                var message = new MulticastMessage
+                _notifyLogger.LogInformation("✅ FirebaseMessaging instance acquired.");
+
+                var message = new MulticastMessage()
                 {
                     Tokens = payload.MobileTokens.ToList(),
                     Notification = new Notification
