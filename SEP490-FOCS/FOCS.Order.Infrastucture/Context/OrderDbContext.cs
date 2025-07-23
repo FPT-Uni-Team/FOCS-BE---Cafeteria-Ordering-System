@@ -50,16 +50,18 @@ namespace FOCS.Order.Infrastucture.Context
 
         public DbSet<SystemConfiguration> SystemConfigurations { get; set; }
 
+        public DbSet<MobileTokenDevice> MobileTokenDevices { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            //modelBuilder.Entity<MenuItem>()
-            //     .HasOne(mi => mi.Store)
-            //     .WithMany(s => s.MenuItems) 
-            //     .HasForeignKey(mi => mi.StoreId)
-            //     .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<MenuItem>()
+                 .HasOne(mi => mi.Store)
+                 .WithMany(s => s.MenuItems)
+                 .HasForeignKey(mi => mi.StoreId)
+                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<PromotionItemCondition>()
                 .HasOne(pic => pic.BuyItem)

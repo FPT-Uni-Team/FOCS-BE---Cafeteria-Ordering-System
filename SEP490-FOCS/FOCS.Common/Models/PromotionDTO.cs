@@ -79,21 +79,19 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         [JsonPropertyName("coupon_ids")]
         public List<Guid>? CouponIds { get; set; }
 
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        public void Validate(ValidationContext validationContext, bool updateOngoingPromotion)
         {
             var results = new List<ValidationResult>();
-
-            ConditionCheck.CheckCondition(StartDate.Date > DateTime.UtcNow.Date,
-                                                Errors.PromotionError.StartDateInPast, 
-                                                Errors.FieldName.StartDate);
+            if (!updateOngoingPromotion)
+            {
+                ConditionCheck.CheckCondition(StartDate.Date > DateTime.UtcNow.Date,
+                                                    Errors.PromotionError.StartDateInPast,
+                                                    Errors.FieldName.StartDate);
+            }
 
             ConditionCheck.CheckCondition(StartDate < EndDate,
                                                 Errors.PromotionError.StartDateAfterEndDate,
                                                 Errors.FieldName.EndDate);
-
-            ConditionCheck.CheckCondition(StartDate.Date > DateTime.UtcNow.Date,
-                                                Errors.PromotionError.MaxPercentageDiscountValue,
-                                                Errors.FieldName.DiscountValue);
 
             if (PromotionType == PromotionType.BuyXGetY)
             {
@@ -101,8 +99,6 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
                                                     Errors.PromotionError.RequireItemCondition,
                                                     Errors.FieldName.PromotionItemCondition);
             }
-
-            return results;
         }
     }
 }

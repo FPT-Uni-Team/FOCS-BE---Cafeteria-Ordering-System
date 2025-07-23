@@ -120,17 +120,18 @@ namespace FOCS.Application.Services
             var promotion = await GetAvailablePromotionById(promotionId);
             if (promotion == null) return false;
             await ValidateUser(userId, promotion.StoreId);
-            await ValidatePromotionDto(dto);
             await ValidatePromotionUniqueness(dto, storeId);
             await ValidateStoreExists(storeId);
 
             if (promotion.IsActive &&
                     promotion.StartDate <= DateTime.UtcNow && promotion.EndDate >= DateTime.UtcNow)
             {
+                await ValidatePromotionDto(dto, updateOngoingPromotion: true);
                 promotion.EndDate = dto.EndDate;
             }
             else
             {
+                await ValidatePromotionDto(dto);
                 var coupons = await ValidateCoupons(dto.CouponIds, dto.StartDate, dto.EndDate, storeId, promotionId);
                 promotion.Coupons = coupons;
                 _mapper.Map(dto, promotion);
@@ -338,12 +339,10 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(storesOfUser.Select(x => x.StoreId).Contains(storeId), Errors.AuthError.UserUnauthor, Errors.FieldName.UserId);
         }
 
-        private async Task ValidatePromotionDto(PromotionDTO dto)
+        private async Task ValidatePromotionDto(PromotionDTO dto, bool updateOngoingPromotion = false)
         {
             var context = new ValidationContext(dto);
-            var validationResults = dto.Validate(context);
-            ConditionCheck.CheckCondition(!validationResults.Any(),
-                string.Join("; ", validationResults.Select(r => r.ErrorMessage)), "");
+            dto.Validate(context, updateOngoingPromotion);
         }
 
         private async Task ValidatePromotionUniqueness(PromotionDTO dto, Guid storeId)

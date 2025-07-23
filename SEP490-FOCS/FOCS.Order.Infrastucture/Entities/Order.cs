@@ -15,7 +15,7 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public string OrderCode { get; set; } = null!;
 
-        public Guid? UserId { get; set; }
+        public Guid UserId { get; set; }
 
         public OrderStatus OrderStatus { get; set; }
 
