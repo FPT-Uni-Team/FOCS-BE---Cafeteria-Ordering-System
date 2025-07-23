@@ -42,7 +42,7 @@ jobs:
           echo "$FIREBASE_CREDENTIAL" | base64 -d > firebase-service-account.json
         env:
           FIREBASE_CREDENTIAL: ${{ secrets.FIREBASE_CREDENTIAL }}
-        working-directory: ./SEP490-FOCS
+        working-directory: ./SEP490-FOCS/FOCS.NotificationService
 
       - name: Deploy - restart container
         run: |
