@@ -204,7 +204,7 @@ namespace FOCS.Application.Services
                 Email = request.Email,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                UserName = request.Email,
+                UserName = request.Email.Split("@")[0],
                 PhoneNumber = request.Phone
             };
 
