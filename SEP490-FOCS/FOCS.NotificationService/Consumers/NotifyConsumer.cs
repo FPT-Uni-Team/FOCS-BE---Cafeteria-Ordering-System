@@ -42,19 +42,11 @@ namespace FOCS.NotificationService.Consumers
             }
 
             // Send notify to Firebase
-            if (payload.MobileTokens != null && payload.MobileTokens.Any())
+            foreach (var token in payload.MobileTokens)
             {
-               if (_firebaseService.Messaging == null)
+                var message = new Message()
                 {
-                    _notifyLogger.LogError("❌ FirebaseMessaging is null in NotifyConsumer");
-                    return;
-                }
-                
-                _notifyLogger.LogInformation("✅ FirebaseMessaging instance acquired.");
-                
-                var message = new MulticastMessage()
-                {
-                    Tokens = payload.MobileTokens.ToList(),
+                    Token = token,
                     Notification = new Notification
                     {
                         Title = payload.Title,
@@ -62,10 +54,15 @@ namespace FOCS.NotificationService.Consumers
                     }
                 };
 
-                _notifyLogger.LogInformation("this is json data: {message}", message);
-                
-                var result = await _firebaseService.Messaging.SendMulticastAsync(message);
-                _notifyLogger.LogInformation("✅ Push sent to {Count} devices, success: {Success}", payload.MobileTokens, result.SuccessCount);
+                try
+                {
+                    var result = await _firebaseService.Messaging.SendAsync(message);
+                    _notifyLogger.LogInformation("✅ Push sent to device {Token}, result: {Result}", token, result);
+                }
+                catch (Exception ex)
+                {
+                    _notifyLogger.LogError(ex, "❌ Failed to send push to device {Token}", token);
+                }
             }
         }
     }
