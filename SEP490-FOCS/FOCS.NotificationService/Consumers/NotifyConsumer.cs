@@ -61,6 +61,8 @@ namespace FOCS.NotificationService.Consumers
                         Body = payload.Message
                     }
                 };
+
+                _notifyLogger.LogInformation("this is json data: {message}", message);
                 
                 var result = await _firebaseService.Messaging.SendMulticastAsync(message);
                 _notifyLogger.LogInformation("✅ Push sent to {Count} devices, success: {Success}", payload.MobileTokens, result.SuccessCount);
