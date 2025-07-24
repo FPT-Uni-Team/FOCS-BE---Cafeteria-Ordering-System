@@ -14,7 +14,8 @@ namespace FOCS.Common.Models
         [DataType(DataType.Password)]
         public string Password { get; set; }
 
-        [RegularExpression(@"^(0[3|5|7|8|9])([0-9]{8})$", ErrorMessage = "It must be 10 digits and start with 03, 05, 07, 08, or 09.")]
+        [StringLength(11, ErrorMessage = "Phone number must be 10 to 11 digits.", MinimumLength = 10)]
+        [RegularExpression(@"^\d+$", ErrorMessage = "Phone number must be 10 to 11 digits.")]
         public string? Phone {  get; set; }
 
         [JsonPropertyName("first_name")]
