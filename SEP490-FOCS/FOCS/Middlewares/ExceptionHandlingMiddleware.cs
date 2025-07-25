@@ -33,12 +33,13 @@ namespace FOCS.Middlewares
 
             context.Response.ContentType = "application/json";
             int statusCode = StatusCodes.Status500InternalServerError;
-            string[] messages = exception.Message.Split("@");
-            string message = messages[0];
+            string message = exception.Message;
             string fieldName = string.Empty;
-            if(messages.Count() > 1)
+            int lastAtIndex = exception.Message.LastIndexOf('@');
+            if (lastAtIndex >= 0)
             {
-                fieldName = messages[1] ?? string.Empty;
+                message = exception.Message.Substring(0, lastAtIndex);
+                fieldName = exception.Message.Substring(lastAtIndex + 1);
             }
             //Check the error and res correct error
             if (exception is ValidationException)
