@@ -54,7 +54,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> SendPasswordResetLinkAsync(string email, string resetToken)
         {
-            var baseWebUrl = _configuration["applicationProductUrl:BaseWebUrl"] ?? "http://localhost:5257";
+            var baseWebUrl = _configuration["applicationProductUrl:BaseStoreFrontUrl"] ?? "http://localhost:5257";
             var callbackUrl = $"{baseWebUrl}/reset-password?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(resetToken)}";
             var subject = "TipTrip - Reset Your Password";
             var body = $@"
