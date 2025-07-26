@@ -15,7 +15,7 @@ namespace FOCS.Common.Interfaces
 
         Task<DiscountResultDTO> CreateOrderAsync(CreateOrderRequest dto, string userId);
 
-        Task<OrderDTO> GetOrderByCodeAsync(string orderCode);
+        Task<OrderDTO> GetOrderByCodeAsync(long orderCode);
 
         Task<DiscountResultDTO> ApplyDiscountForOrder(ApplyDiscountOrderRequest request, string userId);
 
@@ -29,6 +29,7 @@ namespace FOCS.Common.Interfaces
         Task<PagedResult<OrderDTO>> GetListOrders(UrlQueryParameters queryParameters, string storeId, string userId);
         Task<bool> CancelOrderAsync(Guid orderId, string userId, string storeId);
         Task<bool> DeleteOrderAsync(Guid orderId, string userId, string storeId);
+        Task MarkAsPaid(long orderCode);
 
         #endregion
     }

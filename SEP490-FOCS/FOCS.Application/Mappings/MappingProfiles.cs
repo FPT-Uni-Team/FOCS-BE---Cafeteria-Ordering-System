@@ -94,6 +94,11 @@ namespace FOCS.Application.Mappings
             CreateMap<VariantGroup, CreateVariantGroupRequest>().ReverseMap();
 
             CreateMap<VariantGroup, VariantGroupResponse>().ReverseMap();
+
+            CreateMap<StoreAdminResponse, StoreSetting>().ReverseMap()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Store.Name))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Store.Address))
+                .ForMember(dest => dest.CustomTaxRate, opt => opt.MapFrom(src => src.Store.CustomTaxRate));
         }
     }
 }

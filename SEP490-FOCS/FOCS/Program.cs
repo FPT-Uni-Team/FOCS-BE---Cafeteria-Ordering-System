@@ -6,6 +6,7 @@ using FOCS.Application.Services.Interface;
 using FOCS.Common.Helpers;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
+using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Infrastructure.Identity.Common.UnitOfWorks;
 using FOCS.Infrastructure.Identity.Identity.Model;
@@ -19,6 +20,7 @@ using FOCS.Order.Infrastucture.Interfaces;
 using FOCS.Realtime.Hubs;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -88,6 +90,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<ICategoryService, CategoryService>()
                 .AddScoped<ICouponService, CouponService>()
                 .AddScoped<IPricingService, PricingService>()
+                .AddScoped<IPayOSServiceFactory, PayOSServiceFactory>()
                 .AddScoped<IRepository<PromotionItemCondition>, Repository<PromotionItemCondition, OrderDbContext>>()
                 .AddScoped<IRepository<OrderDetail>, Repository<OrderDetail, OrderDbContext>>()
                 .AddScoped<DiscountContext>()
@@ -106,6 +109,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IRepository<CartItem>, Repository<CartItem, OrderDbContext>>()
                 .AddScoped<IRepository<CouponUsage>, Repository<CouponUsage, OrderDbContext>>()
                 .AddScoped<IRepository<Coupon>, Repository<Coupon, OrderDbContext>>()
+                .AddScoped<IRepository<PaymentAccount>, Repository<PaymentAccount, OrderDbContext>>()
                 .AddScoped<IRepository<Promotion>, Repository<Promotion, OrderDbContext>>()
                 .AddScoped<IRepository<UserStore>, Repository<UserStore, OrderDbContext>>()
                 .AddScoped<IRepository<MenuItemCategories>, Repository<MenuItemCategories, OrderDbContext>>()
@@ -203,6 +207,8 @@ builder.Services.AddAuthentication(options =>
         RoleClaimType = ClaimTypes.Role
     };
 });
+
+builder.Services.AddDataProtection();
 
 builder.Services.Configure<IdentityOptions>(options =>
 {

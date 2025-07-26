@@ -106,7 +106,7 @@ namespace FOCS.Application.Services
 
             return parameters.SearchBy.ToLowerInvariant() switch
             {
-                "order_code" => query.Where(p => p.OrderCode.ToLower().Contains(searchValue)),
+                "order_code" => query.Where(p => p.OrderCode.ToString().ToLower().Contains(searchValue)),
                 _ => query
             };
         }
