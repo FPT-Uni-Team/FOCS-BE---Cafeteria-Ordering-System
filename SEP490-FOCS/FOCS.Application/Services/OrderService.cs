@@ -165,7 +165,7 @@ namespace FOCS.Application.Services
             return new PagedResult<OrderDTO>(mapped, total, queryParameters.Page, queryParameters.PageSize);
         }
 
-        public async Task<OrderDTO> GetOrderByCodeAsync(string orderCode)
+        public async Task<OrderDTO> GetOrderByCodeAsync(long orderCode)
         {
             var orderByCode = await _orderRepository.AsQueryable().Include(x => x.OrderDetails).FirstOrDefaultAsync(x => x.OrderCode == orderCode);
 
@@ -217,6 +217,27 @@ namespace FOCS.Application.Services
             return _mapper.Map<OrderDTO>(orderByUser);
         }
 
+        public async Task MarkAsPaid(long orderCode)
+        {
+            var order = await _orderRepository.AsQueryable().Include(x => x.Table).FirstOrDefaultAsync(x => x.OrderCode == orderCode);
+
+            order.PaymentStatus = PaymentStatus.Paid;
+
+            _orderRepository.Update(order);
+            await _orderRepository.SaveChangesAsync();
+
+            var notifyEvent = new NotifyEvent
+            {
+                Title = Constants.ActionTitle.PaymentSuccess(order.Table.TableNumber),
+                Message = Constants.ActionTitle.PaymentSuccess(order.Table.TableNumber),
+                TargetGroups = new[] { SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId) },
+                storeId = order.StoreId.ToString(),
+                tableId = order.TableId.ToString()
+            };
+
+            await _realtimeService.SendToGroupAsync<NotifyHub, NotifyEvent>(SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId), Constants.Method.NewNotify, notifyEvent);
+        }
+
         #region private methods
         private async Task SaveOrderAsync(CreateOrderRequest order, Table table, Store store, string userId)
         {
@@ -234,7 +255,7 @@ namespace FOCS.Application.Services
                 var orderCreate = new Order.Infrastucture.Entities.Order
                 {
                     Id = Guid.NewGuid(),
-                    OrderCode = "ORD" + randomNum.Next(1000, 9999),
+                    OrderCode = randomNum.Next(1000, 9999),
                     UserId = Guid.Parse(userId),
                     OrderStatus = OrderStatus.Pending,
                     OrderType = order.OrderType,

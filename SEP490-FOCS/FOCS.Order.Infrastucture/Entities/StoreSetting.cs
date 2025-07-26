@@ -30,6 +30,10 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public int? SpendingRate { get; set; }
 
+        public string? PayOSClientId { get; set; }
+        public string? PayOSApiKey { get; set; }
+        public string? PayOSChecksumKey { get; set; }
+
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }

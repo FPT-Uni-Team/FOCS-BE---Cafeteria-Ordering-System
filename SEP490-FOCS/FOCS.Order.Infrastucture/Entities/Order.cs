@@ -13,7 +13,7 @@ namespace FOCS.Order.Infrastucture.Entities
     {
         public Guid Id { get; set; }
 
-        public string OrderCode { get; set; } = null!;
+        public long OrderCode { get; set; }
 
         public Guid UserId { get; set; }
 

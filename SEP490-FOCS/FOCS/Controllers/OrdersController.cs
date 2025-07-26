@@ -54,7 +54,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("order-by-code/{code}")]
-        public async Task<OrderDTO> GetOrderDetailByCodeAsync(string code)
+        public async Task<OrderDTO> GetOrderDetailByCodeAsync(long code)
         {
             return await _orderService.GetOrderByCodeAsync(code);
         }
