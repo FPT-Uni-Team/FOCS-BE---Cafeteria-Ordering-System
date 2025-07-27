@@ -26,65 +26,62 @@ namespace FOCS.Application.Services
         {
             try
             {
-                _logger.LogInformation("Fetching menu for store {StoreId}", storeId);
-                var menuItems = await _menuItemRepository.IncludeAsync(source => source
-                                                                .Where(m => m.StoreId == storeId));
-                                                                //.Include(m => m.VariantGroups));
-                                                                //.ThenInclude(v => v.Variants));
+                var menuItemsQuery = _menuItemRepository.AsQueryable()
+                                                        .Where(x => x.StoreId == storeId)
+                                                        .Include(mi => mi.Images)
+                                                        .Include(mi => mi.MenuItemCategories).ThenInclude(mic => mic.Category)
+                                                        .Include(mi => mi.MenuItemVariantGroups).ThenInclude(mivg => mivg.VariantGroup)
+                                                        .Include(mi => mi.MenuItemVariantGroups)
+                                                            .ThenInclude(mivg => mivg.MenuItemVariantGroupItems)
+                                                            .ThenInclude(mivgi => mivgi.MenuItemVariant);
 
-                if (!string.IsNullOrWhiteSpace(urlQueryParameters.SearchValue))
+                var totalItems = await menuItemsQuery.CountAsync();
+
+                int pageIndex = urlQueryParameters.Page;
+                int pageSize = urlQueryParameters.PageSize;
+
+                IQueryable<MenuItem> pagedQuery;
+
+                if (pageIndex > 0 && pageSize > 0)
                 {
-                    var search = urlQueryParameters.SearchValue.Trim();
-                    menuItems = menuItems.Where(s => s.Name.ToLower().Contains(search.ToLower()));
-                }
-
-                if (urlQueryParameters.Filters?.Any() == true)
-                {
-                    foreach (var (key, value) in urlQueryParameters.Filters)
-                    {
-                        menuItems = key switch
-                        {
-                            "Price" when double.TryParse(value, out var price) =>
-                                menuItems.Where(m => m.BasePrice > price),
-                            _ => menuItems
-                        };
-                    }
-                }
-
-                if (urlQueryParameters.SortBy != null)
-                {
-                    Expression<Func<MenuItem, object>> sortSelector = urlQueryParameters.SortBy switch
-                    {
-                        "Name" => m => m.Name,
-                        "Price" => m => m.BasePrice,
-                        _ => m => m.Id // Default sort
-                    };
-
-                    menuItems = urlQueryParameters.SortOrder.Equals("ASC", StringComparison.OrdinalIgnoreCase)
-                        ? menuItems.OrderBy(sortSelector)
-                        : menuItems.OrderByDescending(sortSelector);
-                }
-
-                var totalItems = menuItems.Count();
-
-                List<MenuItemDTO> data;
-                var pageIndex = urlQueryParameters.Page;
-                var pageSize = urlQueryParameters.PageSize;
-                if (pageIndex == 0 && pageSize == 0)
-                {
-                    data = _mapper.Map<List<MenuItemDTO>>(menuItems);
+                    int skip = (pageIndex - 1) * pageSize;
+                    pagedQuery = menuItemsQuery.Skip(skip).Take(pageSize);
                 }
                 else
                 {
-                    var pageStart = pageIndex - 1;
-                    data = _mapper.Map<List<MenuItemDTO>>(
-                        menuItems
-                        .Skip(pageStart * pageSize)
-                        .Take(pageSize));
+                    pagedQuery = menuItemsQuery;
                 }
-                data = data.ToList();
-                var pagedResponse = new PagedResult<MenuItemDTO>(data, totalItems, pageIndex, pageSize);
-                return pagedResponse;
+
+                var data = await pagedQuery.Select(x => new MenuItemDTO
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    BasePrice = x.BasePrice,
+                    Description = x.Description,
+                    Images = x.Images.FirstOrDefault().Url,
+                    IsAvailable = x.IsAvailable,
+                    MenuCategories = x.MenuItemCategories.Select(y => new MenuCategoryDTO
+                    {
+                        Id = y.Category.Id,
+                        Description = y.Category.Description,
+                        IsActive = y.Category.IsActive,
+                        Name = y.Category.Name
+                    }).ToList(),
+                    VariantGroups = x.MenuItemVariantGroups.Select(z => new VariantGroupDTO
+                    {
+                        Id = z.Id,
+                        name = z.VariantGroup.Name,
+                        Variants = z.MenuItemVariantGroupItems.Select(c => new MenuItemVariantDTO
+                        {
+                            Id = c.MenuItemVariant.Id,
+                            Name = c.MenuItemVariant.Name,
+                            IsAvailable = c.MenuItemVariant.IsAvailable,
+                            Price = c.MenuItemVariant.Price,
+                        }).ToList()
+                    }).ToList()
+                }).ToListAsync();
+
+                return new PagedResult<MenuItemDTO>(data, totalItems, pageIndex, pageSize);
             }
             catch (Exception ex)
             {

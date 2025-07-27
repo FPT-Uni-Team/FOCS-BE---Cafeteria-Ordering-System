@@ -34,7 +34,7 @@ namespace FOCS.Order.Infrastucture.Entities
         public Store Store { get; set; }
 
         public ICollection<MenuItemVariantGroup> MenuItemVariantGroups { get; set; }
-        
+        public ICollection<MenuItemCategories> MenuItemCategories { get; set; }
         public ICollection<MenuItemImage> Images { get; set; }
     }
 }
