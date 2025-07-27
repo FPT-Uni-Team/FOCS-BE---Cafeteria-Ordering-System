@@ -12,8 +12,8 @@ namespace FOCS.Common.Models.CartModels
         [JsonPropertyName("menu_item_id")]
         public Guid MenuItemId { get; set; }
 
-        [JsonPropertyName("variant_id")]
-        public Guid? VariantId { get; set; }
+        [JsonPropertyName("variant_ids")]
+        public List<Guid>? VariantIds { get; set; }
 
         [JsonPropertyName("quantity")]
         public int Quantity { get; set; }

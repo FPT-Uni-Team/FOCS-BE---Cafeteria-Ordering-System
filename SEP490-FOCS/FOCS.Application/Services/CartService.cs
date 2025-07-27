@@ -13,6 +13,7 @@ using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -54,18 +55,24 @@ namespace FOCS.Application.Services
         {
             var key = GetCartKey(tableId, storeId, actorId);
 
-            var cart = await _redisCacheService.GetAsync<List<CartItemRedisModel>>(key) ?? new List<CartItemRedisModel> { };
+            var cart = await _redisCacheService.GetAsync<List<CartItemRedisModel>>(key) ?? new List<CartItemRedisModel>();
 
-            var existingItem = cart.FirstOrDefault(x => x.MenuItemId == item.MenuItemId && x.VariantId == item.VariantId);
+            var existingItem = cart.FirstOrDefault(x =>
+                x.MenuItemId == item.MenuItemId &&
+                x.VariantIds != null &&
+                item.VariantIds != null &&
+                new HashSet<Guid>(x.VariantIds).SetEquals(item.VariantIds)
+            );
 
             if (existingItem != null)
             {
                 existingItem.Quantity += item.Quantity;
+
                 if (!string.IsNullOrEmpty(item.Note))
                 {
                     existingItem.Note = item.Note;
                 }
-            } 
+            }
             else
             {
                 cart.Add(item);
@@ -73,9 +80,7 @@ namespace FOCS.Application.Services
 
             await _redisCacheService.SetAsync(key, cart, _cacheExpiry);
 
-            //Send data realtime to client
             var group = SignalRGroups.User(Guid.Parse(storeId), tableId, Guid.Parse(actorId));
-
             await _realtimeService.SendToGroupAsync<CartHub, List<CartItemRedisModel>>(group, SignalRGroups.ActionHub.UpdateCart, cart);
         }
 
@@ -107,8 +112,11 @@ namespace FOCS.Application.Services
 
             if(cartItems == null) { return; }
 
-            var itemToRemove = cartItems.FirstOrDefault(x => x.MenuItemId == menuItemId && x.VariantId == variantId);
-            if(itemToRemove != null)
+            var itemToRemove = cartItems.FirstOrDefault(x => x.MenuItemId == menuItemId);
+
+            if (variantId != null) cartItems.FirstOrDefault(x => x.VariantIds.Contains((Guid)variantId));
+
+            if (itemToRemove != null)
             {
                 if(itemToRemove.Quantity <= quantity)
                 {

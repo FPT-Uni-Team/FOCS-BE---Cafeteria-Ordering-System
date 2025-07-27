@@ -25,7 +25,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost]
-        public async Task<PagedResult<MenuItemDTO>> GetMenuItemByStore([FromBody] UrlQueryParameters urlQueryParameters, [FromQuery] Guid storeId)
+        public async Task<PagedResult<MenuItemDTO>> GetMenuItemByStore([FromBody] UrlQueryParameters urlQueryParameters, [FromHeader] Guid storeId)
         { 
             return await _menuService.GetMenuItemByStore(urlQueryParameters, storeId);
         }

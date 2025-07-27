@@ -73,7 +73,7 @@ namespace FOCS.Application.Services.BackgroundServices
                         {
                             Id = Guid.NewGuid(),
                             MenuItemId = item.MenuItemId,
-                            VariantId = item.VariantId,
+                            //VariantId = item.VariantId,
                             Quantity = item.Quantity,
                             Note = item.Note
                         });
@@ -92,14 +92,16 @@ namespace FOCS.Application.Services.BackgroundServices
                         UserId = actorGuid,
                         OrderStatus = OrderStatus.CartSaved,
                         CreatedAt = DateTime.UtcNow,
-                        OrderDetails = cartItems.Select(ci => new OrderDetail
-                        {
-                            Id = Guid.NewGuid(),
-                            MenuItemId = ci.MenuItemId,
-                            VariantId = ci.VariantId,
-                            Quantity = ci.Quantity,
-                            Note = ci.Note
-                        }).ToList()
+                        OrderDetails = cartItems.SelectMany(ci =>
+                            ci.VariantIds.Select(variantId => new OrderDetail
+                            {
+                                Id = Guid.NewGuid(),
+                                MenuItemId = ci.MenuItemId,
+                                VariantId = variantId,
+                                Quantity = ci.Quantity,
+                                Note = ci.Note
+                            })
+                        ).ToList()
                     };
 
                     await orderRepository.AddAsync(newOrder);
