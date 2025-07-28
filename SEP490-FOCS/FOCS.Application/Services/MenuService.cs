@@ -71,6 +71,9 @@ namespace FOCS.Application.Services
                     {
                         Id = z.Id,
                         name = z.VariantGroup.Name,
+                        MinSelect = z.MinSelect,
+                        MaxSelect = z.MaxSelect,
+                        IsRequired = z.IsRequired,
                         Variants = z.MenuItemVariantGroupItems.Select(c => new MenuItemVariantDTO
                         {
                             Id = c.MenuItemVariant.Id,

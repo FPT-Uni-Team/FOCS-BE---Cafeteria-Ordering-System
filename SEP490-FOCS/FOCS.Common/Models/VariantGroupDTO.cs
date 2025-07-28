@@ -10,6 +10,15 @@ namespace FOCS.Common.Models
         [JsonPropertyName("name")]
         public string name { get; set; }
 
+        [JsonPropertyName("is_required")]
+        public bool IsRequired { get; set; }
+
+        [JsonPropertyName("min_select")]
+        public int MinSelect { get; set; }
+
+        [JsonPropertyName("max_select")]
+        public int MaxSelect { get; set; }
+
         [JsonPropertyName("variant")]
         public ICollection<MenuItemVariantDTO> Variants { get; set; }
     }
