@@ -14,7 +14,10 @@ namespace FOCS.Common.Constants
         public static string Admin(Guid storeid) => $"Admin_{storeid}";
 
         public static string User(Guid storeId, Guid tableId, Guid userId) => $"dept=user&storeId={storeId}&tableId={tableId}&actorId={userId}";
-        
+
+        public static string CartUpdate(Guid storeId, Guid tableId) => $"dept=user&storeId={storeId}&tableId={tableId}";
+
+
         public static class ActionHub
         {   
             public static string UpdateCart = "UpdateCart";
