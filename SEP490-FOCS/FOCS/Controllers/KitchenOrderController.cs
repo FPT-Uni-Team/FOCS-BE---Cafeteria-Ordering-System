@@ -7,7 +7,7 @@ namespace FOCS.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class KitchenOrderController : ControllerBase
+    public class KitchenOrderController : FocsController
     {
         private readonly IOrderWrapService _orderWrapService;
 

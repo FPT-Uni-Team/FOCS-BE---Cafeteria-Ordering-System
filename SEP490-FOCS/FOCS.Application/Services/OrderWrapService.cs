@@ -8,6 +8,7 @@ using MassTransit;
 using MassTransit.Testing;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,57 +40,80 @@ namespace FOCS.Application.Services
 
         public async Task<bool> ChangeStatusProductionOrder(UpdateStatusProductionOrderRequest dto)
         {
-            var orderWrap = await _orderWrapRepo.AsQueryable().Include(x => x.Orders).ThenInclude(x => x.Table).FirstOrDefaultAsync(x => x.Id == dto.OrderWrapId);
-
-            if(orderWrap == null) return false;
-
-            if(dto.Status == Common.Enums.OrderWrapStatus.Completed)
+            try
             {
-                // split order -> sync success process to user order
-                var orders = orderWrap.Orders.ToList();
+                var orderWrap = await _orderWrapRepo.AsQueryable().Include(x => x.Orders).ThenInclude(x => x.Table).FirstOrDefaultAsync(x => x.Id == dto.OrderWrapId);
 
-                orders.ForEach(x => x.OrderStatus = Common.Enums.OrderStatus.Completed);
+                if (orderWrap == null) return false;
 
-                _orderRepo.UpdateRange(orders);
-                await _orderRepo.SaveChangesAsync();
-
-                foreach(var order in orders)
+                if (dto.Status == Common.Enums.OrderWrapStatus.Completed)
                 {
-                    var currentToken = await _mobileTokenService.GetMobileToken((Guid)order.UserId);
+                    // split order -> sync success process to user order
+                    var orders = orderWrap.Orders.ToList();
 
-                    var notifyEventForUser = new NotifyEvent
-                    {
-                        Title = "Your order is complete",
-                        Message = "Your order is complete, Please check with staff",
-                        storeId = order.StoreId.ToString(),
-                        tableId = order.TableId.ToString(),
-                        TargetGroups = new string[] { SignalRGroups.User(order.StoreId, (Guid)order.TableId, (Guid)order.UserId)},
-                        MobileTokens = new string[] { currentToken.Token }
-                    };
+                    orders.ForEach(x => x.OrderStatus = Common.Enums.OrderStatus.Completed);
 
-                    var notifyEventForStaff = new NotifyEvent
+                    _orderRepo.UpdateRange(orders);
+                    await _orderRepo.SaveChangesAsync();
+
+                    foreach (var order in orders)
                     {
-                        Title = $"Order in table {order.Table.TableNumber} is complete",
-                        Message = "Order in table {order.Table.TableNumber} is complete, Please check with user",
-                        storeId = order.StoreId.ToString(),
-                        tableId = order.TableId.ToString(),
-                        TargetGroups = new string[] {SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId) }
-                    };
+                        var currentToken = await _mobileTokenService.GetMobileToken((Guid)order.UserId);
+
+                        var notifyEventForUser = new NotifyEvent
+                        {
+                            Title = "Your order is complete",
+                            Message = "Your order is complete, Please check with staff",
+                            storeId = order.StoreId.ToString(),
+                            tableId = order.TableId.ToString(),
+                            TargetGroups = new string[] { SignalRGroups.User(order.StoreId, (Guid)order.TableId, (Guid)order.UserId) },
+                            MobileTokens = new string[] { currentToken.Token }
+                        };
+
+                        var notifyEventForStaff = new NotifyEvent
+                        {
+                            Title = $"Order in table {order.Table.TableNumber} is complete",
+                            Message = $"Order in table {order.Table.TableNumber} is complete, Please check with user",
+                            storeId = order.StoreId.ToString(),
+                            tableId = order.TableId.ToString(),
+                            TargetGroups = new string[] { SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId) }
+                        };
+
+                        await _publishEndpoint.Publish(notifyEventForStaff);
+                        await _publishEndpoint.Publish(notifyEventForUser);
+                    }
                 }
+                else if (dto.Status == Common.Enums.OrderWrapStatus.Processing)
+                {
+                    var orders = orderWrap.Orders.ToList();
+
+                    orders.ForEach(x => x.OrderStatus = Common.Enums.OrderStatus.Confirmed);
+
+                    _orderRepo.UpdateRange(orders);
+                    await _orderRepo.SaveChangesAsync();
+
+                    foreach (var order in orders)
+                    {
+                        var currentToken = await _mobileTokenService.GetMobileToken((Guid)order.UserId);
+
+                        var notifyEventForUser = new NotifyEvent
+                        {
+                            Title = "Your order is processing",
+                            Message = "Your order is processing, Please wait a minute",
+                            storeId = order.StoreId.ToString(),
+                            tableId = order.TableId.ToString(),
+                            TargetGroups = new string[] { SignalRGroups.User(order.StoreId, (Guid)order.TableId, (Guid)order.UserId) },
+                            MobileTokens = new string[] { currentToken.Token }
+                        };
+
+                        await _publishEndpoint.Publish(notifyEventForUser);
+                    }
+                }
+                return true;
+            } catch(Exception ex)
+            {
+                return false;
             }
-
-            orderWrap.OrderWrapStatus = dto.Status;
-            //await _publishEndpoint.Publish(new NotifyEvent
-            //{
-            //    Title = "Order change process",
-            //    Message = "Your order is going to next process",
-            //    TargetGroups = SignalRGroups.User(dto.)
-            //});
-            // update status wrap order -> sync process to user order
-
-
-            return true;
-
         }
     }
 }

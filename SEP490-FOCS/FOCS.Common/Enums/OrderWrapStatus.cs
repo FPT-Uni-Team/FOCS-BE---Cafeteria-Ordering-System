@@ -29,14 +29,9 @@ namespace FOCS.Common.Enums
         Cancelled = 3,
 
         /// <summary>
-        /// Đơn gộp đã thanh toán toàn bộ
-        /// </summary>
-        Paid = 4,
-
-        /// <summary>
         /// Đơn gộp đã hoàn tất & thanh toán
         /// </summary>
-        Finalized = 5
+        Finalized = 4
     }
 
 }

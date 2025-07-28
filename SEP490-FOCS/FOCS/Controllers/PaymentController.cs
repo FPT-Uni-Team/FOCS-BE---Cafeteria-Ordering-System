@@ -66,6 +66,27 @@ namespace FOCS.Controllers
         //    var payOS = await payOSService.cancelPaymentLink();
         //}
 
+        [HttpPost("receive-hook")]
+        public async Task<IActionResult> HandleWebhook([FromBody] ReceiveHookRequest request)
+        {
+            var order = await _orderService.GetOrderByCodeAsync(long.Parse(request.OrderCode));
+            if (order == null)
+                return NotFound("Order not found");
+
+            var store = await _storeService.GetStoreSetting(order.StoreId);
+            if (store == null)
+                return NotFound("Store setting not found");
+
+            var payOSService = _payOSServiceFactory.Create(store.PayOSClientId!, store.PayOSApiKey!, store.PayOSChecksumKey!);
+
+            //var verifiedCode = payOSService.VerifyWebhook(webhookData);
+            if (request.Status != "00")
+                return Unauthorized();
+
+            await _orderService.MarkAsPaid(long.Parse(request.OrderCode));
+
+            return Ok();
+        }
 
         [HttpPost("webhook")]
         public async Task<IActionResult> HandleWebhook([FromBody] WebhookType webhookData)
