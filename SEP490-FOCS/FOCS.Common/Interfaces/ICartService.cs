@@ -28,6 +28,6 @@ namespace FOCS.Common.Interfaces
         /// <summary>
         /// Tạo Redis key dựa theo actor (user hoặc guest) + table
         /// </summary>
-        string GetCartKey(Guid tableId, string storeId, string actorId);
+        string GetCartKey(Guid tableId, string storeId);
     }
 }

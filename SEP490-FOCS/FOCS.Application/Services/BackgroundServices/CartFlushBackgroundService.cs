@@ -93,7 +93,7 @@ namespace FOCS.Application.Services.BackgroundServices
                         OrderStatus = OrderStatus.CartSaved,
                         CreatedAt = DateTime.UtcNow,
                         OrderDetails = cartItems.SelectMany(ci =>
-                            ci.VariantIds.Select(variantId => new OrderDetail
+                            ci.Variants.Select(x => x.VariantId).Select(variantId => new OrderDetail
                             {
                                 Id = Guid.NewGuid(),
                                 MenuItemId = ci.MenuItemId,
