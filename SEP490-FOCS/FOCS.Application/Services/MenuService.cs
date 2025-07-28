@@ -93,6 +93,60 @@ namespace FOCS.Application.Services
             }
         }
 
+        public async Task<List<MenuItemDTO>> GetMenuItemByIds(List<Guid> ids, Guid storeId)
+        {
+            try
+            {
+                var menuItemsQuery = _menuItemRepository.AsQueryable()
+                                                        .Where(x => x.StoreId == storeId && ids.Contains(x.Id))
+                                                        .Include(mi => mi.Images)
+                                                        .Include(mi => mi.MenuItemCategories).ThenInclude(mic => mic.Category)
+                                                        .Include(mi => mi.MenuItemVariantGroups).ThenInclude(mivg => mivg.VariantGroup)
+                                                        .Include(mi => mi.MenuItemVariantGroups)
+                                                            .ThenInclude(mivg => mivg.MenuItemVariantGroupItems)
+                                                            .ThenInclude(mivgi => mivgi.MenuItemVariant);
+
+                var data = await menuItemsQuery.Select(x => new MenuItemDTO
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    BasePrice = x.BasePrice,
+                    Description = x.Description,
+                    Images = x.Images.FirstOrDefault().Url,
+                    IsAvailable = x.IsAvailable,
+                    MenuCategories = x.MenuItemCategories.Select(y => new MenuCategoryDTO
+                    {
+                        Id = y.Category.Id,
+                        Description = y.Category.Description,
+                        IsActive = y.Category.IsActive,
+                        Name = y.Category.Name
+                    }).ToList(),
+                    VariantGroups = x.MenuItemVariantGroups.Select(z => new VariantGroupDTO
+                    {
+                        Id = z.Id,
+                        name = z.VariantGroup.Name,
+                        MinSelect = z.MinSelect,
+                        MaxSelect = z.MaxSelect,
+                        IsRequired = z.IsRequired,
+                        Variants = z.MenuItemVariantGroupItems.Select(c => new MenuItemVariantDTO
+                        {
+                            Id = c.MenuItemVariant.Id,
+                            Name = c.MenuItemVariant.Name,
+                            IsAvailable = c.MenuItemVariant.IsAvailable,
+                            Price = c.MenuItemVariant.Price,
+                        }).ToList()
+                    }).ToList()
+                }).ToListAsync();
+
+                return data;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching menu for store {StoreId}", storeId);
+                return new List<MenuItemDTO>();
+            }
+        }
+
         public async Task<MenuItemDTO> GetItemVariant(Guid itemId)
         {
             try

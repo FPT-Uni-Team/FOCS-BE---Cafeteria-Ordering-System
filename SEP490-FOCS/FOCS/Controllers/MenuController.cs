@@ -30,6 +30,12 @@ namespace FOCS.Controllers
             return await _menuService.GetMenuItemByStore(urlQueryParameters, storeId);
         }
 
+        [HttpPost("ids")]
+        public async Task<List<MenuItemDTO>> GetMenuItemByStore(List<Guid> ids, [FromHeader] Guid storeId)
+        {
+            return await _menuService.GetMenuItemByIds(ids, storeId);
+        }
+
         [HttpPost("most-order")]
         public async Task<List<MenuItemInsightResponse>> GetProductsMostOrder()
         {
