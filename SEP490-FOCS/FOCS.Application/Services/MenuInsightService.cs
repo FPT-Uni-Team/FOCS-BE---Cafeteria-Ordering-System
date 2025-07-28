@@ -18,12 +18,15 @@ namespace FOCS.Application.Services
         private readonly IRepository<OrderEntity> _orderRepository;
         private readonly IRepository<OrderDetail> _orderDetailRepository;
         private readonly IRepository<Promotion> _promotionRepository;
+        private readonly IRepository<MenuItem> _menuItemRepository;
 
-        public MenuInsightService(IRepository<OrderEntity> orderRepository, IRepository<Promotion> promotionRepository, IRepository<OrderDetail> orderDetailRepository)
+
+        public MenuInsightService(IRepository<OrderEntity> orderRepository, IRepository<MenuItem> menuItemRepository, IRepository<Promotion> promotionRepository, IRepository<OrderDetail> orderDetailRepository)
         {
             _orderRepository = orderRepository;
             _promotionRepository = promotionRepository;
             _orderDetailRepository = orderDetailRepository;
+            _menuItemRepository = menuItemRepository;
         }
 
         public async Task<List<MenuItemInsightResponse>> GetMostOrderedProductsAsync(TimeSpan since, string storeId, int topN = 10)
@@ -43,8 +46,21 @@ namespace FOCS.Application.Services
             return GroupProductInsignt(allOrderDetails, topN);
         }
 
-        public Task<List<MenuItemInsightResponse>> GetProductsBasedOnBestPromotionAsync(string storeId, int topN = 10)
+        public async Task<List<MenuItemInsightResponse>> GetProductsBasedOnBestPromotionAsync(string storeId, int topN = 10)
         {
+            var currentDate = DateTime.UtcNow;
+
+            var currentProductsPromotion = _promotionRepository.AsQueryable()
+                                                               .Where(x => x.StartDate < currentDate && x.EndDate > currentDate && x.AcceptForItems != null)
+                                                               .Select(x => x.AcceptForItems)
+                                                               .Take(topN)
+                                                               .ToList()
+                                                               .Select(x => x)
+                                                               .Distinct()
+                                                               .ToList();
+
+            //var allProducts = await _menuItemRepository.AsQueryable().Where();
+
             throw new NotImplementedException();
         }
 
