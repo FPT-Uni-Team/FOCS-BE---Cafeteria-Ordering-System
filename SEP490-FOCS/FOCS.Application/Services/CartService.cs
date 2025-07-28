@@ -69,17 +69,12 @@ namespace FOCS.Application.Services
                     if(currentVariant != null)
                     {
                         currentVariant.Quantity += itemVariant.Quantity;
-                        if(itemVariant.Note != null)
-                        {
-                            currentVariant.Note += $" - {itemVariant.Note}";
-                        }
                     } else
                     {
                         existingItem.Variants.Add(new CartVariantRedisModel
                         {
                             VariantId = itemVariant.VariantId,
                             Quantity = itemVariant.Quantity,
-                            Note = itemVariant.Note
                         });
                     }
                 }

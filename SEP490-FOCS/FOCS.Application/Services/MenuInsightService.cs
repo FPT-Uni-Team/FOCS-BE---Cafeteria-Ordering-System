@@ -48,11 +48,6 @@ namespace FOCS.Application.Services
             throw new NotImplementedException();
         }
 
-        public Task<List<MenuItemInsightResponse>> GetSuggestedProductsBasedOnHistoryAsync(Guid userId, int topN = 10)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<List<MenuItemInsightResponse>> GetProductOrderNearingWithCurrent(Guid userId, int topN = 1)
         {
             var orders = await _orderRepository.AsQueryable().Include(x => x.OrderDetails)
