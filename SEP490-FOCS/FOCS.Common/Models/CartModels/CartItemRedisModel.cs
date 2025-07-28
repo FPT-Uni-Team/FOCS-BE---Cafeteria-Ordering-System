@@ -29,9 +29,6 @@ namespace FOCS.Common.Models.CartModels
 
         [JsonPropertyName("quantity")]
         public int Quantity { get; set; }
-
-        [JsonPropertyName("note")]
-        public string Note { get; set; }
     }
 
     public class OrderRedisModel
