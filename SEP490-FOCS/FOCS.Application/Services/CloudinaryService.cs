@@ -75,6 +75,38 @@ namespace FOCS.Application.Services
             return results;
         }
 
+        public async Task<List<UploadedImageResult>> UploadImageFeedbackAsync(List<IFormFile> files, string storeId, string orderId)
+        {
+            var results = new List<UploadedImageResult>();
+
+            foreach (var image in files)
+            {
+                var uploadParams = new ImageUploadParams
+                {
+                    File = new FileDescription(image.FileName, image.OpenReadStream()),
+                    Folder = $"stores/{storeId}/feedback/orders/{orderId}",
+                    PublicId = Guid.NewGuid().ToString(),
+                    Transformation = new Transformation().Crop("limit").Width(800).Height(800)
+                };
+
+                var result = await _cloudinary.UploadAsync(uploadParams);
+
+                if (result.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    results.Add(new UploadedImageResult
+                    {
+                        Url = result.SecureUrl.ToString()
+                    });
+                }
+                else
+                {
+                    throw new Exception("Upload failed");
+                }
+            }
+
+            return results;
+        }
+
         public async Task<UploadedImageResult> UploadQrCodeForTable(IFormFile file, string storeId, string tableId)
         {
             if (file == null || file.Length == 0)

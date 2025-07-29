@@ -5,6 +5,7 @@ using FOCS.Application.Services.BackgroundServices;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Helpers;
 using FOCS.Common.Interfaces;
+using FOCS.Common.Interfaces.Focs.Application.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
@@ -87,6 +88,8 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IRepository<PromotionItemCondition>, Repository<PromotionItemCondition, OrderDbContext>>()
                 .AddScoped<IRepository<MenuItemVariant>, Repository<MenuItemVariant, OrderDbContext>>()
                 .AddScoped<IRepository<Category>, Repository<Category, OrderDbContext>>()
+                .AddScoped<IRepository<Feedback>, Repository<Feedback, OrderDbContext>>()
+                .AddScoped<IFeedbackService, FeedbackService>()
                 .AddScoped<ICategoryService, CategoryService>()
                 .AddScoped<ICouponService, CouponService>()
                 .AddScoped<IPricingService, PricingService>()
