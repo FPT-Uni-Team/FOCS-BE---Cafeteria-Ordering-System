@@ -16,7 +16,7 @@ namespace FOCS.Realtime.Hubs
 
             if (!string.IsNullOrEmpty(storeId) && !string.IsNullOrEmpty(tableId))
             {
-                string group = $"storeId={storeId}&tableId={tableId}";
+                string group = $"dept=user&storeId={storeId}&tableId={tableId}";
                 await Groups.AddToGroupAsync(Context.ConnectionId, group);
             }
 
