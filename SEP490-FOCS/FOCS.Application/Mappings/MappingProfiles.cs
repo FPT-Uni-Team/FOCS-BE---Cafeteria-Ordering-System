@@ -34,7 +34,12 @@ namespace FOCS.Application.Mappings
                  .ReverseMap()
                  .ForMember(dest => dest.Images, opt => opt.Ignore());
 
+            CreateMap<Feedback, CreateFeedbackRequest>()
+                .ForMember(dest => dest.Files, opt => opt.Ignore())
+                .ReverseMap()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.ActorId));
 
+            CreateMap<Feedback, FeedbackDTO>().ReverseMap();
 
             CreateMap<MenuItemVariant, MenuItemVariantDTO>().ReverseMap();
             CreateMap<VariantGroup, VariantGroupDTO>().ReverseMap();

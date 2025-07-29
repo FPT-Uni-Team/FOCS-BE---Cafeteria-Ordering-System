@@ -21,10 +21,16 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public Guid? UserId { get; set; }
 
+        public List<string> Images {  get; set; }
+
+        public bool IsPublic {  get; set; }
+
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string? UpdatedBy { get; set; }
+
+        public Guid StoreId { get; set; }
 
         public Guid OrderId { get; set; }
         public Order Order { get; set; }

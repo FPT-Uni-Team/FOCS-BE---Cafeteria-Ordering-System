@@ -13,7 +13,7 @@ namespace FOCS.Common.Models
         public string Url { get; set; }
 
         [JsonPropertyName("is_main")]
-        public bool IsMain { get; set; }
+        public bool? IsMain { get; set; }
 
     }
 }
