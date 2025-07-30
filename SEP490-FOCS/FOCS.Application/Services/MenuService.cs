@@ -4,6 +4,7 @@ using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Order.Infrastucture.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 
@@ -35,22 +36,70 @@ namespace FOCS.Application.Services
                                                             .ThenInclude(mivg => mivg.MenuItemVariantGroupItems)
                                                             .ThenInclude(mivgi => mivgi.MenuItemVariant);
 
-                var totalItems = await menuItemsQuery.CountAsync();
-
                 int pageIndex = urlQueryParameters.Page;
                 int pageSize = urlQueryParameters.PageSize;
+                var totalItems = 0;
 
                 IQueryable<MenuItem> pagedQuery;
 
                 if (pageIndex > 0 && pageSize > 0)
                 {
                     int skip = (pageIndex - 1) * pageSize;
-                    pagedQuery = menuItemsQuery.Skip(skip).Take(pageSize);
+                    pagedQuery = menuItemsQuery;
+
+                    if (urlQueryParameters.SearchBy != null && urlQueryParameters.SearchValue != null)
+                    {
+                        pagedQuery = urlQueryParameters.SearchBy.ToLower() switch
+                        {
+                            "name" => pagedQuery.Where(x => x.Name.ToLower().Contains(urlQueryParameters.SearchValue.ToLower())),
+                            "description" => pagedQuery.Where(x => x.Description.ToLower().Contains(urlQueryParameters.SearchValue.ToLower())),
+                            _ => pagedQuery
+                        };
+                    }
+
+                    if (urlQueryParameters.Filters != null && urlQueryParameters.Filters.Any())
+                    {
+                        foreach (var item in urlQueryParameters.Filters)
+                        {
+                            pagedQuery = item.Key switch
+                            {
+                                "category" => pagedQuery.Where(x => x.MenuItemCategories
+                                                                    .Select(c => c.Category.Name.ToLower())
+                                                                    .Contains(item.Value.ToLower())),
+                                "available" => pagedQuery.Where(x => x.IsAvailable),
+                                "price_from" => pagedQuery.Where(x => x.BasePrice >= double.Parse(item.Value)),
+                                "price_to" => pagedQuery.Where(x => x.BasePrice <= double.Parse(item.Value)),
+                                _ => pagedQuery
+                            };
+                        }
+                    }
+
+                    totalItems = await pagedQuery.CountAsync();
+
+                    if (urlQueryParameters.SortBy != null && urlQueryParameters.SortOrder != null)
+                    {
+                        pagedQuery = urlQueryParameters.SortBy switch
+                        {
+                            "name" => urlQueryParameters.SortOrder == "asc"
+                                        ? pagedQuery.OrderBy(x => x.Name)
+                                        : pagedQuery.OrderByDescending(x => x.Name),
+                            "price" => urlQueryParameters.SortOrder == "asc"
+                                        ? pagedQuery.OrderBy(x => x.BasePrice)
+                                        : pagedQuery.OrderByDescending(x => x.BasePrice),
+                            "created_date" => urlQueryParameters.SortOrder == "asc"
+                                        ? pagedQuery.OrderBy(x => x.CreatedAt)
+                                        : pagedQuery.OrderByDescending(x => x.CreatedAt),
+                            _ => pagedQuery
+                        };
+                    }
+                    pagedQuery = pagedQuery.Skip(skip).Take(pageSize);
                 }
                 else
                 {
                     pagedQuery = menuItemsQuery;
+                    totalItems = await pagedQuery.CountAsync();
                 }
+
 
                 var data = await pagedQuery.Select(x => new MenuItemDTO
                 {
