@@ -52,6 +52,11 @@ namespace FOCS.Common.Exceptions
             public const string InvalidGuidFormat = "Invalid Guid format";
         }
 
+        public static class Checkout
+        {
+            public const string MaxUsedCoupon = "Coupon is max used";
+        }
+
         public static class Variant
         {
             public const string Exist = "Group name already exists for this menu item.";

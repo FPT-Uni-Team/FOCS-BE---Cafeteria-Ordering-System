@@ -1,11 +1,15 @@
 ﻿using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
 using FOCS.Common.Enums;
+using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
+using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Order.Infrastucture.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -21,12 +25,14 @@ namespace FOCS.Application.Services.ApplyStrategy
         private readonly IMenuService _menuService;
 
         private readonly IPricingService _pricingService;
+        private readonly IRepository<CouponUsage> _couponUsageRepo;
 
-        public CouponOnlyStrategy(IRepository<Coupon> couponRepository, IMenuService menuService, IPricingService pricingService)
+        public CouponOnlyStrategy(IRepository<Coupon> couponRepository, IRepository<CouponUsage> couponUsageRepo, IMenuService menuService, IPricingService pricingService)
         {
             _couponRepository = couponRepository;
             _menuService = menuService;
             _pricingService = pricingService;
+            _couponUsageRepo = couponUsageRepo;
         }
 
         public async Task<DiscountResultDTO> ApplyDiscountAsync(ApplyDiscountOrderRequest order, string? couponCode = null)
@@ -42,6 +48,10 @@ namespace FOCS.Application.Services.ApplyStrategy
                 return result;
 
             var coupon = (await _couponRepository.FindAsync(x => x.Code == couponCode && x.StoreId == order.StoreId))?.FirstOrDefault();
+            var countUsedCoupon = await _couponUsageRepo.AsQueryable().CountAsync(x => x.CouponId == coupon.Id);
+
+            ConditionCheck.CheckCondition(coupon.MaxUsage < countUsedCoupon, Errors.Checkout.MaxUsedCoupon);
+
             if (coupon == null)
                 return result;
 

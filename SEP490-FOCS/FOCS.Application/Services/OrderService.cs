@@ -52,6 +52,7 @@ namespace FOCS.Application.Services
         private readonly IRepository<SystemConfiguration> _systemConfig;
         private readonly IStoreSettingService _storeSettingService;
 
+        private readonly ICouponUsageService _couponUsageService;
         private readonly IRealtimeService _realtimeService;
 
         private readonly ILogger<OrderService> _logger;
@@ -78,7 +79,8 @@ namespace FOCS.Application.Services
                             UserManager<User> userManager,
                             IRepository<SystemConfiguration> systemConfig,
                             IPublishEndpoint publishEndpoint,
-                            IMobileTokenSevice mobileTokenService)
+                            IMobileTokenSevice mobileTokenService,
+                            ICouponUsageService couponUsageService)
         {
             _orderRepository = orderRepository;
             _realtimeService = realtimeService;
@@ -97,6 +99,7 @@ namespace FOCS.Application.Services
             _mapper = mapper;
             _publishEndpoint = publishEndpoint;
             _systemConfig = systemConfig;
+            _couponUsageService = couponUsageService;
             _mobileTokenService = mobileTokenService;
         }
 
@@ -244,9 +247,33 @@ namespace FOCS.Application.Services
             return _mapper.Map<OrderDTO>(orderByUser);
         }
 
-        public async Task MarkAsPaid(long orderCode)
+        public async Task MarkAsPaid(long orderCode, string storeId)
         {
             var order = await _orderRepository.AsQueryable().Include(x => x.Table).FirstOrDefaultAsync(x => x.OrderCode == orderCode);
+
+            //update coupon, promotion usage
+            var storeSetting = await _storeSettingService.GetStoreSettingAsync(Guid.Parse(storeId));
+
+            if(storeSetting.DiscountStrategy == DiscountStrategy.CouponThenPromotion)
+            {
+                try
+                {
+                    var currentCoupon = await _couponRepository.AsQueryable().Include(x => x.Promotion).FirstOrDefaultAsync(x => x.Code == orderCode.ToString());
+
+                    var isAdded = await _couponUsageService.SaveCouponUsage(currentCoupon.Code, order.UserId, order.Id);
+
+                    if (isAdded)
+                    {
+                        currentCoupon.Promotion.CountUsed++;
+                    }
+
+                    _couponRepository.Update(currentCoupon);
+                    await _couponRepository.SaveChangesAsync();
+                } catch(Exception ex)
+                {
+                    return;
+                }
+            }
 
             order.PaymentStatus = PaymentStatus.Paid;
 

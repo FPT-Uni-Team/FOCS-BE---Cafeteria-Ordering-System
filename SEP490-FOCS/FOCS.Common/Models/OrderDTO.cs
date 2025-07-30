@@ -58,6 +58,9 @@ namespace FOCS.Common.Models
         [JsonPropertyName("updated_by")]
         public string? UpdatedBy { get; set; }
 
+        [JsonIgnore]
+        public string CouponCode {  get; set; }
+
 
         [JsonPropertyName("order_details")]
         //Order details
