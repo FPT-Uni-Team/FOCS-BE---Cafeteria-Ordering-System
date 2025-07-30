@@ -3,6 +3,8 @@ using FOCS.Application.Services.Interface;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Models.Payment;
+using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Order.Infrastucture.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Net.payOS.Types;
@@ -83,7 +85,7 @@ namespace FOCS.Controllers
             if (request.Status != "00")
                 return Unauthorized();
 
-            await _orderService.MarkAsPaid(long.Parse(request.OrderCode));
+            await _orderService.MarkAsPaid(long.Parse(request.OrderCode), StoreId);
 
             return Ok();
         }
@@ -108,7 +110,7 @@ namespace FOCS.Controllers
             if (verifiedCode != "00") 
                 return Unauthorized();
 
-            await _orderService.MarkAsPaid(webhookData.data.orderCode);
+            await _orderService.MarkAsPaid(webhookData.data.orderCode, StoreId);
 
             return Ok();
         }
