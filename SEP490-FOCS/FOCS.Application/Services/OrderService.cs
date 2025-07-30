@@ -21,6 +21,7 @@ using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Crypto.Modes.Gcm;
 using Org.BouncyCastle.Utilities.Collections;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -167,9 +168,35 @@ namespace FOCS.Application.Services
 
         public async Task<OrderDTO> GetOrderByCodeAsync(long orderCode)
         {
-            var orderByCode = await _orderRepository.AsQueryable().Include(x => x.OrderDetails).FirstOrDefaultAsync(x => x.OrderCode == orderCode);
+            var orderByCode = await _orderRepository.AsQueryable()
+                                                    .Include(x => x.OrderDetails)
+                                                        .ThenInclude(od => od.MenuItem)
+                                                    .FirstOrDefaultAsync(x => x.OrderCode == orderCode);
 
-            return orderCode == null ? new OrderDTO { } : _mapper.Map<OrderDTO>(orderByCode);
+            if (orderByCode == null)
+                return new OrderDTO();
+
+            var variantIds = orderByCode.OrderDetails
+                                  .Where(od => od.VariantId.HasValue)
+                                  .Select(od => od.VariantId.Value)
+                                  .Distinct()
+                                  .ToList();
+
+            var variants = await _variantRepository.AsQueryable()
+                                                   .Where(x => variantIds.Contains(x.Id))
+                                                   .ToListAsync();
+
+            var variantDict = variants.ToDictionary(x => x.Id);
+
+            foreach (var item in orderByCode.OrderDetails)
+            {
+                if (variantDict.TryGetValue((Guid)item.VariantId, out var variant))
+                {
+                    item.Variant = variant;
+                }
+            }
+
+            return _mapper.Map<OrderDTO>(orderByCode);
         }
 
         public async Task<List<OrderDTO>> GetPendingOrdersInDayAsync()
