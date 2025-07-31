@@ -110,35 +110,58 @@ namespace FOCS.Application.Services
             return cartItems ?? new List<CartItemRedisModel> { };
         }
 
-        public async Task RemoveItemAsync(Guid tableId, string actorId, string storeId, Guid menuItemId, Guid? variantId, int quantity)
+        public async Task RemoveItemAsync(Guid tableId, string actorId, string storeId, Guid menuItemId, List<CartVariantRedisModel> variants, int quantity)
         {
             var key = GetCartKey(tableId, storeId);
-
             var cartItems = await _redisCacheService.GetAsync<List<CartItemRedisModel>>(key);
 
-            if(cartItems == null) { return; }
+            if (cartItems == null) return;
 
             var itemToRemove = cartItems.FirstOrDefault(x => x.MenuItemId == menuItemId);
+            if (itemToRemove == null) return;
 
-            if (variantId != null) cartItems.FirstOrDefault(x => x.Variants.Select(x => x.VariantId).Contains((Guid)variantId));
-
-            if (itemToRemove != null)
+            if (variants != null && variants.Any())
             {
-                if(itemToRemove.Quantity <= quantity)
+                foreach (var variant in variants)
+                {
+                    var currentVariant = itemToRemove.Variants?.FirstOrDefault(x => x.VariantId == variant.VariantId);
+                    if (currentVariant != null)
+                    {
+                        if (currentVariant.Quantity <= quantity)
+                        {
+                            itemToRemove.Variants.Remove(currentVariant);
+                        }
+                        else
+                        {
+                            currentVariant.Quantity -= variant.Quantity;
+                        }
+                    }
+                }
+
+                if ((itemToRemove.Variants == null || !itemToRemove.Variants.Any()) && itemToRemove.Quantity <= 1)
                 {
                     cartItems.Remove(itemToRemove);
                 }
-
-                itemToRemove.Quantity -= quantity;
-
-                await _redisCacheService.SetAsync(key, cartItems, _cacheExpiry);
-
-                var group = SignalRGroups.CartUpdate(Guid.Parse(storeId), tableId);
-
-                await _cartHubContext.Clients.Group(group).SendAsync(SignalRGroups.ActionHub.UpdateCart, cartItems);
+            }
+            else
+            {
+                if (itemToRemove.Quantity <= quantity)
+                {
+                    cartItems.Remove(itemToRemove);
+                }
+                else
+                {
+                    itemToRemove.Quantity -= quantity;
+                }
             }
 
+            await _redisCacheService.SetAsync(key, cartItems, _cacheExpiry);
+
+            var group = SignalRGroups.CartUpdate(Guid.Parse(storeId), tableId);
+            await _realtimeService.SendToGroupAsync<CartHub, List<CartItemRedisModel>>(group, SignalRGroups.ActionHub.UpdateCart, cartItems);
         }
+
+
 
         public string GetCartKey(Guid tableId, string storeId)
         {

@@ -13,7 +13,7 @@ namespace FOCS.Common.Interfaces
         /// <summary>
         /// Xoá 1 món trong cart
         /// </summary>
-        Task RemoveItemAsync(Guid tableId, string actorId, string storeId, Guid menuItemId, Guid? variantId, int quantity);
+        Task RemoveItemAsync(Guid tableId, string actorId, string storeId, Guid menuItemId, List<CartVariantRedisModel>? variants, int quantity);
 
         /// <summary>
         /// Lấy toàn bộ cart hiện tại
