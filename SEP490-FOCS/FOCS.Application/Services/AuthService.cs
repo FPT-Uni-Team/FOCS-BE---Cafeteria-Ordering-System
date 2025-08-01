@@ -127,7 +127,7 @@ namespace FOCS.Application.Services
             }
 
             var userStores = await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(user.Id));
-            if(!userStores.Any(x => x.UserId == Guid.Parse(user.Id) && x.StoreId == storeId))
+            if (await _userManager.IsInRoleAsync(user, Roles.User) && !userStores.Any(x => x.UserId == Guid.Parse(user.Id) && x.StoreId == storeId))
             {
                 var newUserStore = new UserStoreDTO
                 {

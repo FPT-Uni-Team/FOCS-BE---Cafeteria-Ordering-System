@@ -202,6 +202,27 @@ namespace FOCS.Application.Services
             return _mapper.Map<OrderDTO>(orderByCode);
         }
 
+        public async Task<bool> ChangeStatusOrder(string code, ChangeOrderStatusRequest request, string storeId)
+        {
+            try
+            {
+                var order = await _orderRepository.AsQueryable().FirstOrDefaultAsync(x => x.OrderCode.ToString() == code && !x.IsDeleted && x.StoreId == Guid.Parse(storeId));
+
+                ConditionCheck.CheckCondition(order != null, Errors.Common.NotFound);
+
+                order.OrderStatus = request.OrderStatus;
+                order.UpdatedAt = DateTime.UtcNow;
+
+                _orderRepository.Update(order);
+                await _orderRepository.SaveChangesAsync();
+
+                return true;
+            } catch(Exception ex)
+            {
+                return false;
+            }
+        }
+
         public async Task<List<OrderDTO>> GetPendingOrdersInDayAsync()
         {
             var timeSince = DateTime.UtcNow.Subtract(TimeSpan.FromDays(1));
