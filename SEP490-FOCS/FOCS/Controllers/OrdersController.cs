@@ -1,5 +1,6 @@
 ﻿using FOCS.Application.DTOs;
 using FOCS.Common.Constants;
+using FOCS.Common.Enums;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Order.Infrastucture.Entities;
@@ -57,6 +58,12 @@ namespace FOCS.Controllers
         public async Task<OrderDTO> GetOrderDetailByCodeAsync(long code)
         {
             return await _orderService.GetOrderByCodeAsync(code);
+        }
+
+        [HttpPatch("change-status/{code}")]
+        public async Task<bool> ChangeStatusOrder(string code, ChangeOrderStatusRequest request)
+        {
+            return await _orderService.ChangeStatusOrder(code, request, StoreId);
         }
 
         [HttpPost("cancel/{id}")]
