@@ -60,10 +60,10 @@ namespace FOCS.Application.Services
 
         public async Task<PromotionDTO> CreatePromotionAsync(PromotionDTO dto, Guid storeId, string userId)
         {
+            await ValidateStoreExists(storeId);
             await ValidateUser(userId, storeId);
             await ValidatePromotionDto(dto);
             await ValidatePromotionUniqueness(dto, storeId);
-            await ValidateStoreExists(storeId);
 
             var coupons = await ValidateCoupons(dto.CouponIds, dto.StartDate, dto.EndDate, storeId);
 
@@ -119,9 +119,9 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(promotionId == dto.Id, Errors.Common.NotFound, Errors.FieldName.Id);
             var promotion = await GetAvailablePromotionById(promotionId);
             if (promotion == null) return false;
+            await ValidateStoreExists(storeId);
             await ValidateUser(userId, promotion.StoreId);
             await ValidatePromotionUniqueness(dto, storeId);
-            await ValidateStoreExists(storeId);
 
             if (promotion.IsActive &&
                     promotion.StartDate <= DateTime.UtcNow && promotion.EndDate >= DateTime.UtcNow)
@@ -135,11 +135,11 @@ namespace FOCS.Application.Services
                 var coupons = await ValidateCoupons(dto.CouponIds, dto.StartDate, dto.EndDate, storeId, promotionId);
                 promotion.Coupons = coupons;
                 _mapper.Map(dto, promotion);
-            }
 
-            if (promotion.PromotionType == PromotionType.BuyXGetY)
-            {
-                await CreateOrUpdatePromotionItemCondition(dto, promotion.Id);
+                if (promotion.PromotionType == PromotionType.BuyXGetY)
+                {
+                    await CreateOrUpdatePromotionItemCondition(dto, promotion.Id);
+                }
             }
 
             UpdateAuditFields(promotion, userId);
