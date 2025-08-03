@@ -59,33 +59,14 @@ namespace FOCS.Application.Services
 
             var cart = await _redisCacheService.GetAsync<List<CartItemRedisModel>>(key) ?? new List<CartItemRedisModel>();
 
-            var existingItem = cart.FirstOrDefault(x => x.MenuItemId == item.MenuItemId);
+            var existingItem = cart.FirstOrDefault(x =>
+                x.MenuItemId == item.MenuItemId &&
+                AreVariantsEqual(x.Variants, item.Variants)
+            );
 
             if (existingItem != null)
             {
-                if(item.Variants == null)
-                {
-                    existingItem.Quantity += item.Quantity;
-                } 
-                else
-                {
-                    foreach (var itemVariant in item.Variants)
-                    {
-                        var currentVariant = existingItem.Variants.FirstOrDefault(x => x.VariantId == itemVariant.VariantId);
-                        if (currentVariant != null)
-                        {
-                            currentVariant.Quantity += itemVariant.Quantity;
-                        }
-                        else
-                        {
-                            existingItem.Variants.Add(new CartVariantRedisModel
-                            {
-                                VariantId = itemVariant.VariantId,
-                                Quantity = itemVariant.Quantity,
-                            });
-                        }
-                    }
-                }
+                existingItem.Quantity += item.Quantity;
             }
             else
             {
@@ -96,6 +77,18 @@ namespace FOCS.Application.Services
 
             var group = SignalRGroups.CartUpdate(Guid.Parse(storeId), tableId);
             await _realtimeService.SendToGroupAsync<CartHub, List<CartItemRedisModel>>(group, SignalRGroups.ActionHub.UpdateCart, cart);
+        }
+
+        private bool AreVariantsEqual(List<CartVariantRedisModel>? a, List<CartVariantRedisModel>? b)
+        {
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+            if (a.Count != b.Count) return false;
+
+            var dictA = a.GroupBy(x => x.VariantId).ToDictionary(g => g.Key, g => g.Sum(v => v.Quantity));
+            var dictB = b.GroupBy(x => x.VariantId).ToDictionary(g => g.Key, g => g.Sum(v => v.Quantity));
+
+            return dictA.Count == dictB.Count && !dictA.Except(dictB).Any();
         }
 
         public async Task ClearCartAsync(Guid tableId, string storeId, string actorId)
