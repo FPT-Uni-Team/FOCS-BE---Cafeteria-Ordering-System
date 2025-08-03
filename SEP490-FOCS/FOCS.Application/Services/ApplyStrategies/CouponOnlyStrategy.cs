@@ -48,9 +48,9 @@ namespace FOCS.Application.Services.ApplyStrategy
                 return result;
 
             var coupon = (await _couponRepository.FindAsync(x => x.Code == couponCode && x.StoreId == order.StoreId))?.FirstOrDefault();
-            var countUsedCoupon = await _couponUsageRepo.AsQueryable().CountAsync(x => x.CouponId == coupon.Id);
+            //var countUsedCoupon = await _couponUsageRepo.AsQueryable().CountAsync(x => x.CouponId == coupon.Id);
 
-            ConditionCheck.CheckCondition(coupon.MaxUsage < countUsedCoupon, Errors.Checkout.MaxUsedCoupon);
+            //ConditionCheck.CheckCondition(coupon.MaxUsage < countUsedCoupon, Errors.Checkout.MaxUsedCoupon);
 
             if (coupon == null)
                 return result;

@@ -139,7 +139,7 @@ namespace FOCS.Application.Services
 
         public async Task<DiscountResultDTO> ApplyDiscountForOrder(ApplyDiscountOrderRequest orderRequest, string userId, string storeId)
         {
-            if(orderRequest.CouponCode == null && orderRequest.CouponCode.Count() <= 0)
+            if(orderRequest.CouponCode == null)
             {
                 var dictPrice = orderRequest.Items
                    .Distinct()
