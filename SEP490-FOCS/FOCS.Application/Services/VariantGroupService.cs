@@ -15,17 +15,23 @@ namespace FOCS.Application.Services
         private readonly IMenuItemVariantService _menuItemVariantService;
         private readonly IAdminMenuItemService _menuItemService;
 
-        private readonly IRepository<VariantGroup> _variantGroup;
+        private readonly IRepository<VariantGroup> _variantGroupRepo;
         private readonly IRepository<MenuItemVariantGroup> _menuItemVariantGroup;
+        private readonly IRepository<MenuItemVariant> _menuItemVariantRepo;
+
+        private readonly IRepository<MenuItemVariantGroupItem> _menuItemVariantGroupItemRepo;
+
         private readonly IMapper _mapper;
 
-        public VariantGroupService(IMenuItemVariantService menuItemVariantService, IMapper mapper, IAdminMenuItemService menuItemService, IRepository<VariantGroup> variantGroup, IRepository<MenuItemVariantGroup> menuItemVariantGroup)
+        public VariantGroupService(IMenuItemVariantService menuItemVariantService, IRepository<MenuItemVariantGroupItem> menuItemVariantGroupItemRepo, IRepository<MenuItemVariant> menuItemVariantRepo, IMapper mapper, IAdminMenuItemService menuItemService, IRepository<VariantGroup> variantGroup, IRepository<MenuItemVariantGroup> menuItemVariantGroup)
         {
             _menuItemService = menuItemService;
             _menuItemVariantService = menuItemVariantService;
-            _variantGroup = variantGroup;
+            _variantGroupRepo = variantGroup;
             _mapper = mapper;
             _menuItemVariantGroup = menuItemVariantGroup;
+            _menuItemVariantRepo = menuItemVariantRepo;
+            _menuItemVariantGroupItemRepo = menuItemVariantGroupItemRepo;
         }
 
         public async Task<bool> AddMenuItemVariantToGroupAsync(AddVariantToGroupRequest request, Guid storeId)
@@ -37,7 +43,7 @@ namespace FOCS.Application.Services
 
                 var variants = await _menuItemVariantService.ListVariantsWithIds(request.VariantIds, storeId);
 
-                var groupNameExist = await _variantGroup.AsQueryable().AnyAsync(x => x.Name == request.GroupName);
+                var groupNameExist = await _variantGroupRepo.AsQueryable().AnyAsync(x => x.Name == request.GroupName);
                 ConditionCheck.CheckCondition(!groupNameExist, Errors.Common.NotFound);
 
                 var newGroupVariant = new VariantGroup
@@ -52,11 +58,11 @@ namespace FOCS.Application.Services
                     CreatedBy = storeId.ToString()
                 };
 
-                await _variantGroup.AddAsync(newGroupVariant);
+                await _variantGroupRepo.AddAsync(newGroupVariant);
 
                 await _menuItemVariantService.AssignVariantGroupToVariants(request.VariantIds, newGroupVariant.Id);
 
-                await _variantGroup.SaveChangesAsync();
+                await _variantGroupRepo.SaveChangesAsync();
             } catch (Exception ex)
             {
                 return false;
@@ -64,9 +70,54 @@ namespace FOCS.Application.Services
             return true;
         }
 
+        public async Task<VariantGroupDetailDTO> UpdateVariantGroupAsync(Guid variantGroupId, UpdateVariantGroupRequest updateVariantGroupRequest, string storeId)
+        {
+            var variantGroup = await _variantGroupRepo.AsQueryable().FirstOrDefaultAsync(x => x.Id == variantGroupId);
+            ConditionCheck.CheckCondition(variantGroup != null, Errors.Common.NotFound);
+
+            var isExist = await _variantGroupRepo.AsQueryable().AnyAsync(x => x.Name == updateVariantGroupRequest.Name);
+            ConditionCheck.CheckCondition(!isExist, Errors.Common.IsExist);
+
+            variantGroup.Name = updateVariantGroupRequest.Name;
+            variantGroup.UpdatedAt = DateTime.UtcNow;
+            variantGroup.UpdatedBy = storeId;
+
+            _variantGroupRepo.Update(variantGroup);
+            await _variantGroupRepo.SaveChangesAsync();
+
+
+            return _mapper.Map<VariantGroupDetailDTO>(variantGroup);
+        }
+
+        public async Task<VariantGroupDetailDTO> GetVariantGroupDetailAsync(Guid variantGroupId, string storeId)
+        {
+            var variantGroupItem = _variantGroupRepo
+                .AsQueryable()
+                .Include(x => x.Variants)
+                .ThenInclude(x => x.VariantGroup)
+                .Where(x => x.CreatedBy == storeId && x.Id == variantGroupId);
+
+            ConditionCheck.CheckCondition(variantGroupItem != null, Errors.Common.NotFound);
+
+            var result = variantGroupItem.Select(x => new VariantGroupDetailDTO
+            {
+                Id = x.Id,
+                GroupName = x.Name,
+                Variants = x.Variants.Select(v => new VariantOptionDTO
+                {
+                    Id = v.Id,
+                    Name = v.Name,
+                    IsAvailable = v.IsAvailable,
+                    Price = v.Price,
+                }).ToList()
+            }).First();
+
+            return result;
+        }
+
         public async Task<PagedResult<VariantGroupDetailDTO>> GetVariantGroupsByStore(UrlQueryParameters urlQueryParameters, string storeId)
         {
-            var variantsGroup = _variantGroup
+            var variantsGroup = _variantGroupRepo
                 .AsQueryable()
                 .Include(x => x.Variants)
                 .ThenInclude(x => x.VariantGroup)
@@ -122,15 +173,15 @@ namespace FOCS.Application.Services
         {
             try
             {
-                var isExist = await _variantGroup.AsQueryable().AnyAsync(x => x.Name == request.Name && x.CreatedBy == storeId);
+                var isExist = await _variantGroupRepo.AsQueryable().AnyAsync(x => x.Name == request.Name && x.CreatedBy == storeId);
                 ConditionCheck.CheckCondition(!isExist, Errors.Common.IsExist, "name");
 
                 var newVariantGroup = _mapper.Map<VariantGroup>(request);
                 newVariantGroup.Id = Guid.NewGuid();
                 newVariantGroup.CreatedBy = storeId;
 
-                await _variantGroup.AddAsync(newVariantGroup);
-                await _variantGroup.SaveChangesAsync();
+                await _variantGroupRepo.AddAsync(newVariantGroup);
+                await _variantGroupRepo.SaveChangesAsync();
 
                 return true;
             } catch(Exception ex)
@@ -167,20 +218,57 @@ namespace FOCS.Application.Services
             return new List<VariantGroupDetailDTO>();
         }
 
-        public async Task<bool> RemoveVariantFromGroupAsync(Guid variantGroupId)
+        public async Task<bool> RemoveVariantGroupAsync(Guid variantGroupId)
         {
             try
             {
-                var group = await _variantGroup.GetByIdAsync(variantGroupId);
-                ConditionCheck.CheckCondition(group != null, Errors.Common.NotFound);
+                var group = await _variantGroupRepo.AsQueryable()
+                    .Include(x => x.Variants)
+                    .FirstOrDefaultAsync(x => x.Id == variantGroupId);
 
-                _variantGroup.Remove(group);
-                await _variantGroup.SaveChangesAsync();
-            } catch (Exception ex)
+                ConditionCheck.CheckCondition(group != null, Errors.Common.NotFound);
+                
+                if (group.Variants?.Any() == true)
+                {
+                    var variantGroupLinks = await _menuItemVariantGroup.AsQueryable()
+                        .Where(x => x.VariantGroupId == variantGroupId)
+                        .ToListAsync();
+
+                    if (variantGroupLinks.Any())
+                    {
+                        var variantGroupLinkIds = variantGroupLinks.Select(x => x.Id).ToList();
+
+                        var groupItems = await _menuItemVariantGroupItemRepo.AsQueryable()
+                            .Where(x => variantGroupLinkIds.Contains(x.MenuItemVariantGroupId))
+                            .ToListAsync();
+
+                        _menuItemVariantGroupItemRepo.RemoveRange(groupItems);
+                        _menuItemVariantGroup.RemoveRange(variantGroupLinks);
+                    }
+
+                    var variantsToUpdate = await _menuItemVariantRepo.AsQueryable()
+                        .Where(x => x.VariantGroupId == variantGroupId)
+                        .ToListAsync();
+
+                    foreach (var variant in variantsToUpdate)
+                    {
+                        variant.VariantGroupId = null;
+                    }
+
+                    _menuItemVariantRepo.UpdateRange(variantsToUpdate);
+
+                    await _menuItemVariantGroupItemRepo.SaveChangesAsync();
+                }
+
+                _variantGroupRepo.Remove(group);
+                await _variantGroupRepo.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
             {
                 return false;
             }
-            return true;
         }
 
         public async Task<bool> UpdateGroupSettingsAsync(Guid menuItemId, string groupName, UpdateGroupSettingRequest request)
