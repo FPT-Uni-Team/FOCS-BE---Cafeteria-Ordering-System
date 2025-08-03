@@ -36,6 +36,16 @@ namespace FOCS.Controllers
             return Ok(pagedResult);
         }
 
+        [HttpGet("brand/{id}")]
+        public async Task<IActionResult> GetBrandDetail(Guid id)
+        {
+            var brandDetail = await _adminBrandService.GetBrandDetailAsync(id, UserId);
+            if (brandDetail == null)
+                return NotFound();
+
+            return Ok(brandDetail);
+        }
+
         [HttpPut("brand/{id}")]
         public async Task<IActionResult> UpdateBrand(Guid id, [FromBody] BrandAdminDTO dto)
         {
