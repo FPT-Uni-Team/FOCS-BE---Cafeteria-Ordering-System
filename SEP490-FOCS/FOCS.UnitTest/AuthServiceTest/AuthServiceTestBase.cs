@@ -28,6 +28,7 @@ namespace FOCS.UnitTest.AuthServiceTest
         protected readonly Mock<IRepository<Store>> _storeRepositoryMock;
         protected readonly Mock<ILogger<AuthService>> _loggerMock;
         protected readonly Mock<IRepository<UserStore>> _userStoreRepositoryMock;
+        protected readonly Mock<IRepository<MobileTokenDevice>> _mobileTokenDeviceRepositoryMock;
         protected readonly AuthService _authService;
 
         public AuthServiceTestBase()
@@ -45,6 +46,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             _storeRepositoryMock = new Mock<IRepository<Store>>();
             _loggerMock = new Mock<ILogger<AuthService>>();
             _userStoreRepositoryMock = new Mock<IRepository<UserStore>>();
+            _mobileTokenDeviceRepositoryMock = new Mock<IRepository<MobileTokenDevice>>();
             _signInManagerMock = new Mock<SignInManager<User>>(
                     _userManagerMock.Object,
                     new Mock<IHttpContextAccessor>().Object,
@@ -64,7 +66,8 @@ namespace FOCS.UnitTest.AuthServiceTest
                 _userRefreshTokenRepositoryMock.Object,
                 _storeRepositoryMock.Object,
                 _loggerMock.Object,
-                _userStoreRepositoryMock.Object
+                _userStoreRepositoryMock.Object,
+                _mobileTokenDeviceRepositoryMock.Object
             );
         }
 
@@ -182,10 +185,12 @@ namespace FOCS.UnitTest.AuthServiceTest
                 .ReturnsAsync(userStores);
         }
 
-        protected void SetupUserRoles(User user, List<string> roles)
+        protected void SetupUserRoles(User user, string role)
         {
             _userManagerMock.Setup(x => x.GetRolesAsync(user))
-                .ReturnsAsync(roles);
+                .ReturnsAsync(new List<string> { role });
+            _userManagerMock.Setup(x => x.IsInRoleAsync(user, role))
+                .ReturnsAsync(true);
         }
 
         protected void SetupTokenGeneration(string accessToken = "access_token", string refreshToken = "refresh_token")

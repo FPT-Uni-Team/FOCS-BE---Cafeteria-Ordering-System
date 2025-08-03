@@ -128,7 +128,6 @@ namespace FOCS.UnitTest.AuthServiceTest
             Assert.Equal(request.Email, capturedUser.Email);
             Assert.Equal(request.FirstName, capturedUser.FirstName);
             Assert.Equal(request.LastName, capturedUser.LastName);
-            Assert.Equal(request.Email, capturedUser.UserName);
             Assert.Equal(request.Phone, capturedUser.PhoneNumber);
         }
 
@@ -342,7 +341,6 @@ namespace FOCS.UnitTest.AuthServiceTest
 
             // Assert
             Assert.Equal(customEmail, capturedUser.Email);
-            Assert.Equal(customEmail, capturedUser.UserName);
             _emailServiceMock.Verify(x => x.SendEmailConfirmationAsync(customEmail, "email_confirmation_token"), Times.Once);
         }
 

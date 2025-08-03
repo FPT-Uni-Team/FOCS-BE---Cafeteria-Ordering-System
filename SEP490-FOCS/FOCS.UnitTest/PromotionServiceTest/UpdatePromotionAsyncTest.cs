@@ -141,6 +141,7 @@ namespace FOCS.UnitTest.PromotionServiceTest
             _promotionRepositoryMock.Setup(x => x.GetByIdAsync(promotionId))
                 .ReturnsAsync(promotion);
 
+            SetupValidPromotionUniqueness();
             SetupValidUser(userId, user, userStore);
 
             // Act & Assert

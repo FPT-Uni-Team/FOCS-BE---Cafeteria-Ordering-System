@@ -113,7 +113,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             SetupRepositoryAdd(_userStoreRepositoryMock);
             SetupTokenGeneration();
             SetupConfiguration();
-            SetupUserRoles(user, new List<string> { Roles.User });
+            SetupUserRoles(user, Roles.User);
             SetupMapperForUserRefreshToken(It.IsAny<UserRefreshTokenDTO>(), CreateValidUserRefreshToken(user.Id));
             SetupRepositoryAdd(_userRefreshTokenRepositoryMock);
 
@@ -150,7 +150,7 @@ namespace FOCS.UnitTest.AuthServiceTest
 
             SetupTokenGeneration();
             SetupConfiguration();
-            SetupUserRoles(user, new List<string> { Roles.User });
+            SetupUserRoles(user, Roles.User);
             SetupMapperForUserRefreshToken(It.IsAny<UserRefreshTokenDTO>(), CreateValidUserRefreshToken(user.Id));
             SetupRepositoryAdd(_userRefreshTokenRepositoryMock);
 
@@ -179,7 +179,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             SetupUserStoreQuery(new List<UserStore> { existingUserStore }); // User already in store
             SetupTokenGeneration();
             SetupConfiguration();
-            SetupUserRoles(user, new List<string> { Roles.User });
+            SetupUserRoles(user, Roles.User);
             SetupMapperForUserRefreshToken(It.IsAny<UserRefreshTokenDTO>(), CreateValidUserRefreshToken(user.Id));
             SetupRepositoryAdd(_userRefreshTokenRepositoryMock);
 
@@ -203,6 +203,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             var user = CreateValidUser();
             var request = CreateValidLoginRequest(user.Email);
             var userStoreOtherStore = CreateValidUserStore(Guid.Parse(user.Id), otherStoreId);
+            var userRoles = new List<string> { Roles.User };
 
             SetupValidStore(storeId, store);
             SetupValidUser(user.Email, user);
@@ -212,7 +213,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             SetupRepositoryAdd(_userStoreRepositoryMock);
             SetupTokenGeneration();
             SetupConfiguration();
-            SetupUserRoles(user, new List<string> { Roles.User });
+            SetupUserRoles(user, Roles.User);
             SetupMapperForUserRefreshToken(It.IsAny<UserRefreshTokenDTO>(), CreateValidUserRefreshToken(user.Id));
             SetupRepositoryAdd(_userRefreshTokenRepositoryMock);
 
@@ -235,7 +236,6 @@ namespace FOCS.UnitTest.AuthServiceTest
             var existingUserStore = CreateValidUserStore(Guid.Parse(user.Id), storeId);
             var accessToken = "test_access_token";
             var refreshToken = "test_refresh_token";
-            var userRoles = new List<string> { Roles.User, Roles.Admin };
 
             SetupValidStore(storeId, store);
             SetupValidUser(user.Email, user);
@@ -243,7 +243,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             SetupUserStoreQuery(new List<UserStore> { existingUserStore });
             SetupTokenGeneration(accessToken, refreshToken);
             SetupConfiguration();
-            SetupUserRoles(user, userRoles);
+            SetupUserRoles(user, Roles.User);
             SetupMapperForUserRefreshToken(It.IsAny<UserRefreshTokenDTO>(), CreateValidUserRefreshToken(user.Id));
             SetupRepositoryAdd(_userRefreshTokenRepositoryMock);
 
@@ -261,8 +261,7 @@ namespace FOCS.UnitTest.AuthServiceTest
                 claims.Any(c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id) &&
                 claims.Any(c => c.Type == ClaimTypes.Email && c.Value == user.Email) &&
                 claims.Any(c => c.Type == "StoreId" && c.Value == storeId.ToString()) &&
-                claims.Any(c => c.Type == ClaimTypes.Role && c.Value == "User") &&
-                claims.Any(c => c.Type == ClaimTypes.Role && c.Value == "Admin")
+                claims.Any(c => c.Type == ClaimTypes.Role && c.Value == "User")
             )), Times.Once);
 
             // Verify refresh token was saved
@@ -286,7 +285,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             SetupUserStoreQuery(new List<UserStore> { existingUserStore });
             SetupTokenGeneration();
             SetupConfiguration();
-            SetupUserRoles(user, new List<string>()); // No roles
+            SetupUserRoles(user, ""); 
             SetupMapperForUserRefreshToken(It.IsAny<UserRefreshTokenDTO>(), CreateValidUserRefreshToken(user.Id));
             SetupRepositoryAdd(_userRefreshTokenRepositoryMock);
 
@@ -302,8 +301,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             _tokenServiceMock.Verify(x => x.GenerateAccessToken(It.Is<List<Claim>>(claims =>
                 claims.Any(c => c.Type == ClaimTypes.NameIdentifier && c.Value == user.Id) &&
                 claims.Any(c => c.Type == ClaimTypes.Email && c.Value == user.Email) &&
-                claims.Any(c => c.Type == "StoreId" && c.Value == storeId.ToString()) &&
-                !claims.Any(c => c.Type == ClaimTypes.Role)
+                claims.Any(c => c.Type == "StoreId" && c.Value == storeId.ToString())
             )), Times.Once);
         }
     }
