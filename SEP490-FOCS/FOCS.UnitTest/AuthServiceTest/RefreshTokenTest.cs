@@ -1,4 +1,5 @@
-﻿using FOCS.Common.Exceptions;
+﻿using FOCS.Common.Constants;
+using FOCS.Common.Exceptions;
 using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using Moq;
@@ -116,7 +117,7 @@ namespace FOCS.UnitTest.AuthServiceTest
 
             SetupConfiguration();
             SetupRepositoryAdd(_userRefreshTokenRepositoryMock);
-            SetupUserRoles(user, new List<string> { "User" });
+            SetupUserRoles(user, Roles.User);
             SetupTokenGeneration("new_access_token", "new_refresh_token");
             SetupMapperForUserRefreshToken(It.IsAny<UserRefreshTokenDTO>(), new UserRefreshToken());
 

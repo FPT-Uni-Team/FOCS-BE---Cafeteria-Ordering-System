@@ -21,6 +21,7 @@ namespace FOCS.UnitTest.PromotionServiceTest
         protected readonly Mock<IRepository<CouponUsage>> _couponUsageRepositoryMock;
         protected readonly Mock<IRepository<PromotionItemCondition>> _promotionItemConditionRepositoryMock;
         protected readonly Mock<IRepository<Store>> _storeRepositoryMock;
+        protected readonly Mock<IRepository<StoreSetting>> _storeSettingRepositoryMock;
         protected readonly Mock<IRepository<MenuItem>> _menuItemRepositoryMock;
         protected readonly Mock<IMapper> _mapperMock;
         protected readonly Mock<UserManager<User>> _userManagerMock;
@@ -35,6 +36,7 @@ namespace FOCS.UnitTest.PromotionServiceTest
             _couponUsageRepositoryMock = new Mock<IRepository<CouponUsage>>();
             _promotionItemConditionRepositoryMock = new Mock<IRepository<PromotionItemCondition>>();
             _storeRepositoryMock = new Mock<IRepository<Store>>();
+            _storeSettingRepositoryMock = new Mock<IRepository<StoreSetting>>();
             _menuItemRepositoryMock = new Mock<IRepository<MenuItem>>();
             _mapperMock = new Mock<IMapper>();
             _pricingServiceMock = new Mock<IPricingService>();
@@ -53,6 +55,7 @@ namespace FOCS.UnitTest.PromotionServiceTest
                 _couponUsageRepositoryMock.Object,
                 _userManagerMock.Object,
                 _mapperMock.Object,
+                _storeSettingRepositoryMock.Object,
                 _userStoreRepositoryMock.Object,
                 _pricingServiceMock.Object
             );
