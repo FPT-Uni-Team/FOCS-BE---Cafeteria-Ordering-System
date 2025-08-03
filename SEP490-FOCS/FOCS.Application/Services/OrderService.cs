@@ -211,6 +211,12 @@ namespace FOCS.Application.Services
                 ConditionCheck.CheckCondition(order != null, Errors.Common.NotFound);
 
                 order.OrderStatus = request.OrderStatus;
+
+                if(order.OrderStatus == OrderStatus.Confirmed)
+                {
+                    order.PaymentStatus = PaymentStatus.Paid;
+                }
+
                 order.UpdatedAt = DateTime.UtcNow;
 
                 _orderRepository.Update(order);
@@ -238,6 +244,13 @@ namespace FOCS.Application.Services
 
             var mappingOrders = _mapper.Map<List<OrderDTO>>(ordersPending);
 
+            if(ordersPending != null)
+            {
+                ordersPending.ForEach(x => x.OrderStatus = OrderStatus.Confirmed);
+
+                _orderRepository.UpdateRange(ordersPending);
+                await _orderRepository.SaveChangesAsync();
+            }
 
             foreach (var dto in mappingOrders)
             {

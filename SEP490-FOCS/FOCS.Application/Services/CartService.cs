@@ -63,19 +63,27 @@ namespace FOCS.Application.Services
 
             if (existingItem != null)
             {
-                foreach(var itemVariant in item.Variants)
+                if(item.Variants == null)
                 {
-                    var currentVariant = existingItem.Variants.FirstOrDefault(x => x.VariantId == itemVariant.VariantId);
-                    if(currentVariant != null)
+                    existingItem.Quantity += item.Quantity;
+                } 
+                else
+                {
+                    foreach (var itemVariant in item.Variants)
                     {
-                        currentVariant.Quantity += itemVariant.Quantity;
-                    } else
-                    {
-                        existingItem.Variants.Add(new CartVariantRedisModel
+                        var currentVariant = existingItem.Variants.FirstOrDefault(x => x.VariantId == itemVariant.VariantId);
+                        if (currentVariant != null)
                         {
-                            VariantId = itemVariant.VariantId,
-                            Quantity = itemVariant.Quantity,
-                        });
+                            currentVariant.Quantity += itemVariant.Quantity;
+                        }
+                        else
+                        {
+                            existingItem.Variants.Add(new CartVariantRedisModel
+                            {
+                                VariantId = itemVariant.VariantId,
+                                Quantity = itemVariant.Quantity,
+                            });
+                        }
                     }
                 }
             }

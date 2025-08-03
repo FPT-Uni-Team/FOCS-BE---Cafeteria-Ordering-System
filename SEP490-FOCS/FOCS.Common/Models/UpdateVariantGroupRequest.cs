@@ -7,10 +7,9 @@ using System.Threading.Tasks;
 
 namespace FOCS.Common.Models
 {
-    public class CreateVariantGroupRequest
+    public class UpdateVariantGroupRequest
     {
         [JsonPropertyName("name")]
-        public string Name { get; set; } // size, topping, ...
-
+        public string Name { get; set; }
     }
 }
