@@ -15,7 +15,7 @@ namespace FOCS.Common.Interfaces
         Task<bool> AddMenuItemVariantToGroupAsync(AddVariantToGroupRequest request, Guid StoreId);
 
      
-        Task<bool> RemoveVariantFromGroupAsync(Guid variantGroupId);
+        Task<bool> RemoveVariantGroupAsync(Guid variantGroupId);
 
      
         Task<bool> UpdateGroupSettingsAsync(Guid menuItemId, string groupName, UpdateGroupSettingRequest request);
@@ -26,5 +26,7 @@ namespace FOCS.Common.Interfaces
         Task<bool> CreateVariantGroup(CreateVariantGroupRequest request, string storeId);
 
         Task<PagedResult<VariantGroupDetailDTO>> GetVariantGroupsByStore(UrlQueryParameters urlQueryParameters, string storeId);
+        Task<VariantGroupDetailDTO> GetVariantGroupDetailAsync(Guid variantGroupId, string storeId);
+        Task<VariantGroupDetailDTO> UpdateVariantGroupAsync(Guid variantGroupId, UpdateVariantGroupRequest updateVariantGroupRequest, string storeId);
     }
 }

@@ -28,6 +28,12 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public bool AllowCombinePromotionAndCoupon { get; set; } = true;
 
+        public int? SpendingRate { get; set; }
+
+        public string? PayOSClientId { get; set; }
+        public string? PayOSApiKey { get; set; }
+        public string? PayOSChecksumKey { get; set; }
+
         public DateTime? CreatedAt { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime? UpdatedAt { get; set; }

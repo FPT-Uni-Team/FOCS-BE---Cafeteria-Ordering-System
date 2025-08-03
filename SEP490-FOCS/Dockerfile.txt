@@ -12,6 +12,7 @@ COPY FOCS.Common/*.csproj ./FOCS.Common/
 COPY FOCS.Infrastructure.Identity/*.csproj ./FOCS.Infrastructure.Identity/
 COPY FOCS.Order.Infrastucture/*.csproj ./FOCS.Order.Infrastucture/
 COPY FOCS.Realtime.Hub/*.csproj ./FOCS.Realtime.Hub/
+COPY FOCS.NotificationService/*.csproj ./FOCS.NotificationService/
 COPY FOCS/*.csproj ./FOCS/
 
 RUN dotnet restore

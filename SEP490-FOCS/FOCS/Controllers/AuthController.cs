@@ -16,16 +16,18 @@ namespace FOCS.Controllers
     public class AuthController : FocsController
     {
         private readonly IAuthService _authService;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IConfiguration configuration)
         {
             _authService = authService;
+            _configuration = configuration;
         }
 
         [HttpPost("login")]
-        public async Task<AuthResult> LoginAsync(LoginRequest loginRequest)
+        public async Task<AuthResult> LoginAsync(LoginRequest loginRequest, [FromHeader] string storeId)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
+            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
             return await _authService.LoginAsync(loginRequest, storeIdGuid);
         }
 
@@ -72,7 +74,7 @@ namespace FOCS.Controllers
             var result = await _authService.ConfirmEmailAsync(email, token);
             if (result)
             {
-                return Ok(new { message = "Email confirmed successfully!" });
+                return Redirect(_configuration["applicationProductUrl:BaseStoreFrontUrl"] + "/en/sign-in");
             }
             else
             {
@@ -95,6 +97,12 @@ namespace FOCS.Controllers
 
             ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
             return await _authService.RefreshTokenAsync(refreshToken, storeIdGuid);
+        }
+
+        [HttpPost("mobile-token")]
+        public async Task<bool> AddOrUpdateMobileToken(MobileTokenRequest request)
+        {
+            return await _authService.CreateOrUpdateMobileToken(request);
         }
     }
 }

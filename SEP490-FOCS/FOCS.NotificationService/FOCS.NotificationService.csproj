@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-FOCS.NotificationService-c614cdc5-40d7-44b7-a756-1c0ecd6e7076</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FirebaseAdmin" Version="3.3.0" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.70.0" />
+    <PackageReference Include="MassTransit" Version="8.5.1" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.5.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FOCS.Common\FOCS.Common.csproj" />
+    <ProjectReference Include="..\FOCS.Realtime.Hub\FOCS.Realtime.Hubs.csproj" />
+  </ItemGroup>
+
+</Project>

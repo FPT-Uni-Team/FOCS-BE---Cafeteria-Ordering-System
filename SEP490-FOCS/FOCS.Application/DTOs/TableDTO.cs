@@ -13,6 +13,9 @@ namespace FOCS.Application.DTOs
 
         [JsonPropertyName("status")]
         public TableStatus Status { get; set; }
+
+        [JsonPropertyName("qr_code")]
+        public string? QrCode { get; set; }
         
         [JsonPropertyName("is_active")]
         public bool IsActive { get; set; }

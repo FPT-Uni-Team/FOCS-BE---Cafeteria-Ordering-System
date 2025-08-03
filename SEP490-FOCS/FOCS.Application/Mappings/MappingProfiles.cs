@@ -34,7 +34,12 @@ namespace FOCS.Application.Mappings
                  .ReverseMap()
                  .ForMember(dest => dest.Images, opt => opt.Ignore());
 
+            CreateMap<Feedback, CreateFeedbackRequest>()
+                .ForMember(dest => dest.Files, opt => opt.Ignore())
+                .ReverseMap()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.ActorId));
 
+            CreateMap<Feedback, FeedbackDTO>().ReverseMap();
 
             CreateMap<MenuItemVariant, MenuItemVariantDTO>().ReverseMap();
             CreateMap<VariantGroup, VariantGroupDTO>().ReverseMap();
@@ -52,6 +57,7 @@ namespace FOCS.Application.Mappings
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
             // Mappings for Table
             CreateMap<Table, TableDTO>().ReverseMap()
+                .ForMember(dest => dest.QrCode, opt => opt.Ignore())
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
 
             CreateMap<Brand, CreateAdminBrandRequest>().ReverseMap()
@@ -83,7 +89,8 @@ namespace FOCS.Application.Mappings
 
             // Order mapping
             CreateMap<OrderDTO, Order.Infrastucture.Entities.Order>().ReverseMap(); 
-            CreateMap<OrderDetailDTO, OrderDetail>().ReverseMap();
+            CreateMap<OrderDetailDTO, OrderDetail>().ReverseMap()
+                .ForMember(dest => dest.VariantName, opt => opt.MapFrom(src => src.Variant.Name));
 
             CreateMap<VariantOptionDTO, MenuItemVariant>().ReverseMap();
 
@@ -92,6 +99,11 @@ namespace FOCS.Application.Mappings
             CreateMap<VariantGroup, CreateVariantGroupRequest>().ReverseMap();
 
             CreateMap<VariantGroup, VariantGroupResponse>().ReverseMap();
+
+            CreateMap<StoreAdminResponse, StoreSetting>().ReverseMap()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Store.Name))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Store.Address))
+                .ForMember(dest => dest.CustomTaxRate, opt => opt.MapFrom(src => src.Store.CustomTaxRate));
         }
     }
 }

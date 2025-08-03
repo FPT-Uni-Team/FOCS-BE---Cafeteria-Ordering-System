@@ -35,7 +35,7 @@ namespace FOCS.Application.Services.ApplyStrategy
             _promotionRepository = promotionRepository;
         }
 
-        public async Task<DiscountResultDTO> ApplyDiscountAsync(CreateOrderRequest order, string? couponCode = null)
+        public async Task<DiscountResultDTO> ApplyDiscountAsync(ApplyDiscountOrderRequest order, string? couponCode = null)
         {
             var promotion = await _promotionRepository.AsQueryable()
                 .Include(x => x.Coupons)
@@ -127,7 +127,6 @@ namespace FOCS.Application.Services.ApplyStrategy
                             break;
                     }
 
-
                     if (itemDiscount > 0)
                     {
                         totalDiscount += itemDiscount;
@@ -175,7 +174,7 @@ namespace FOCS.Application.Services.ApplyStrategy
             return Math.Min(itemPrice, (double)discountValue);
         }
 
-        private async Task<List<DiscountItemDetail>> ApplyBuyXGetYDiscount(CreateOrderRequest order, Promotion promotion)
+        private async Task<List<DiscountItemDetail>> ApplyBuyXGetYDiscount(ApplyDiscountOrderRequest order, Promotion promotion)
         {
             var discountDetails = new List<DiscountItemDetail>();
 

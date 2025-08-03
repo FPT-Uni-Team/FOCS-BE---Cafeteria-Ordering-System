@@ -22,11 +22,8 @@ namespace FOCS.Common.Models
         [JsonPropertyName("is_available")]
         public bool IsAvailable { get; set; }
 
-        [JsonPropertyName("menu_category_id")]
-        public Guid MenuCategoryId { get; set; }
-
-        [JsonPropertyName("menu_category")]
-        public MenuCategoryDTO MenuCategory { get; set; }
+        [JsonPropertyName("categories")]
+        public List<MenuCategoryDTO> MenuCategories { get; set; }
 
         [JsonPropertyName("variant_groups")]
         public ICollection<VariantGroupDTO> VariantGroups { get; set; }

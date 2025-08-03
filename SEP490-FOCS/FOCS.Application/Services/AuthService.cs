@@ -22,6 +22,7 @@ using FOCS.Common.Utils;
 using Newtonsoft.Json.Linq;
 using FOCS.Order.Infrastucture.Entities;
 using System.Net.Http.Headers;
+using Microsoft.EntityFrameworkCore;
 
 namespace FOCS.Application.Services
 {
@@ -37,11 +38,13 @@ namespace FOCS.Application.Services
         private readonly IRepository<Store> _storeRepository;
         private readonly ILogger<AuthService> _logger;
 
+        private readonly IRepository<MobileTokenDevice> _mobileTokenDevice;
+
         private readonly IRepository<UserStore> _userStoreRepository;
 
         public AuthService(UserManager<User> userManager, SignInManager<User> signInManager,
             IConfiguration config, IMapper mapper, IEmailService emailService, ITokenService tokenService,
-            IRepository<UserRefreshToken> userRepo, IRepository<Store> storeRepository, ILogger<AuthService> logger, IRepository<UserStore> userStoreRepository)
+            IRepository<UserRefreshToken> userRepo, IRepository<Store> storeRepository, ILogger<AuthService> logger, IRepository<UserStore> userStoreRepository, IRepository<MobileTokenDevice> mobileTokenDevice)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -53,6 +56,7 @@ namespace FOCS.Application.Services
             _storeRepository = storeRepository;
             _logger = logger;
             _userStoreRepository = userStoreRepository;
+            _mobileTokenDevice = mobileTokenDevice;
         }
 
         public async Task<bool> ConfirmEmailAsync(string email, string token)
@@ -123,7 +127,7 @@ namespace FOCS.Application.Services
             }
 
             var userStores = await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(user.Id));
-            if(!userStores.Any(x => x.UserId == Guid.Parse(user.Id) && x.StoreId == storeId))
+            if (await _userManager.IsInRoleAsync(user, Roles.User) && !userStores.Any(x => x.UserId == Guid.Parse(user.Id) && x.StoreId == storeId))
             {
                 var newUserStore = new UserStoreDTO
                 {
@@ -192,7 +196,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> RegisterAsync(RegisterRequest request, Guid StoreId)
         {
-            var store = _storeRepository.GetByIdAsync(StoreId);
+            var store = await _storeRepository.GetByIdAsync(StoreId);
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
 
             var user = new User
@@ -200,7 +204,7 @@ namespace FOCS.Application.Services
                 Email = request.Email,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                UserName = request.Email,
+                UserName = request.Email.Split("@")[0],
                 PhoneNumber = request.Phone
             };
 
@@ -244,7 +248,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> ChangePassword(ChangePasswordRequest request, string email)
         {
-            ConditionCheck.CheckCondition(request.OldPassword != request.NewPassword, Errors.AuthError.PasswordReuse);
+            ConditionCheck.CheckCondition(request.OldPassword != request.NewPassword, Errors.AuthError.PasswordReuse, Errors.FieldName.NewPassword);
 
             var user = await _userManager.FindByEmailAsync(email);
             ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound);
@@ -257,6 +261,43 @@ namespace FOCS.Application.Services
             _logger.LogInformation($"User changed their password successfully.");
 
             return true;
+        }
+
+        public async Task<bool> CreateOrUpdateMobileToken(MobileTokenRequest request)
+        {
+            try
+            {
+                var existing = await _mobileTokenDevice.AsQueryable().FirstOrDefaultAsync(x => x.DeviceId == request.DeviceId);
+
+                if (existing == null)
+                {
+                    await _mobileTokenDevice.AddAsync(new MobileTokenDevice
+                    {
+                        Id = Guid.NewGuid(),
+                        DeviceId = request.DeviceId,
+                        CreatedAt = DateTime.UtcNow,
+                        LastUsedAt = DateTime.UtcNow,
+                        Platform = request.Platform,
+                        Token = request.Token,
+                        UserId = request.ActorId
+                    });
+
+                }
+                else
+                {
+                    existing.Token = request.Token;
+                    existing.LastUsedAt = request.LastUsedAt;
+
+                    _mobileTokenDevice.Update(existing);
+                }
+
+                await _mobileTokenDevice.SaveChangesAsync();
+
+                return true;
+            } catch(Exception ex)
+            {
+                return false;
+            }
         }
 
         #region private method

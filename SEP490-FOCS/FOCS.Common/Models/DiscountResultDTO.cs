@@ -29,6 +29,15 @@ namespace FOCS.Common.Models
 
         [JsonPropertyName("is_discount_applied")]
         public bool IsDiscountApplied => TotalDiscount > 0;
+
+        [JsonPropertyName("order_code")]
+        public long? OrderCode { get; set; }
+
+        [JsonPropertyName("is_use_point")]
+        public bool? IsUsePoint {  get; set; }
+
+        [JsonPropertyName("point")]
+        public int? Point {  get; set; }
     }
     public class DiscountItemDetail
     {

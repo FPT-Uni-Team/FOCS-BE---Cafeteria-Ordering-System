@@ -20,7 +20,7 @@ namespace FOCS.Order.Infrastucture.Entities
         public int MaxSelect { get; set; }
         public bool IsRequired { get; set; }
 
-        public ICollection<MenuItemVariantGroupItem> Items { get; set; }
+        public ICollection<MenuItemVariantGroupItem> MenuItemVariantGroupItems { get; set; }
 
     }
 }

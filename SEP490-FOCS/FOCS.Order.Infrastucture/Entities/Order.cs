@@ -13,9 +13,9 @@ namespace FOCS.Order.Infrastucture.Entities
     {
         public Guid Id { get; set; }
 
-        public string OrderCode { get; set; } = null!;
+        public long OrderCode { get; set; }
 
-        public Guid? UserId { get; set; }
+        public Guid UserId { get; set; }
 
         public OrderStatus OrderStatus { get; set; }
 
@@ -28,6 +28,7 @@ namespace FOCS.Order.Infrastucture.Entities
         public double DiscountAmount {  get; set; } // discount follow promotion
         public double TotalAmount { get; set; } // total after apply tax and promotion
 
+        public bool IsDeleted { get; set; } = false;
         public string CustomerNote { get; set; }
 
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
@@ -41,7 +42,7 @@ namespace FOCS.Order.Infrastucture.Entities
 
         //Coupon
         public Guid? CouponId {  get; set; }
-        public Coupon Coupon {  get; set; }
+        public Coupon Coupon {  get; set; } 
 
         //Order wrap 
         public Guid? OrderWrapId { get; set; }

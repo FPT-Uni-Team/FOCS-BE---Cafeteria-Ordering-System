@@ -1,24 +1,34 @@
 ﻿using AutoMapper;
 using Azure.Core;
+using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
 using FOCS.Common.Enums;
 using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
+using FOCS.Common.Models.CartModels;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
+using FOCS.Infrastructure.Identity.Identity.Model;
+using FOCS.NotificationService.Models;
 using FOCS.Order.Infrastucture.Entities;
+using FOCS.Realtime.Hubs;
+using MassTransit;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Crypto.Modes.Gcm;
 using Org.BouncyCastle.Utilities.Collections;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static Org.BouncyCastle.Asn1.Cmp.Challenge;
 
 namespace FOCS.Application.Services
@@ -33,17 +43,27 @@ namespace FOCS.Application.Services
         private readonly IRepository<Coupon> _couponRepository;
         private readonly IRepository<OrderDetail> _orderDetailRepository;
 
+        private readonly IMobileTokenSevice _mobileTokenService;
+
         private readonly IPricingService _pricingService;
 
         private readonly IPromotionService _promotionService;
         private readonly DiscountContext _discountContext;
+        private readonly IRepository<SystemConfiguration> _systemConfig;
         private readonly IStoreSettingService _storeSettingService;
 
-        private readonly ILogger<string> _logger;
+        private readonly ICouponUsageService _couponUsageService;
+        private readonly IRealtimeService _realtimeService;
+
+        private readonly ILogger<OrderService> _logger;
         private readonly IMapper _mapper;
 
+        private readonly IPublishEndpoint _publishEndpoint;
+
+        private readonly UserManager<User> _userManager;
+
         public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository, 
-                            ILogger<string> logger, 
+                            ILogger<OrderService> logger, 
                             IRepository<OrderDetail> orderDetailRepository, 
                             IPricingService pricingService, 
                             IRepository<Coupon> couponRepository, 
@@ -54,21 +74,33 @@ namespace FOCS.Application.Services
                             IRepository<MenuItem> menuRepository, 
                             IRepository<MenuItemVariant> variantRepository, 
                             IPromotionService promotionService,
-                            IMapper mapper)
+                            IMapper mapper,
+                            IRealtimeService realtimeService,
+                            UserManager<User> userManager,
+                            IRepository<SystemConfiguration> systemConfig,
+                            IPublishEndpoint publishEndpoint,
+                            IMobileTokenSevice mobileTokenService,
+                            ICouponUsageService couponUsageService)
         {
             _orderRepository = orderRepository;
+            _realtimeService = realtimeService;
             _logger = logger;
             _pricingService = pricingService;
             _orderDetailRepository = orderDetailRepository;
             _couponRepository = couponRepository;
             _storeRepository = storeRepository;
-            this._discountContext = discountContext;
+            _discountContext = discountContext;
             _menuItemRepository = menuRepository;
             _storeSettingService = storeSettingService;
             _variantRepository = variantRepository;
             _promotionService = promotionService;
+            _userManager = userManager;
             _tableRepository = tableRepo;
             _mapper = mapper;
+            _publishEndpoint = publishEndpoint;
+            _systemConfig = systemConfig;
+            _couponUsageService = couponUsageService;
+            _mobileTokenService = mobileTokenService;
         }
 
         public async Task<DiscountResultDTO> CreateOrderAsync(CreateOrderRequest order, string userId)
@@ -85,29 +117,159 @@ namespace FOCS.Application.Services
             var storeSettings = await _storeSettingService.GetStoreSettingAsync(order.StoreId, userId); 
             ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.StoreNotFound);
 
-            // Validate promotion and coupon
-            await _promotionService.IsValidPromotionCouponAsync(order.CouponCode, userId, order.StoreId);
+            if(order.DiscountResult == null)
+            {
+                order.DiscountResult = new DiscountResultDTO();
 
-            // Pricing
-            ConditionCheck.CheckCondition(!storeSettings!.DiscountStrategy.Equals(null), Errors.StoreSetting.DiscountStrategyNotConfig);
-            var discountResult = await _discountContext.CalculateDiscountAsync(order, order.CouponCode, (DiscountStrategy)storeSettings.DiscountStrategy);
-            
+                var dictPrice = order.Items
+                   .Distinct()
+                   .Select(x => (x.MenuItemId, x.VariantId))
+                   .ToDictionary();
+
+                var price = await _pricingService.CalculatePriceOfProducts(dictPrice, store!.Id.ToString());
+
+                order.DiscountResult.TotalPrice = (decimal)price;
+            }
+
             //save order and order detail
-            await SaveOrderAsync(order, discountResult, tableInStore.FirstOrDefault(), store, userId);
+            await SaveOrderAsync(order, tableInStore.FirstOrDefault(), store, userId);
 
-            return discountResult;
+            return order.DiscountResult;
         }
 
-        public async Task<OrderDTO> GetOrderByCodeAsync(string orderCode)
+        public async Task<DiscountResultDTO> ApplyDiscountForOrder(ApplyDiscountOrderRequest orderRequest, string userId)
         {
-            var orderByCode = await _orderRepository.AsQueryable().Include(x => x.OrderDetails).FirstOrDefaultAsync(x => x.OrderCode == orderCode);
+            ConditionCheck.CheckCondition(orderRequest.CouponCode != null, Errors.Common.NotFound);
 
-            return orderCode == null ? new OrderDTO { } : _mapper.Map<OrderDTO>(orderByCode);
+            await _promotionService.IsValidPromotionCouponAsync(orderRequest.CouponCode!, userId.ToString(), orderRequest.StoreId);
+
+            var storeSettings = await _storeSettingService.GetStoreSettingAsync(orderRequest.StoreId);
+
+            ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.NotFound);
+            ConditionCheck.CheckCondition(!storeSettings!.DiscountStrategy.Equals(null), Errors.StoreSetting.DiscountStrategyNotConfig);
+
+            return await _discountContext.CalculateDiscountAsync(orderRequest, orderRequest.CouponCode, storeSettings.DiscountStrategy, userId);
         }
 
-        public Task<List<OrderDTO>> GetPendingOrdersAsync()
+        public async Task<PagedResult<OrderDTO>> GetListOrders(UrlQueryParameters queryParameters, string storeId, string userId)
         {
-            throw new NotImplementedException();
+            var ordersQuery = _orderRepository.AsQueryable().Where(x => x.StoreId == Guid.Parse(storeId) && x.UserId == Guid.Parse(userId) && !x.IsDeleted);
+
+            ordersQuery = ApplyFilters(ordersQuery, queryParameters);
+            ordersQuery = ApplySearch(ordersQuery, queryParameters);
+            ordersQuery = ApplySort(ordersQuery, queryParameters);
+
+            var total = await ordersQuery.CountAsync();
+            var items = await ordersQuery
+                .Skip((queryParameters.Page - 1) * queryParameters.PageSize)
+                .Take(queryParameters.PageSize)
+            .ToListAsync();
+
+            var mapped = _mapper.Map<List<OrderDTO>>(items);
+            return new PagedResult<OrderDTO>(mapped, total, queryParameters.Page, queryParameters.PageSize);
+        }
+
+        public async Task<OrderDTO> GetOrderByCodeAsync(long orderCode)
+        {
+            var orderByCode = await _orderRepository.AsQueryable()
+                                                    .Include(x => x.OrderDetails)
+                                                        .ThenInclude(od => od.MenuItem)
+                                                    .FirstOrDefaultAsync(x => x.OrderCode == orderCode);
+
+            if (orderByCode == null)
+                return new OrderDTO();
+
+            var variantIds = orderByCode.OrderDetails
+                                  .Where(od => od.VariantId.HasValue)
+                                  .Select(od => od.VariantId.Value)
+                                  .Distinct()
+                                  .ToList();
+
+            var variants = await _variantRepository.AsQueryable()
+                                                   .Where(x => variantIds.Contains(x.Id))
+                                                   .ToListAsync();
+
+            var variantDict = variants.ToDictionary(x => x.Id);
+
+            foreach (var item in orderByCode.OrderDetails)
+            {
+                if (variantDict.TryGetValue((Guid)item.VariantId, out var variant))
+                {
+                    item.Variant = variant;
+                }
+            }
+
+            return _mapper.Map<OrderDTO>(orderByCode);
+        }
+
+        public async Task<bool> ChangeStatusOrder(string code, ChangeOrderStatusRequest request, string storeId)
+        {
+            try
+            {
+                var order = await _orderRepository.AsQueryable().FirstOrDefaultAsync(x => x.OrderCode.ToString() == code && !x.IsDeleted && x.StoreId == Guid.Parse(storeId));
+
+                ConditionCheck.CheckCondition(order != null, Errors.Common.NotFound);
+
+                order.OrderStatus = request.OrderStatus;
+
+                if(order.OrderStatus == OrderStatus.Confirmed)
+                {
+                    order.PaymentStatus = PaymentStatus.Paid;
+                }
+
+                order.UpdatedAt = DateTime.UtcNow;
+
+                _orderRepository.Update(order);
+                await _orderRepository.SaveChangesAsync();
+
+                return true;
+            } catch(Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public async Task<List<OrderDTO>> GetPendingOrdersInDayAsync()
+        {
+            var timeSince = DateTime.UtcNow.Subtract(TimeSpan.FromDays(1));
+
+            var ordersPending = await _orderRepository.AsQueryable()
+                                                      .Include(x => x.OrderDetails)
+                                                      .ThenInclude(x => x.Variant)
+                                                      .Where(x => x.OrderStatus == OrderStatus.Pending
+                                                              && !x.IsDeleted
+                                                              && x.PaymentStatus == PaymentStatus.Paid
+                                                              && x.CreatedAt >= timeSince)
+                                                      .ToListAsync();
+
+            var mappingOrders = _mapper.Map<List<OrderDTO>>(ordersPending);
+
+            if(ordersPending != null)
+            {
+                ordersPending.ForEach(x => x.OrderStatus = OrderStatus.Confirmed);
+
+                _orderRepository.UpdateRange(ordersPending);
+                await _orderRepository.SaveChangesAsync();
+            }
+
+            foreach (var dto in mappingOrders)
+            {
+                var original = ordersPending.FirstOrDefault(x => x.Id == dto.Id);
+                if (original != null && original.OrderDetails.Any())
+                {
+                    var firstMenuItemId = original.OrderDetails.First().MenuItemId;
+
+                    var menuItem = await _menuItemRepository.GetByIdAsync(firstMenuItemId);
+                    var menuItemName = menuItem?.Name;
+
+                    dto.OrderDetails.ForEach(detail =>
+                    {
+                        detail.MenuItemName = menuItemName;
+                    });
+                }
+            }
+
+            return mappingOrders;
         }
 
         public async Task<OrderDTO> GetUserOrderDetailAsync(Guid userId, Guid orderId)
@@ -119,47 +281,76 @@ namespace FOCS.Application.Services
             return _mapper.Map<OrderDTO>(orderByUser);
         }
 
-        public Task<IEnumerable<OrderSummaryDTO>> GetUserOrdersAsync(Guid userId)
+        public async Task MarkAsPaid(long orderCode, string storeId)
         {
-            throw new NotImplementedException();
-        }
+            var order = await _orderRepository.AsQueryable().Include(x => x.Table).FirstOrDefaultAsync(x => x.OrderCode == orderCode);
 
-        public Task<DiscountResultDTO> VerifyCouponAsGuestAsync(string couponCode, Guid storeId)
-        {
-            throw new NotImplementedException();
-        }
+            //update coupon, promotion usage
+            var storeSetting = await _storeSettingService.GetStoreSettingAsync(Guid.Parse(storeId));
 
+            if(storeSetting.DiscountStrategy == DiscountStrategy.CouponThenPromotion)
+            {
+                try
+                {
+                    var currentCoupon = await _couponRepository.AsQueryable().Include(x => x.Promotion).FirstOrDefaultAsync(x => x.Code == orderCode.ToString());
+
+                    var isAdded = await _couponUsageService.SaveCouponUsage(currentCoupon.Code, order.UserId, order.Id);
+
+                    if (isAdded)
+                    {
+                        currentCoupon.Promotion.CountUsed++;
+                    }
+
+                    _couponRepository.Update(currentCoupon);
+                    await _couponRepository.SaveChangesAsync();
+                } catch(Exception ex)
+                {
+                    return;
+                }
+            }
+
+            order.PaymentStatus = PaymentStatus.Paid;
+
+            _orderRepository.Update(order);
+            await _orderRepository.SaveChangesAsync();
+
+            var notifyEvent = new NotifyEvent
+            {
+                Title = Constants.ActionTitle.PaymentSuccess(order.Table.TableNumber),
+                Message = Constants.ActionTitle.PaymentSuccess(order.Table.TableNumber),
+                TargetGroups = new[] { SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId) },
+                storeId = order.StoreId.ToString(),
+                tableId = order.TableId.ToString()
+            };
+
+            await _realtimeService.SendToGroupAsync<NotifyHub, NotifyEvent>(SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId), Constants.Method.NewNotify, notifyEvent);
+        }
 
         #region private methods
-        private async Task<bool> IsValidApplyCoupon(string? couponCode)
-        {
-            throw new NotImplementedException();
-        }
-
-        private async Task SaveOrderAsync(CreateOrderRequest order, DiscountResultDTO discountResult, Table table, Store store, string userId)
+        private async Task SaveOrderAsync(CreateOrderRequest order, Table table, Store store, string userId)
         {
             Random randomNum = new Random();
 
             try
             {
                 Guid? couponCurrent = null;
-                if (!string.IsNullOrEmpty(discountResult.AppliedCouponCode))
+                if (!string.IsNullOrEmpty(order.DiscountResult.AppliedCouponCode))
                 {
-                    var coupon = await _couponRepository.FindAsync(x => x.Code == discountResult.AppliedCouponCode);
+                    var coupon = await _couponRepository.FindAsync(x => x.Code == order.DiscountResult.AppliedCouponCode);
                     couponCurrent = coupon.FirstOrDefault()?.Id;
                 }
 
                 var orderCreate = new Order.Infrastucture.Entities.Order
                 {
                     Id = Guid.NewGuid(),
-                    OrderCode = "ORD" + randomNum.Next(1000, 9999),
-                    UserId = string.IsNullOrEmpty(userId) ? null : Guid.Parse(userId),
+                    OrderCode = randomNum.Next(1000, 9999),
+                    UserId = Guid.Parse(userId),
                     OrderStatus = OrderStatus.Pending,
                     OrderType = order.OrderType,
-                    SubTotalAmout = (double)(discountResult.TotalPrice + discountResult.TotalDiscount),
+                    SubTotalAmout = (double)(order.DiscountResult.TotalPrice + order.DiscountResult.TotalDiscount),
                     TaxAmount = store.CustomTaxRate ?? 0,
-                    DiscountAmount = (double)discountResult.TotalDiscount,
-                    TotalAmount = (double)((double)discountResult.TotalPrice + store.CustomTaxRate ?? 0),
+                    DiscountAmount = (double)order.DiscountResult.TotalDiscount,
+                    TotalAmount = (double)((double)order.DiscountResult.TotalPrice + store.CustomTaxRate ?? 0),
                     CustomerNote = order.Note ?? "",
                     StoreId = order.StoreId,
                     CouponId = couponCurrent,
@@ -168,13 +359,15 @@ namespace FOCS.Application.Services
                         PaymentType.CASH => PaymentStatus.Unpaid,
                         PaymentType.BANK_TRANSFER or PaymentType.ONLINE_PAYMENT => PaymentStatus.Waiting,
                         _ => PaymentStatus.Unpaid
-                    }
+                    },
+                    CreatedBy = userId,
+                    TableId = table.Id
                 };
 
                 var ordersDetailCreate = new List<OrderDetail>();
-                if(discountResult.ItemDiscountDetails != null)
+                if(order.DiscountResult.ItemDiscountDetails != null)
                 {
-                    foreach (var item in discountResult.ItemDiscountDetails)
+                    foreach (var item in order.DiscountResult.ItemDiscountDetails)
                     {
                         var itemCodes = item.ItemCode?.Split("_");
                         if (itemCodes == null || itemCodes.Length == 0)
@@ -205,20 +398,109 @@ namespace FOCS.Application.Services
                     }
                 }
 
+                if (order.DiscountResult.IsUsePoint.HasValue && order.DiscountResult.IsUsePoint == true)
+                {
+                    var user = await _userManager.FindByIdAsync(userId);
+                    ConditionCheck.CheckCondition(user != null, Errors.Common.NotFound);
+
+                    var systemConfigEarningRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.EarningRate;
+
+                    user!.FOCSPoint -= order.DiscountResult.Point;
+                    user!.FOCSPoint += (int)order.DiscountResult.TotalPrice / (int)systemConfigEarningRate;
+
+                    await _userManager.UpdateAsync(user);
+                }
+
+                table.Status = TableStatus.Occupied;
+                _tableRepository.Update(table);
+
                 await _orderRepository.AddAsync(orderCreate);
                 await _orderRepository.SaveChangesAsync();
 
                 await _orderDetailRepository.AddRangeAsync(ordersDetailCreate);
                 await _orderDetailRepository.SaveChangesAsync();
 
-                table.Status = TableStatus.Occupied;
-                _tableRepository.Update(table);
                 await _tableRepository.SaveChangesAsync();
 
+                //code order for payment hook
+                order.DiscountResult.OrderCode = orderCreate.OrderCode;
+
+                var tokenDeviceMobile = await _mobileTokenService.GetMobileToken(Guid.Parse(userId));
+
+                //send notify to casher
+                var notifyEventModel = new NotifyEvent
+                {
+                    Title = Constants.ActionTitle.NewOrderd,
+                    Message = Constants.ActionTitle.NewOrderAtTable(table.TableNumber),
+                    TargetGroups = new[] { SignalRGroups.Cashier(store.Id, table.Id) },
+                    MobileTokens = new[] { tokenDeviceMobile.Token }, 
+                    storeId = store.Id.ToString(),
+                    tableId = table.Id.ToString()
+                };
+                
+                await _publishEndpoint.Publish(notifyEventModel);
+
+                var orderDataExchangeRealtime = order.Items.Select(x => new OrderRedisModel
+                {
+                    MenuItemId = x.MenuItemId,
+                    VariantId = x.VariantId,
+                    Quantity = x.Quantity,
+                    Note = x.Note
+                }).ToList();
+                await _realtimeService.SendToGroupAsync<OrderHub, List<OrderRedisModel>>(SignalRGroups.User(store.Id, table.Id, Guid.Parse(userId)), Constants.Method.OrderCreated, orderDataExchangeRealtime);
             }
             catch (Exception ex)
             {
                 _logger.LogError("Error when saving order: " + ex.Message);
+            }
+        }
+
+        public async Task<bool> DeleteOrderAsync(Guid orderId, string userId, string storeId)
+        {
+            try
+            {
+                var order = await _orderRepository.GetByIdAsync(orderId);
+
+                ConditionCheck.CheckCondition(order != null, Errors.Common.NotFound);
+
+                var orderDetails = _orderDetailRepository.AsQueryable().Where(x => x.OrderId == order.Id).ToList();
+
+                if(orderDetails.Any() && orderDetails != null)
+                {
+                    _orderDetailRepository.RemoveRange(orderDetails);
+                }
+
+                _orderRepository.Remove(order);
+                await _orderRepository.SaveChangesAsync();
+
+                return true;
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+        }
+
+        public async Task<bool> CancelOrderAsync(Guid orderId, string userId, string storeId)
+        {
+            try
+            {
+
+                var order = await _orderRepository.GetByIdAsync(orderId);
+
+                ConditionCheck.CheckCondition(order != null, Errors.Common.NotFound);
+
+                order!.OrderStatus = OrderStatus.Canceled;
+                order!.UpdatedAt = DateTime.UtcNow;
+
+                _orderRepository.Update(order);
+                await _orderRepository.SaveChangesAsync();
+
+                return true;
+            } catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
             }
         }
 
@@ -237,6 +519,77 @@ namespace FOCS.Application.Services
                 if (item.VariantId.HasValue)
                     ConditionCheck.CheckCondition(existingVariants.Any(x => x.Id == item.VariantId), Errors.OrderError.MenuItemNotFound);
             }
+        }
+
+        private static IQueryable<Order.Infrastucture.Entities.Order> ApplyFilters(IQueryable<Order.Infrastucture.Entities.Order> query, UrlQueryParameters parameters)
+        {
+            if (parameters.Filters?.Any() != true) return query;
+
+            foreach (var (key, value) in parameters.Filters)
+            {
+                query = key.ToLowerInvariant() switch
+                {
+                  /*  "promotion_type" when Enum.TryParse<PromotionType>(value, true, out var promotionType) =>
+                        query.Where(p => p.PromotionType == promotionType),
+                    "start_date" => query.Where(p => p.StartDate >= DateTime.Parse(value)),
+                    "end_date" => query.Where(p => p.EndDate <= DateTime.Parse(value)),
+                    "status" when Enum.TryParse<PromotionStatus>(value, true, out var status) =>
+                        status switch
+                        {
+                            PromotionStatus.Incomming => query.Where(p => p.StartDate > DateTime.UtcNow),
+                            PromotionStatus.OnGoing => query.Where(p => p.StartDate <= DateTime.UtcNow && p.EndDate >= DateTime.UtcNow),
+                            PromotionStatus.Expired => query.Where(p => p.EndDate < DateTime.UtcNow),
+                            PromotionStatus.UnAvailable => query.Where(p => p.IsActive == false),
+                            _ => query
+                        },
+                    _ => query*/
+                };
+            }
+
+            return query;
+        }
+
+        private static IQueryable<Order.Infrastucture.Entities.Order> ApplySearch(IQueryable<Order.Infrastucture.Entities.Order> query, UrlQueryParameters parameters)
+        {
+            if (string.IsNullOrWhiteSpace(parameters.SearchBy) || string.IsNullOrWhiteSpace(parameters.SearchValue))
+                return query;
+
+            var searchValue = parameters.SearchValue.ToLowerInvariant();
+
+            return parameters.SearchBy.ToLowerInvariant() switch
+            {
+                //"title" => query.Where(p => p.Title.ToLower().Contains(searchValue)),
+                //_ => query
+            };
+        }
+
+        private static IQueryable<Order.Infrastucture.Entities.Order> ApplySort(IQueryable<Order.Infrastucture.Entities.Order> query, UrlQueryParameters parameters)
+        {
+            //if (string.IsNullOrWhiteSpace(parameters.SortBy)) return query.OrderBy(p => p.StartDate);
+
+            //var isDescending = string.Equals(parameters.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+
+            //return parameters.SortBy.ToLowerInvariant() switch
+            //{
+            //    "title" => isDescending
+            //        ? query.OrderByDescending(p => p.Title)
+            //        : query.OrderBy(p => p.Title),
+            //    "end_date" => isDescending
+            //        ? query.OrderByDescending(p => p.EndDate)
+            //        : query.OrderBy(p => p.EndDate),
+            //    "start_date" => isDescending
+            //        ? query.OrderByDescending(p => p.StartDate)
+            //        : query.OrderBy(p => p.StartDate),
+            //    "promotion_type" => isDescending
+            //        ? query.OrderByDescending(p => p.PromotionType)
+            //        : query.OrderBy(p => p.PromotionType),
+            //    "discount_value" => isDescending
+            //        ? query.OrderByDescending(p => p.DiscountValue)
+            //        : query.OrderBy(p => p.DiscountValue),
+            //    _ => query.OrderBy(p => p.StartDate)
+            //};
+
+            return query;
         }
 
 

@@ -2,6 +2,7 @@
 using FOCS.Common.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 
 namespace FOCS.Controllers
 {
@@ -42,8 +43,22 @@ namespace FOCS.Controllers
         [HttpDelete("{variantGroupId}")]
         public async Task<IActionResult> RemoveVariantFromGroupAsync(Guid variantGroupId)
         {
-            var result = await _variantGroupService.RemoveVariantFromGroupAsync(variantGroupId);
+            var result = await _variantGroupService.RemoveVariantGroupAsync(variantGroupId);
             return result ? Ok() : NotFound("Variant group not found.");
+        }
+
+        [HttpGet("{variantGroupId}")]
+        public async Task<IActionResult> GetVariantGroupDetailAsync(Guid variantGroupId)
+        {
+            var variantGroup = await _variantGroupService.GetVariantGroupDetailAsync(variantGroupId, StoreId);
+            return Ok(variantGroup);
+        }
+
+        [HttpPatch("{variantGroupId}")]
+        public async Task<IActionResult> UpdateVariantGroupAsync(Guid variantGroupId,[FromBody] UpdateVariantGroupRequest updateVariantGroupRequest)
+        {
+            var variantGroup = await _variantGroupService.UpdateVariantGroupAsync(variantGroupId, updateVariantGroupRequest, StoreId);
+            return Ok(variantGroup);
         }
 
         // PUT: /variant-group/{menuItemId}/group-name/{groupName}

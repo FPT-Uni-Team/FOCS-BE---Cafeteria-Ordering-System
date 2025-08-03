@@ -9,11 +9,14 @@
 	<ItemGroup>
 	  <PackageReference Include="AutoMapper" Version="14.0.0" />
 	  <PackageReference Include="CloudinaryDotNet" Version="1.27.6" />
+	  <PackageReference Include="MassTransit" Version="8.5.1" />
+	  <PackageReference Include="MassTransit.RabbitMQ" Version="8.5.1" />
 	  <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
 	  <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />
 	  <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
 	  <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.5" />
 	  <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.35.0" />
+	  <PackageReference Include="payOS" Version="1.0.9" />
 	  <PackageReference Include="QRCoder" Version="1.6.0" />
 	  <PackageReference Include="StackExchange.Redis" Version="2.8.37" />
 	  <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.35.0" />
@@ -22,6 +25,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\FOCS.Common\FOCS.Common.csproj" />
 	  <ProjectReference Include="..\FOCS.Infrastructure.Identity\FOCS.Infrastructure.Identity.csproj" />
+	  <ProjectReference Include="..\FOCS.NotificationService\FOCS.NotificationService.csproj" />
 	  <ProjectReference Include="..\FOCS.Order.Infrastucture\FOCS.Order.Infrastucture.csproj" />
 	  <ProjectReference Include="..\FOCS.Realtime.Hub\FOCS.Realtime.Hubs.csproj" />
 	</ItemGroup>

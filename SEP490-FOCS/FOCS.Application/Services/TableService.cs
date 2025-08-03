@@ -31,7 +31,7 @@ namespace FOCS.Application.Services
             _cloudinaryService = cloudinaryService;
         }
 
-        public async Task<TableDTO> CreateTableAsync(TableDTO dto, string storeId)
+        public async Task<TableDTO> CreateTableAsync(TableDTO dto, string storeId, string? userId = null)
         {
             // Check userId
             ConditionCheck.CheckCondition(!string.IsNullOrEmpty(storeId), TableConstants.UserIdEmpty);
@@ -42,11 +42,14 @@ namespace FOCS.Application.Services
             // Unique table number
             ConditionCheck.CheckCondition(!exists, TableConstants.UniqueTableNumber);
 
+            var tableId = Guid.NewGuid();
+
+            var qrImage = await GenerateQrCodeForTableAsync("Add", tableId, userId, Guid.Parse(storeId));
 
             var table = _mapper.Map<Table>(dto);
-            table.Id = Guid.NewGuid();
-            table.QrCode = "";
-            table.IsDeleted = false;
+            table.Id = tableId;
+            table.QrCode = qrImage;
+            table.IsDeleted = false;    
             table.CreatedAt = DateTime.UtcNow;  
             table.CreatedBy = storeId;
 
@@ -120,7 +123,7 @@ namespace FOCS.Application.Services
 
             var table = await _tableRepository.GetByIdAsync(id);
 
-            ConditionCheck.CheckCondition(table != null && table.IsDeleted, Errors.Common.NotFound, "id");
+            ConditionCheck.CheckCondition(table != null && !table.IsDeleted, Errors.Common.NotFound, "id");
 
             return _mapper.Map<TableDTO>(table);
         }
@@ -146,7 +149,7 @@ namespace FOCS.Application.Services
             table.UpdatedAt = DateTime.UtcNow;
             table.UpdatedBy = userId;
 
-            await _tableRepository.SaveChangesAsync();
+                await _tableRepository.SaveChangesAsync();
             return true;
         }
 
@@ -190,30 +193,42 @@ namespace FOCS.Application.Services
             return true;
         }
 
-        public async Task<string> GenerateQrCodeForTableAsync(Guid tableId, string userId, Guid storeId)
+        public async Task<string> GenerateQrCodeForTableAsync(string? actionType, Guid tableId, string userId, Guid storeId)
         {
-            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), TableConstants.UserIdEmpty);
+            ConditionCheck.CheckCondition(!string.IsNullOrWhiteSpace(userId), TableConstants.UserIdEmpty);
+
+            if (string.Equals(actionType, "Add", StringComparison.OrdinalIgnoreCase))
+            {
+                var qrAddBytes = GenerateQrCodeForTable(tableId, 1); // Generate QR code bytes
+                var formFileAdd = CreateFormFileFromBytes(qrAddBytes, tableId.ToString(), "image/png");
+
+                var uploadResult = await _cloudinaryService.UploadQrCodeForTable(formFileAdd, storeId.ToString(), tableId.ToString());
+
+                return uploadResult.Url;
+            }
 
             var table = await _tableRepository
                                 .AsQueryable()
                                 .FirstOrDefaultAsync(t => t.Id == tableId && t.StoreId == storeId && !t.IsDeleted);
+
             ConditionCheck.CheckCondition(table != null, TableConstants.TableEmpty);
 
-            table.QrVersion++;
-            var qrBytes = GenerateQrCodeForTable(tableId, table.QrVersion); // returns byte[]
+            table!.QrVersion++;
 
+            var qrBytes = GenerateQrCodeForTable(tableId, table.QrVersion);
             var formFile = CreateFormFileFromBytes(qrBytes, tableId.ToString(), "image/png");
 
-            var uploadResult = await _cloudinaryService.UploadQrCodeForTable(formFile, storeId.ToString(), table!.Id.ToString());
+            var uploadResultUpdate = await _cloudinaryService.UploadQrCodeForTable(formFile, storeId.ToString(), table.Id.ToString());
 
-            table!.QrCode = uploadResult.Url;
+            table.QrCode = uploadResultUpdate.Url;
             table.UpdatedAt = DateTime.UtcNow;
             table.UpdatedBy = userId;
 
             await _tableRepository.SaveChangesAsync();
 
-            return table.QrCode; 
+            return table.QrCode;
         }
+
 
         private IFormFile CreateFormFileFromBytes(byte[] fileBytes, string fileName, string contentType)
         {

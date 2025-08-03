@@ -47,6 +47,9 @@ namespace FOCS.Infrastructure.Identity.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("FOCSPoint")
+                        .HasColumnType("int");
+
                     b.Property<string>("FirstName")
                         .HasColumnType("nvarchar(max)");
 

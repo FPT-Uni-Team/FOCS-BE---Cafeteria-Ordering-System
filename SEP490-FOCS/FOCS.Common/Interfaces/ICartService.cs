@@ -13,7 +13,7 @@ namespace FOCS.Common.Interfaces
         /// <summary>
         /// Xoá 1 món trong cart
         /// </summary>
-        Task RemoveItemAsync(Guid tableId, string actorId, string storeId, Guid menuItemId, Guid? variantId);
+        Task RemoveItemAsync(Guid tableId, string actorId, string storeId, Guid menuItemId, List<CartVariantRedisModel>? variants, int quantity);
 
         /// <summary>
         /// Lấy toàn bộ cart hiện tại
@@ -28,6 +28,6 @@ namespace FOCS.Common.Interfaces
         /// <summary>
         /// Tạo Redis key dựa theo actor (user hoặc guest) + table
         /// </summary>
-        string GetCartKey(Guid tableId, string storeId, string actorId);
+        string GetCartKey(Guid tableId, string storeId);
     }
 }

@@ -32,6 +32,7 @@ namespace FOCS.Common.Exceptions
             public const string DiscountValue = "discount_value";
             public const string MaxDiscountValue = "max_discount_value";
             public const string PromotionItemCondition = "promotion_item_condition";
+            public const string Role = "role";
             public const string NewPassword = "new_password";
         }
 
@@ -49,6 +50,11 @@ namespace FOCS.Common.Exceptions
             public const string Empty = "Empty";
             public const string IsExist = "Exist in system";
             public const string InvalidGuidFormat = "Invalid Guid format";
+        }
+
+        public static class Checkout
+        {
+            public const string MaxUsedCoupon = "Coupon is max used";
         }
 
         public static class Variant
@@ -94,6 +100,7 @@ namespace FOCS.Common.Exceptions
             public const string MenuItemNotFound = "Item Not Found";
             public const string CouponIsNotValid = "Coupon is not valid";
             public const string TableNotFound = "Table is not found in system";
+            public const string NotEnoughPoint = "Loyaty point is not enough";
         }
 
         public static class PromotionError

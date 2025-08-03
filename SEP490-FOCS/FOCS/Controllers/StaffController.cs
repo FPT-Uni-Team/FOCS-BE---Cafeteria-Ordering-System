@@ -23,9 +23,9 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("list")]
-        public async Task<PagedResult<StaffProfileDTO>> GetStaffListAsync(UrlQueryParameters query)
+        public async Task<PagedResult<StaffProfileDTO>> GetStaffListAsync(UrlQueryParameters query, [FromHeader] string storeId)
         {
-            return await _staffService.GetStaffListAsync(query, StoreId);
+            return await _staffService.GetStaffListAsync(query, storeId);
         }
 
         [HttpPost]
@@ -44,7 +44,13 @@ namespace FOCS.Controllers
         public async Task<StaffProfileDTO> UpdateStaffProfileAsync(StaffProfileDTO dto, string staffId)
         {
             return await _staffService.UpdateStaffProfileAsync(dto, staffId, UserId);
-        }   
+        }
+
+        [HttpPut("{staffId}/change-password")]
+        public async Task<bool> ChangeStaffPasswordAsync(ChangeStaffPasswordRequest request)
+        {
+            return await _staffService.ChangeStaffPasswordAsync(request, UserId);
+        }
 
         [HttpDelete("{staffId}")]
         public async Task<IActionResult> DeleteStaffProfileAsync(string staffId)

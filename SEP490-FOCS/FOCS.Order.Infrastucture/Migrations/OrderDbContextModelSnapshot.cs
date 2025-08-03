@@ -280,11 +280,21 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.PrimitiveCollection<string>("Images")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("bit");
+
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Rating")
                         .HasColumnType("int");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -522,6 +532,38 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.ToTable("MenuItemVariantGroupItems");
                 });
 
+            modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.MobileTokenDevice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeviceId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MobileTokenDevices");
+                });
+
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -544,9 +586,11 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Property<double>("DiscountAmount")
                         .HasColumnType("float");
 
-                    b.Property<string>("OrderCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("OrderCode")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("OrderStatus")
                         .HasColumnType("int");
@@ -581,7 +625,7 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("UserId")
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -642,14 +686,7 @@ namespace FOCS.Order.Infrastucture.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("DisplayOrderWrap")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("OrderWrapStatus")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
                         .HasColumnType("int");
 
                     b.Property<Guid>("StoreId")
@@ -660,6 +697,51 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.HasIndex("StoreId");
 
                     b.ToTable("OrderWraps");
+                });
+
+            modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.PaymentAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccountName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BankCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PaymentAccounts");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Promotion", b =>
@@ -861,7 +943,19 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Property<TimeSpan>("OpenTime")
                         .HasColumnType("time");
 
+                    b.Property<string>("PayOSApiKey")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PayOSChecksumKey")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PayOSClientId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("PaymentConfig")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SpendingRate")
                         .HasColumnType("int");
 
                     b.Property<Guid>("StoreId")
@@ -881,6 +975,39 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.HasIndex("StoreId");
 
                     b.ToTable("StoreSettings");
+                });
+
+            modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.SystemConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("EarningRate")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("SpendingRate")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SystemConfigurations");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Table", b =>
@@ -1080,7 +1207,7 @@ namespace FOCS.Order.Infrastucture.Migrations
                         .IsRequired();
 
                     b.HasOne("FOCS.Order.Infrastucture.Entities.MenuItem", "MenuItem")
-                        .WithMany()
+                        .WithMany("MenuItemCategories")
                         .HasForeignKey("MenuItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1132,7 +1259,7 @@ namespace FOCS.Order.Infrastucture.Migrations
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.MenuItemVariantGroupItem", b =>
                 {
                     b.HasOne("FOCS.Order.Infrastucture.Entities.MenuItemVariantGroup", "MenuItemVariantGroup")
-                        .WithMany("Items")
+                        .WithMany("MenuItemVariantGroupItems")
                         .HasForeignKey("MenuItemVariantGroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1302,12 +1429,14 @@ namespace FOCS.Order.Infrastucture.Migrations
                 {
                     b.Navigation("Images");
 
+                    b.Navigation("MenuItemCategories");
+
                     b.Navigation("MenuItemVariantGroups");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.MenuItemVariantGroup", b =>
                 {
-                    b.Navigation("Items");
+                    b.Navigation("MenuItemVariantGroupItems");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Order", b =>

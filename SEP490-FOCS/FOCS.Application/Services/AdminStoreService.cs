@@ -1,10 +1,15 @@
 ﻿using AutoMapper;
 using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
+using FOCS.Common.Exceptions;
 using FOCS.Common.Models;
+using FOCS.Common.Models.Payment;
+using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.CompilerServices;
 
 namespace FOCS.Application.Services
 {
@@ -12,13 +17,18 @@ namespace FOCS.Application.Services
     {
         private readonly IRepository<Store> _storeRepository;
         private readonly IRepository<StoreSetting> _storeSettingRepository;
+        private readonly IRepository<PaymentAccount> _paymentAccountRepository;
         private readonly IMapper _mapper;
 
-        public AdminStoreService(IRepository<Store> storeRepository, IRepository<StoreSetting> storeSettingRepository, IMapper mapper)
+        private readonly IDataProtector _dataProtector;
+
+        public AdminStoreService(IRepository<Store> storeRepository, IRepository<PaymentAccount> paymentAccountRepository, IRepository<StoreSetting> storeSettingRepository, IMapper mapper, IDataProtectionProvider dataProtector)
         {
+            _paymentAccountRepository = paymentAccountRepository;
             _storeRepository = storeRepository;
             _storeSettingRepository = storeSettingRepository;
             _mapper = mapper;
+            _dataProtector = dataProtector.CreateProtector("PayOS.Protection");
         }
 
         public async Task<StoreAdminDTO> CreateStoreAsync(StoreAdminDTO dto, string userId)
@@ -47,6 +57,81 @@ namespace FOCS.Application.Services
             await _storeSettingRepository.SaveChangesAsync();
 
             return _mapper.Map<StoreAdminDTO>(newStore);
+        }
+
+        public async Task<bool> CreatePaymentAsync(CreatePaymentRequest request, string storeId)
+        {
+            try
+            {
+                var exist = await _paymentAccountRepository.AsQueryable().AnyAsync(x => x.BankName == request.BankName && x.AccountNumber == request.AccountNumber);
+
+                ConditionCheck.CheckCondition(!exist, Errors.Common.IsExist);
+
+                var newPayment = new PaymentAccount
+                {
+                    Id = Guid.NewGuid(),
+                    BankCode = request.BankCode,
+                    AccountName = request.AccountName,
+                    AccountNumber = request.AccountNumber,
+                    BankName = request.BankName,
+                    StoreId = Guid.Parse(storeId),
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                await _paymentAccountRepository.AddAsync(newPayment);
+                await _paymentAccountRepository.SaveChangesAsync();
+
+                return true;
+            } catch(Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public async Task<StoreAdminResponse> GetStoreSetting(Guid id)
+        {
+            var store = await _storeSettingRepository.AsQueryable().Include(x => x.Store).FirstOrDefaultAsync(x => x.StoreId == id);
+
+            var dataStoreSetting = _mapper.Map<StoreAdminResponse>(store);
+
+            var protector = new SecretProtector(_dataProtector);
+
+            dataStoreSetting.PayOSClientId = protector.Decrypt(dataStoreSetting.PayOSClientId);
+            dataStoreSetting.PayOSApiKey = protector.Decrypt(dataStoreSetting.PayOSApiKey);
+            dataStoreSetting.PayOSChecksumKey = protector.Decrypt(dataStoreSetting.PayOSChecksumKey);
+
+            return dataStoreSetting;
+        }
+
+        public async Task<bool> UpdateConfigPayment(UpdateConfigPaymentRequest request, string storeId)
+        {
+            try
+            {
+                var storeSetting = await _storeSettingRepository
+                    .AsQueryable()
+                    .FirstOrDefaultAsync(x => x.StoreId == Guid.Parse(storeId));
+
+                if (storeSetting == null)
+                {
+                    return false;
+                }
+
+                var secretProtector = new SecretProtector(_dataProtector);
+
+                storeSetting.PayOSClientId = secretProtector.Encrypt(request.PayOSClientId);
+                storeSetting.PayOSApiKey = secretProtector.Encrypt(request.PayOSApiKey);
+                storeSetting.PayOSChecksumKey = secretProtector.Encrypt(request.PayOSChecksumKey);
+
+                _storeSettingRepository.Update(storeSetting);
+                await _storeSettingRepository.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
 
         public async Task<PagedResult<StoreAdminDTO>> GetAllStoresAsync(UrlQueryParameters query, string userId)

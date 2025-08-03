@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using MimeKit.Cryptography;
 using StackExchange.Redis;
 using System.ComponentModel.DataAnnotations;
+using System.Formats.Asn1;
 namespace FOCS.Application.Services
 {
     public class PromotionService : IPromotionService
@@ -25,6 +26,7 @@ namespace FOCS.Application.Services
         private readonly IRepository<CouponUsage> _couponUsageRepository;
         private readonly IRepository<PromotionItemCondition> _promotionItemConditionRepository;
         private readonly IRepository<Store> _storeRepository;
+        private readonly IRepository<StoreSetting> _storeSettingRepository;
         private readonly IRepository<MenuItem> _menuItemRepository;
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
@@ -39,6 +41,7 @@ namespace FOCS.Application.Services
             IRepository<CouponUsage> couponUsageRepository,
             UserManager<User> userManager,
             IMapper mapper,
+            IRepository<StoreSetting> storeSettingRepository,
             IRepository<UserStore> userStoreRepository,
             IPricingService pricingService)
         {
@@ -47,6 +50,7 @@ namespace FOCS.Application.Services
             _storeRepository = storeRepository;
             _menuItemRepository = menuItemRepository;
             _couponRepository = couponRepository;
+            _storeSettingRepository = storeSettingRepository;
             _couponUsageRepository = couponUsageRepository;
             _userManager = userManager;
             _mapper = mapper;
@@ -116,17 +120,18 @@ namespace FOCS.Application.Services
             var promotion = await GetAvailablePromotionById(promotionId);
             if (promotion == null) return false;
             await ValidateUser(userId, promotion.StoreId);
-            await ValidatePromotionDto(dto);
             await ValidatePromotionUniqueness(dto, storeId);
             await ValidateStoreExists(storeId);
 
             if (promotion.IsActive &&
                     promotion.StartDate <= DateTime.UtcNow && promotion.EndDate >= DateTime.UtcNow)
             {
+                await ValidatePromotionDto(dto, updateOngoingPromotion: true);
                 promotion.EndDate = dto.EndDate;
             }
             else
             {
+                await ValidatePromotionDto(dto);
                 var coupons = await ValidateCoupons(dto.CouponIds, dto.StartDate, dto.EndDate, storeId, promotionId);
                 promotion.Coupons = coupons;
                 _mapper.Map(dto, promotion);
@@ -328,19 +333,16 @@ namespace FOCS.Application.Services
         private async Task ValidateUser(string userId, Guid storeId)
         {
             var user = await _userManager.FindByIdAsync(userId);
+            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound, Errors.FieldName.UserId);
 
             var storesOfUser = (await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(userId))).Distinct().ToList();
-
-            ConditionCheck.CheckCondition(user != null, Errors.Common.UserNotFound, Errors.FieldName.UserId);
             ConditionCheck.CheckCondition(storesOfUser.Select(x => x.StoreId).Contains(storeId), Errors.AuthError.UserUnauthor, Errors.FieldName.UserId);
         }
 
-        private async Task ValidatePromotionDto(PromotionDTO dto)
+        private async Task ValidatePromotionDto(PromotionDTO dto, bool updateOngoingPromotion = false)
         {
             var context = new ValidationContext(dto);
-            var validationResults = dto.Validate(context);
-            ConditionCheck.CheckCondition(!validationResults.Any(),
-                string.Join("; ", validationResults.Select(r => r.ErrorMessage)), "");
+            dto.Validate(context, updateOngoingPromotion);
         }
 
         private async Task ValidatePromotionUniqueness(PromotionDTO dto, Guid storeId)
@@ -459,10 +461,10 @@ namespace FOCS.Application.Services
                     "status" when Enum.TryParse<PromotionStatus>(value, true, out var status) =>
                         status switch
                         {
-                            PromotionStatus.Incomming => query.Where(p => p.StartDate > DateTime.UtcNow),
-                            PromotionStatus.OnGoing => query.Where(p => p.StartDate <= DateTime.UtcNow && p.EndDate >= DateTime.UtcNow),
-                            PromotionStatus.Expired => query.Where(p => p.EndDate < DateTime.UtcNow),
-                            PromotionStatus.UnAvailable => query.Where(p => p.IsActive == false),
+                            PromotionStatus.Incomming => query.Where(p => p.IsActive && p.StartDate > DateTime.UtcNow),
+                            PromotionStatus.OnGoing => query.Where(p => p.IsActive && p.StartDate <= DateTime.UtcNow && p.EndDate >= DateTime.UtcNow),
+                            PromotionStatus.Expired => query.Where(p => p.IsActive && p.EndDate < DateTime.UtcNow),
+                            PromotionStatus.UnAvailable => query.Where(p => !p.IsActive),
                             _ => query
                         },
                     _ => query

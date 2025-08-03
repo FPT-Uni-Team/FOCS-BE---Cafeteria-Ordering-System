@@ -13,10 +13,6 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public OrderWrapStatus OrderWrapStatus { get; set; }
 
-        public int Quantity { get; set; }
-
-        public string DisplayOrderWrap { get; set; } // save with json format
-
         public Guid StoreId { get; set; }
         public Store Store { get; set; }
 

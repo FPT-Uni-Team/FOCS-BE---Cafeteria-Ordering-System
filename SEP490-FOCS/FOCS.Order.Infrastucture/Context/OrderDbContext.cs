@@ -48,6 +48,11 @@ namespace FOCS.Order.Infrastucture.Context
         public DbSet<Store> Stores { get; set; }
         public DbSet<StoreSetting> StoreSettings { get; set; }
 
+        public DbSet<PaymentAccount> PaymentAccounts { get; set; }
+        public DbSet<SystemConfiguration> SystemConfigurations { get; set; }
+
+        public DbSet<MobileTokenDevice> MobileTokenDevices { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,7 +60,7 @@ namespace FOCS.Order.Infrastucture.Context
 
             modelBuilder.Entity<MenuItem>()
                  .HasOne(mi => mi.Store)
-                 .WithMany(s => s.MenuItems) 
+                 .WithMany(s => s.MenuItems)
                  .HasForeignKey(mi => mi.StoreId)
                  .OnDelete(DeleteBehavior.Restrict);
 

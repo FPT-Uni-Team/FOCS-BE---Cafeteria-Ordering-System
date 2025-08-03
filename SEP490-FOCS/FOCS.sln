@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FOCS.Application", "FOCS.Ap
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FOCS.Order.Infrastucture", "FOCS.Order.Infrastucture\FOCS.Order.Infrastucture.csproj", "{51747E2C-8BD8-49DE-B919-3F43EAE10DBD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FOCS.Realtime.Hubs", "FOCS.Realtime.Hub\FOCS.Realtime.Hubs.csproj", "{B3AF03F3-E827-4BC4-8ED2-73934FA534DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FOCS.Realtime.Hubs", "FOCS.Realtime.Hub\FOCS.Realtime.Hubs.csproj", "{B3AF03F3-E827-4BC4-8ED2-73934FA534DC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FOCS.NotificationService", "FOCS.NotificationService\FOCS.NotificationService.csproj", "{73B4C66D-25A0-4A5F-9070-86297BA28DF1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FOCS.UnitTest", "FOCS.UnitTest\FOCS.UnitTest.csproj", "{2DEEBE8A-33C6-46B0-B17F-EC220BD2B6F9}"
 EndProject
@@ -47,6 +49,10 @@ Global
 		{B3AF03F3-E827-4BC4-8ED2-73934FA534DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3AF03F3-E827-4BC4-8ED2-73934FA534DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B3AF03F3-E827-4BC4-8ED2-73934FA534DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73B4C66D-25A0-4A5F-9070-86297BA28DF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73B4C66D-25A0-4A5F-9070-86297BA28DF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73B4C66D-25A0-4A5F-9070-86297BA28DF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73B4C66D-25A0-4A5F-9070-86297BA28DF1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2DEEBE8A-33C6-46B0-B17F-EC220BD2B6F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2DEEBE8A-33C6-46B0-B17F-EC220BD2B6F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DEEBE8A-33C6-46B0-B17F-EC220BD2B6F9}.Release|Any CPU.ActiveCfg = Release|Any CPU

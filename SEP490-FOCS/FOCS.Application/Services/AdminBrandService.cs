@@ -70,6 +70,15 @@ namespace FOCS.Application.Services
             return new PagedResult<BrandAdminDTO>(mapped, total, query.Page, query.PageSize);
         }
 
+        public async Task<BrandAdminDTO> GetBrandDetailAsync(Guid id, string userId)
+        {
+            CheckValidInput(userId);
+            var brand = await _brandRepository.AsQueryable()
+                .Where(b => b.Id.Equals(id) && !b.IsDelete && b.CreatedBy.Equals(userId)).FirstOrDefaultAsync();
+
+            return _mapper.Map<BrandAdminDTO>(brand);
+        }
+
         public async Task<bool> UpdateBrandAsync(Guid id, BrandAdminDTO dto, string userId)
         {
             CheckValidInput(userId);

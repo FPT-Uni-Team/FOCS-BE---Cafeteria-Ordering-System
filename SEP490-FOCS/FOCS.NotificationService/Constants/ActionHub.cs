@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FOCS.Common.Models.Payment
+namespace FOCS.NotificationService.Constants
 {
-    public class MomoPaymentRequestDto
+    public class ActionHub
     {
-
+        public static string NewNotification = "NewNotify";
     }
 }
