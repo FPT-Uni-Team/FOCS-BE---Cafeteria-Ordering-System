@@ -117,19 +117,19 @@ namespace FOCS.Application.Services
             var storeSettings = await _storeSettingService.GetStoreSettingAsync(order.StoreId, userId); 
             ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.StoreNotFound);
 
-            if(order.DiscountResult == null)
-            {
-                order.DiscountResult = new DiscountResultDTO();
+            //if(order.DiscountResult == null)
+            //{
+            //    order.DiscountResult = new DiscountResultDTO();
 
-                var dictPrice = order.Items
-                   .Distinct()
-                   .Select(x => (x.MenuItemId, x.VariantId))
-                   .ToDictionary();
+            //    var dictPrice = order.Items
+            //       .Distinct()
+            //       .Select(x => (x.MenuItemId, x.VariantId))
+            //       .ToDictionary();
 
-                var price = await _pricingService.CalculatePriceOfProducts(dictPrice, store!.Id.ToString());
+            //    var price = await _pricingService.CalculatePriceOfProducts(dictPrice, store!.Id.ToString());
 
-                order.DiscountResult.TotalPrice = (decimal)price;
-            }
+            //    order.DiscountResult.TotalPrice = (decimal)price;
+            //}
 
             //save order and order detail
             await SaveOrderAsync(order, tableInStore.FirstOrDefault(), store, userId);
@@ -137,9 +137,30 @@ namespace FOCS.Application.Services
             return order.DiscountResult;
         }
 
-        public async Task<DiscountResultDTO> ApplyDiscountForOrder(ApplyDiscountOrderRequest orderRequest, string userId)
+        public async Task<DiscountResultDTO> ApplyDiscountForOrder(ApplyDiscountOrderRequest orderRequest, string userId, string storeId)
         {
-            ConditionCheck.CheckCondition(orderRequest.CouponCode != null, Errors.Common.NotFound);
+            if(orderRequest.CouponCode == null && orderRequest.CouponCode.Count() <= 0)
+            {
+                var dictPrice = orderRequest.Items
+                   .Distinct()
+                   .Select(x => (x.MenuItemId, x.VariantId))
+                   .ToDictionary();
+
+                var price = await _pricingService.CalculatePriceOfProducts(dictPrice, storeId);
+
+                return new DiscountResultDTO
+                {
+                    AppliedCouponCode = null,
+                    AppliedPromotions = null,
+                    TotalDiscount = 0,
+                    TotalPrice = (decimal)price,
+                    IsUsePoint = orderRequest.IsUseLoyatyPoint,
+                    ItemDiscountDetails = new List<DiscountItemDetail>(),
+                    Messages = null,
+                    OrderCode = null,
+                    Point = 0
+                };
+            }
 
             await _promotionService.IsValidPromotionCouponAsync(orderRequest.CouponCode!, userId.ToString(), orderRequest.StoreId);
 
