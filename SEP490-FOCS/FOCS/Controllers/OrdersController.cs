@@ -45,7 +45,7 @@ namespace FOCS.Controllers
         [HttpPost("{actorId}/apply-discount")]
         public async Task<DiscountResultDTO> ApplyDiscountForOrder([FromBody] ApplyDiscountOrderRequest request, string actorId)
         {
-            return await _orderService.ApplyDiscountForOrder(request, UserId ?? actorId);
+            return await _orderService.ApplyDiscountForOrder(request, UserId ?? actorId, StoreId);
         }
 
         [HttpGet("{orderId}")]
