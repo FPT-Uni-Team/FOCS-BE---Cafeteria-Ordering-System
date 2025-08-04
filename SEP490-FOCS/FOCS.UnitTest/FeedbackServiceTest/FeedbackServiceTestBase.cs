@@ -134,5 +134,145 @@ namespace FOCS.UnitTest.FeedbackServiceTest
                 }
             };
         }
+
+        // Add these methods to your FeedbackServiceTestBase class
+
+        protected Feedback CreateTestFeedback(
+            Guid? id = null,
+            int rating = 5,
+            string comment = "Test comment",
+            Guid? userId = null,
+            List<string> images = null,
+            bool isPublic = true,
+            DateTime? createdAt = null,
+            Guid? storeId = null,
+            Guid? orderId = null,
+            string reply = null)
+        {
+            return new Feedback
+            {
+                Id = id ?? Guid.NewGuid(),
+                Rating = rating,
+                Comment = comment,
+                UserId = userId,
+                Images = images ?? new List<string>(),
+                IsPublic = isPublic,
+                CreatedAt = createdAt ?? DateTime.UtcNow,
+                CreatedBy = "test-user",
+                StoreId = storeId ?? Guid.NewGuid(),
+                OrderId = orderId ?? Guid.NewGuid()
+            };
+        }
+
+        protected FeedbackDTO CreateTestFeedbackDTO(
+            Guid? id = null,
+            int rating = 5,
+            string comment = "Test comment",
+            Guid? userId = null,
+            List<string> images = null,
+            bool isPublic = true,
+            DateTime? createdAt = null,
+            Guid? orderId = null,
+            string reply = null)
+        {
+            return new FeedbackDTO
+            {
+                Id = id ?? Guid.NewGuid(),
+                Rating = rating,
+                Comment = comment,
+                UserId = userId ?? Guid.NewGuid(),
+                Images = images ?? new List<string>(),
+                IsPublic = isPublic,
+                CreatedAt = createdAt ?? DateTime.UtcNow,
+                OrderId = orderId ?? Guid.NewGuid(),
+                Reply = reply
+            };
+        }
+
+        protected List<Feedback> CreateTestFeedbacksForStore(Guid storeId, int count = 5)
+        {
+            var feedbacks = new List<Feedback>();
+            var comments = new[]
+            {
+                "Excellent service! Highly recommended!",
+                "Good experience overall",
+                "Average service, could improve",
+                "Poor experience, needs improvement",
+                "Terrible, would not recommend"
+            };
+
+            for (int i = 0; i < count; i++)
+            {
+                feedbacks.Add(CreateTestFeedback(
+                    rating: 5 - i, // Ratings from 5 to 1
+                    comment: comments[i],
+                    isPublic: i % 2 == 0, // Alternate public status
+                    createdAt: DateTime.UtcNow.AddDays(-i), // Different dates
+                    storeId: storeId,
+                    userId: Guid.NewGuid(),
+                    images: i % 3 == 0 ? new List<string> { $"image_{i}.jpg" } : null // Some with images
+                ));
+            }
+            return feedbacks;
+        }
+
+        protected void SetupRepositoryWithFeedbacks(List<Feedback> feedbacks)
+        {
+            _feedbackRepoMock.Setup(r => r.AsQueryable()).Returns(feedbacks.AsQueryable());
+        }
+
+        protected void SetupMapperForFeedbackDTO(List<Feedback> feedbacks = null)
+        {
+            _mapperMock.Setup(m => m.Map<List<FeedbackDTO>>(It.IsAny<List<Feedback>>()))
+                .Returns((List<Feedback> source) => source.Select(f => new FeedbackDTO
+                {
+                    Id = f.Id,
+                    Rating = f.Rating,
+                    Comment = f.Comment,
+                    UserId = f.UserId ?? Guid.Empty,
+                    Images = f.Images,
+                    IsPublic = f.IsPublic,
+                    CreatedAt = f.CreatedAt ?? DateTime.MinValue,
+                    OrderId = f.OrderId,
+                    Reply = null // Assuming reply isn't mapped from Feedback entity
+                }).ToList());
+        }
+
+        protected void SetupMapperForSingleFeedback(Feedback feedback)
+        {
+            _mapperMock.Setup(m => m.Map<FeedbackDTO>(feedback))
+                .Returns(new FeedbackDTO
+                {
+                    Id = feedback.Id,
+                    Rating = feedback.Rating,
+                    Comment = feedback.Comment,
+                    UserId = feedback.UserId ?? Guid.Empty,
+                    Images = feedback.Images,
+                    IsPublic = feedback.IsPublic,
+                    CreatedAt = feedback.CreatedAt ?? DateTime.MinValue,
+                    OrderId = feedback.OrderId
+                });
+        }
+
+        protected UrlQueryParameters CreateQueryParameters(
+            int page = 1,
+            int pageSize = 10,
+            string searchBy = null,
+            string searchValue = null,
+            string sortBy = null,
+            string sortOrder = null,
+            Dictionary<string, string> filters = null)
+        {
+            return new UrlQueryParameters
+            {
+                Page = page,
+                PageSize = pageSize,
+                SearchBy = searchBy,
+                SearchValue = searchValue,
+                SortBy = sortBy,
+                SortOrder = sortOrder,
+                Filters = filters
+            };
+        }
     }
 }
