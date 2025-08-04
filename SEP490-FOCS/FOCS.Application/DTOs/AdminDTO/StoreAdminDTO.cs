@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace FOCS.Application.DTOs.AdminServiceDTO
 {
@@ -13,6 +14,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         [JsonPropertyName("phone_number")]
         public string PhoneNumber { get; set; }
         [JsonPropertyName("custom_tax_rate")]
+        [Range(0.01, 1.0, ErrorMessage = "Custom Tax Rate must between 0.01 and 1")]
         public double? CustomTaxRate { get; set; }
         [JsonPropertyName("is_active")]
         public bool IsActive { get; set; }

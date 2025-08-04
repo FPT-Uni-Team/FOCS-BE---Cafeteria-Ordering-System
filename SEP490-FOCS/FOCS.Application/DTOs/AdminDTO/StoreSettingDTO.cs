@@ -1,5 +1,6 @@
 ﻿using FOCS.Common.Enums;
 using FOCS.Order.Infrastucture.Entities;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace FOCS.Common.Models
@@ -16,7 +17,7 @@ namespace FOCS.Common.Models
         public TimeSpan CloseTime { get; set; }
 
         [JsonPropertyName("currency")]
-        public string? Currency {  get; set; } = "VND";
+        public string? Currency { get; set; } = "VND";
 
         [JsonPropertyName("payment_config")]
         public PaymentConfig PaymentConfig { get; set; }
@@ -34,7 +35,8 @@ namespace FOCS.Common.Models
         public bool AllowCombinePromotionAndCoupon { get; set; } = true;
 
         [JsonPropertyName("spending_rate")]
-        public int? SpendingRate { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "must be greater than 0")]
+        public int? SpendingRate { get; set; } = 1;
 
     }
 }
