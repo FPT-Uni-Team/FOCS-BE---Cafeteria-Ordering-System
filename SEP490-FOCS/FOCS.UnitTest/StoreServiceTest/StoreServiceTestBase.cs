@@ -3,8 +3,13 @@ using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
+using Microsoft.AspNetCore.DataProtection;
 using MockQueryable.Moq;
 using Moq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace FOCS.UnitTest.StoreServiceTest
 {
@@ -12,7 +17,10 @@ namespace FOCS.UnitTest.StoreServiceTest
     {
         protected readonly Mock<IRepository<Store>> _mockStoreRepository;
         protected readonly Mock<IRepository<StoreSetting>> _mockStoreSettingRepository;
+        protected readonly Mock<IRepository<PaymentAccount>> _mockPaymentAccountRepository;
         protected readonly Mock<IMapper> _mockMapper;
+        protected readonly Mock<IDataProtectionProvider> _mockDataProtectionProvider;
+        protected readonly Mock<IDataProtector> _mockDataProtector;
         protected readonly AdminStoreService _adminStoreService;
         protected readonly string _validUserId = Guid.NewGuid().ToString();
         protected readonly Guid _testStoreId = Guid.NewGuid();
@@ -21,12 +29,22 @@ namespace FOCS.UnitTest.StoreServiceTest
         {
             _mockStoreRepository = new Mock<IRepository<Store>>();
             _mockStoreSettingRepository = new Mock<IRepository<StoreSetting>>();
+            _mockPaymentAccountRepository = new Mock<IRepository<PaymentAccount>>();
             _mockMapper = new Mock<IMapper>();
+            _mockDataProtectionProvider = new Mock<IDataProtectionProvider>();
+            _mockDataProtector = new Mock<IDataProtector>();
+
+            // Setup data protector
+            _mockDataProtectionProvider
+                .Setup(p => p.CreateProtector("PayOS.Protection"))
+                .Returns(_mockDataProtector.Object);
 
             _adminStoreService = new AdminStoreService(
                 _mockStoreRepository.Object,
+                _mockPaymentAccountRepository.Object,
                 _mockStoreSettingRepository.Object,
-                _mockMapper.Object);
+                _mockMapper.Object,
+                _mockDataProtectionProvider.Object);
         }
 
         protected StoreAdminDTO CreateValidStoreAdminDTO()

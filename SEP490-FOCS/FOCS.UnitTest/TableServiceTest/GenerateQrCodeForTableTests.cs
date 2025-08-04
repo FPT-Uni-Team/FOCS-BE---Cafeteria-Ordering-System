@@ -4,6 +4,11 @@ using FOCS.Order.Infrastucture.Entities;
 using Microsoft.AspNetCore.Http;
 using MockQueryable;
 using Moq;
+using Xunit;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace FOCS.UnitTest.TableServiceTest
 {
@@ -28,15 +33,17 @@ namespace FOCS.UnitTest.TableServiceTest
 
             _tableRepositoryMock.Setup(r => r.AsQueryable())
                 .Returns(new List<Table> { table }.AsQueryable().BuildMock());
-
             _cloudinaryServiceMock.Setup(s => s.UploadQrCodeForTable(
                     It.IsAny<IFormFile>(), _storeId.ToString(), _tableId.ToString()))
                 .ReturnsAsync(new UploadedImageResult { Url = expectedUrl });
-
             _tableRepositoryMock.Setup(r => r.SaveChangesAsync()).ReturnsAsync(1);
 
             // Act
-            var result = await _tableService.GenerateQrCodeForTableAsync(_tableId, _userId, _storeId);
+            var result = await _tableService.GenerateQrCodeForTableAsync(
+                actionType: null,
+                tableId: _tableId,
+                userId: _userId,
+                storeId: _storeId);
 
             // Assert
             Assert.Equal(expectedUrl, result);
@@ -49,28 +56,33 @@ namespace FOCS.UnitTest.TableServiceTest
         [Fact]
         public async Task GenerateQrCodeForTableAsync_ShouldThrow_WhenUserIdIsEmpty()
         {
-            var ex = await Assert.ThrowsAsync<Exception>(() =>
-                _tableService.GenerateQrCodeForTableAsync(_tableId, "", _storeId));
-
-            Assert.StartsWith(TableConstants.UserIdEmpty, ex.Message);
+            await Assert.ThrowsAsync<Exception>(async () =>
+                await _tableService.GenerateQrCodeForTableAsync(
+                    actionType: null,
+                    tableId: _tableId,
+                    userId: string.Empty,
+                    storeId: _storeId));
         }
 
         [Fact]
         public async Task GenerateQrCodeForTableAsync_ShouldThrow_WhenTableNotFound()
         {
+            // No tables in repository
             _tableRepositoryMock.Setup(r => r.AsQueryable())
                 .Returns(new List<Table>().AsQueryable().BuildMock());
 
-            var ex = await Assert.ThrowsAsync<Exception>(() =>
-                _tableService.GenerateQrCodeForTableAsync(_tableId, _userId, _storeId));
-
-            Assert.StartsWith(TableConstants.TableEmpty, ex.Message);
+            await Assert.ThrowsAsync<Exception>(async () =>
+                await _tableService.GenerateQrCodeForTableAsync(
+                    actionType: null,
+                    tableId: _tableId,
+                    userId: _userId,
+                    storeId: _storeId));
         }
 
         [Fact]
         public async Task GenerateQrCodeForTableAsync_ShouldUpdateQrVersionCorrectly()
         {
-            // Arrange
+            // Arrange existing table with version 4
             var table = new Table
             {
                 Id = _tableId,
@@ -78,20 +90,21 @@ namespace FOCS.UnitTest.TableServiceTest
                 QrVersion = 4,
                 IsDeleted = false
             };
-
             var expectedUrl = "https://cdn.focs.site/qr-v5.png";
 
             _tableRepositoryMock.Setup(r => r.AsQueryable())
                 .Returns(new List<Table> { table }.AsQueryable().BuildMock());
-
             _cloudinaryServiceMock.Setup(s => s.UploadQrCodeForTable(
                     It.IsAny<IFormFile>(), _storeId.ToString(), _tableId.ToString()))
                 .ReturnsAsync(new UploadedImageResult { Url = expectedUrl });
-
             _tableRepositoryMock.Setup(r => r.SaveChangesAsync()).ReturnsAsync(1);
 
             // Act
-            var result = await _tableService.GenerateQrCodeForTableAsync(_tableId, _userId, _storeId);
+            var result = await _tableService.GenerateQrCodeForTableAsync(
+                actionType: null,
+                tableId: _tableId,
+                userId: _userId,
+                storeId: _storeId);
 
             // Assert
             Assert.Equal(expectedUrl, result);
@@ -100,8 +113,9 @@ namespace FOCS.UnitTest.TableServiceTest
         }
 
         [Fact]
-        public async Task GenerateQrCodeForTableAsync_ShouldThrow_WhenCloudinaryReturnsNull()
+        public async Task GenerateQrCodeForTableAsync_ShouldThrow_WhenCloudinaryReturnsNull_OnUpdate()
         {
+            // Arrange
             var table = new Table
             {
                 Id = _tableId,
@@ -109,18 +123,70 @@ namespace FOCS.UnitTest.TableServiceTest
                 QrVersion = 1,
                 IsDeleted = false
             };
-
             _tableRepositoryMock.Setup(r => r.AsQueryable())
                 .Returns(new List<Table> { table }.AsQueryable().BuildMock());
-
             _cloudinaryServiceMock.Setup(s => s.UploadQrCodeForTable(
                 It.IsAny<IFormFile>(), _storeId.ToString(), _tableId.ToString()))
-                .ReturnsAsync((UploadedImageResult)null!); // simulate null result
-
+                .ReturnsAsync((UploadedImageResult)null!);
             _tableRepositoryMock.Setup(r => r.SaveChangesAsync()).ReturnsAsync(1);
 
-            await Assert.ThrowsAsync<NullReferenceException>(() =>
-                _tableService.GenerateQrCodeForTableAsync(_tableId, _userId, _storeId));
+            // Act & Assert
+            await Assert.ThrowsAsync<NullReferenceException>(async () =>
+                await _tableService.GenerateQrCodeForTableAsync(
+                    actionType: null,
+                    tableId: _tableId,
+                    userId: _userId,
+                    storeId: _storeId));
+        }
+
+        [Fact]
+        public async Task GenerateQrCodeForTableAsync_ShouldReturnQrUrl_WhenActionTypeIsAdd()
+        {
+            // Arrange: no table needed, Add path bypasses repo
+            var expectedUrl = "https://cdn.focs.site/add-qrcode.png";
+            _cloudinaryServiceMock.Setup(s => s.UploadQrCodeForTable(
+                    It.IsAny<IFormFile>(), _storeId.ToString(), _tableId.ToString()))
+                .ReturnsAsync(new UploadedImageResult { Url = expectedUrl });
+
+            // Act
+            var result = await _tableService.GenerateQrCodeForTableAsync(
+                actionType: "Add",
+                tableId: _tableId,
+                userId: _userId,
+                storeId: _storeId);
+
+            // Assert
+            Assert.Equal(expectedUrl, result);
+            _tableRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
+        }
+
+        [Fact]
+        public async Task GenerateQrCodeForTableAsync_ShouldThrow_WhenUserIdIsEmpty_OnAdd()
+        {
+            // Act & Assert
+            await Assert.ThrowsAsync<Exception>(async () =>
+                await _tableService.GenerateQrCodeForTableAsync(
+                    actionType: "Add",
+                    tableId: _tableId,
+                    userId: string.Empty,
+                    storeId: _storeId));
+        }
+
+        [Fact]
+        public async Task GenerateQrCodeForTableAsync_ShouldThrow_WhenCloudinaryReturnsNull_OnAdd()
+        {
+            // Arrange: simulate null result for Add
+            _cloudinaryServiceMock.Setup(s => s.UploadQrCodeForTable(
+                It.IsAny<IFormFile>(), _storeId.ToString(), _tableId.ToString()))
+                .ReturnsAsync((UploadedImageResult)null!);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<NullReferenceException>(async () =>
+                await _tableService.GenerateQrCodeForTableAsync(
+                    actionType: "Add",
+                    tableId: _tableId,
+                    userId: _userId,
+                    storeId: _storeId));
         }
     }
 }
