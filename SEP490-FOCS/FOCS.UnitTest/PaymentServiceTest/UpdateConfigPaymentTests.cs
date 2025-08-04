@@ -34,11 +34,9 @@ namespace FOCS.UnitTest.PaymentServiceTest
             // Assert
             Assert.True(result);
 
-            // 1) Update() và SaveChangesAsync() phải được gọi
             _storeSettingRepoMock.Verify(x => x.Update(setting), Times.Once);
             _storeSettingRepoMock.Verify(x => x.SaveChangesAsync(), Times.Once);
 
-            // 2) Dùng SecretProtector để decrypt và so sánh với gốc
             var protector = new SecretProtector(_dpProvider);
             Assert.Equal(request.PayOSClientId, protector.Decrypt(setting.PayOSClientId));
             Assert.Equal(request.PayOSApiKey, protector.Decrypt(setting.PayOSApiKey));
