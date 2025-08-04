@@ -25,12 +25,12 @@ namespace FOCS.Controllers
         }
 
         // GET: /menu-item-variant
-         [HttpPost]
-         public async Task<IActionResult> ListVariants([FromBody] UrlQueryParameters queryParameters, [FromHeader(Name = "StoreId")] Guid storeId)
-         {
-             var result = await _menuItemVariantService.ListVariants(queryParameters, storeId);
-             return Ok(result);
-         }
+        [HttpPost("list")]
+        public async Task<IActionResult> ListVariants([FromBody] UrlQueryParameters queryParameters, [FromHeader(Name = "StoreId")] Guid storeId)
+        {
+            var result = await _menuItemVariantService.ListVariants(queryParameters, storeId);
+            return Ok(result);
+        }
 
         // POST: /menu-item-variant/by-ids
         [HttpPost("by-ids")]
