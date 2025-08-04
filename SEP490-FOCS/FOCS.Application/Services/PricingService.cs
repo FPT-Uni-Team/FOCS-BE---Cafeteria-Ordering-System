@@ -44,8 +44,8 @@ namespace FOCS.Application.Services
                 VariantPrice = variantPrice
             };
         }
-
-        public async Task<double> CalculatePriceOfProducts(Dictionary<Guid, Guid?> products, string storeId)
+        
+        public async Task<double> CalculatePriceOfProducts(Dictionary<Guid, IEnumerable<Guid>?> products, string storeId)
         {
             ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeGuid), Errors.Common.InvalidGuidFormat);
 
@@ -53,8 +53,12 @@ namespace FOCS.Application.Services
 
             foreach (var product in products)
             {
-                var price = await GetPriceByProduct(product.Key, product.Value, storeGuid);
-                totalPrice += price.ProductPrice + price.VariantPrice ?? 0;
+                var currentProduct = product.Key;
+                foreach(var variant in product.Value)
+                {
+                    var price = await GetPriceByProduct(currentProduct, variant, storeGuid);
+                    totalPrice += price.ProductPrice + price.VariantPrice ?? 0;
+                }
             }
 
             return totalPrice;

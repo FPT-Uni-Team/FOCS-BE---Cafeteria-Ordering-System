@@ -1,4 +1,5 @@
-﻿using FOCS.Common.Interfaces;
+﻿using FOCS.Application.DTOs;
+using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +21,12 @@ namespace FOCS.Controllers
         public async Task<bool> ChangeStatusProductionOrder([FromBody] UpdateStatusProductionOrderRequest dto)
         {
             return await _orderWrapService.ChangeStatusProductionOrder(dto);
+        }
+
+        [HttpPost]
+        public async Task<PagedResult<OrderWrapResponse>> GetOrderWrapsByStore([FromBody] UrlQueryParameters urlQueryParameters, [FromHeader(Name = "storeId")] string storeId)
+        {
+            return await _orderWrapService.GetListOrderWraps(urlQueryParameters, storeId);
         }
     }
 }

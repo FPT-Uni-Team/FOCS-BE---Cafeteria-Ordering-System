@@ -11,6 +11,8 @@ namespace FOCS.Order.Infrastucture.Entities
     {
         public Guid Id { get; set; }
 
+        public string Code { get; set; }
+
         public OrderWrapStatus OrderWrapStatus { get; set; }
 
         public Guid StoreId { get; set; }

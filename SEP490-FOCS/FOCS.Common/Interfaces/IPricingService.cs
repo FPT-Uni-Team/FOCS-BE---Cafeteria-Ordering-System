@@ -11,6 +11,6 @@ namespace FOCS.Common.Interfaces
     {
         Task<PricingDTO> GetPriceByProduct(Guid productId, Guid? variantId, Guid? storeId);
 
-        Task<double> CalculatePriceOfProducts(Dictionary<Guid, Guid?> products, string storeId);
+        Task<double> CalculatePriceOfProducts(Dictionary<Guid, IEnumerable<Guid>?> products, string storeId);
     }
 }

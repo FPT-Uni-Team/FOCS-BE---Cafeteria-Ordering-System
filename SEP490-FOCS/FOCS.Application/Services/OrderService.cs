@@ -14,6 +14,7 @@ using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.NotificationService.Models;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Realtime.Hubs;
+using MailKit;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -143,7 +144,7 @@ namespace FOCS.Application.Services
             {
                 var dictPrice = orderRequest.Items
                    .Distinct()
-                   .Select(x => (x.MenuItemId, x.VariantId))
+                   .Select(x => (x.MenuItemId, x.Variants.Select(v => v.VariantId)))
                    .ToDictionary();
 
                 var price = await _pricingService.CalculatePriceOfProducts(dictPrice, storeId);
@@ -396,16 +397,30 @@ namespace FOCS.Application.Services
 
                         var productId = Guid.Parse(itemCodes[0]);
 
-                        Guid? variantId = null;
-                        if (itemCodes.Length > 1 && Guid.TryParse(itemCodes[1], out var parsedVariantId))
+                        var variantIds = new List<Guid>();
+                        if (itemCodes.Length > 1)
                         {
-                            variantId = parsedVariantId;
+                            var variantIdStrings = itemCodes[1].Split(",", StringSplitOptions.RemoveEmptyEntries);
+                            foreach (var variantIdStr in variantIdStrings)
+                            {
+                                if (Guid.TryParse(variantIdStr, out var vId))
+                                {
+                                    variantIds.Add(vId);
+                                }
+                            }
                         }
 
-                        var price = await _pricingService.GetPriceByProduct(productId, variantId, order.StoreId);
-                        var unitPrice = (double)(price.ProductPrice + price.VariantPrice)!;
+                        var price = await _pricingService.GetPriceByProduct(productId, null, order.StoreId);
+                        double totalVariantPrice = 0;
+                        foreach (var vId in variantIds)
+                        {
+                            var variantPrice = await _pricingService.GetPriceByProduct(productId, vId, order.StoreId);
+                            totalVariantPrice += variantPrice.VariantPrice ?? 0;
+                        }
 
-                        ordersDetailCreate.Add(new OrderDetail
+                        double unitPrice = (double)(price.ProductPrice + totalVariantPrice);
+
+                        ordersDetailCreate.AddRange(variantIds.Select(x => new OrderDetail
                         {
                             Id = Guid.NewGuid(),
                             Quantity = item.Quantity,
@@ -413,10 +428,11 @@ namespace FOCS.Application.Services
                             TotalPrice = unitPrice - (double)item.DiscountAmount,
                             Note = "",
                             MenuItemId = productId,
-                            VariantId = variantId,
+                            VariantId = x,
                             OrderId = orderCreate.Id
-                        });
+                        }).ToList());
                     }
+
                 }
 
                 if (order.DiscountResult.IsUsePoint.HasValue && order.DiscountResult.IsUsePoint == true)
@@ -461,14 +477,22 @@ namespace FOCS.Application.Services
                 
                 await _publishEndpoint.Publish(notifyEventModel);
 
-                var orderDataExchangeRealtime = order.Items.Select(x => new OrderRedisModel
-                {
-                    MenuItemId = x.MenuItemId,
-                    VariantId = x.VariantId,
-                    Quantity = x.Quantity,
-                    Note = x.Note
-                }).ToList();
-                await _realtimeService.SendToGroupAsync<OrderHub, List<OrderRedisModel>>(SignalRGroups.User(store.Id, table.Id, Guid.Parse(userId)), Constants.Method.OrderCreated, orderDataExchangeRealtime);
+                var orderDataExchangeRealtime = order.Items
+                        .SelectMany(item => item.Variants.Select(variant => new OrderRedisModel
+                        {
+                            MenuItemId = item.MenuItemId,
+                            VariantId = variant.VariantId,
+                            Quantity = item.Quantity,
+                            Note = item.Note
+                        }))
+                        .ToList();
+
+                await _realtimeService.SendToGroupAsync<OrderHub, List<OrderRedisModel>>(
+                    SignalRGroups.User(store.Id, table.Id, Guid.Parse(userId)),
+                    Constants.Method.OrderCreated,
+                    orderDataExchangeRealtime
+                );
+
             }
             catch (Exception ex)
             {
@@ -528,7 +552,11 @@ namespace FOCS.Application.Services
         private async Task ValidateMenuItemsAsync(IEnumerable<OrderItemDTO> items)
         {
             var menuItemIds = items.Select(i => i.MenuItemId).ToList();
-            var variantIds = items.Where(i => i.VariantId.HasValue).Select(i => i.VariantId.Value).ToList();
+            var variantIds = items
+                .SelectMany(i => i.Variants ?? new List<CartVariantRedisModel>())
+                .Select(v => v.VariantId)
+                .Distinct()
+                .ToList();
 
             var existingMenuItems = await _menuItemRepository.FindAsync(x => menuItemIds.Contains(x.Id));
             var existingVariants = await _variantRepository.FindAsync(x => variantIds.Contains(x.Id));
@@ -536,9 +564,14 @@ namespace FOCS.Application.Services
             foreach (var item in items)
             {
                 ConditionCheck.CheckCondition(existingMenuItems.Any(x => x.Id == item.MenuItemId), Errors.OrderError.MenuItemNotFound);
-
-                if (item.VariantId.HasValue)
-                    ConditionCheck.CheckCondition(existingVariants.Any(x => x.Id == item.VariantId), Errors.OrderError.MenuItemNotFound);
+                if(item.Variants != null)
+                {
+                    foreach (var itemVariant in item.Variants)
+                    {
+                        if (itemVariant.VariantId != null)
+                            ConditionCheck.CheckCondition(existingVariants.Any(x => x.Id == itemVariant.VariantId), Errors.OrderError.MenuItemNotFound);
+                    }
+                }
             }
         }
 
