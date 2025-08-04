@@ -11,5 +11,6 @@ namespace FOCS.Common.Interfaces
     public interface IOrderWrapService
     {
         Task<bool> ChangeStatusProductionOrder(UpdateStatusProductionOrderRequest dto);
+        Task<PagedResult<OrderWrapResponse>> GetListOrderWraps(UrlQueryParameters urlQueryParameters, string storeId);
     }
 }

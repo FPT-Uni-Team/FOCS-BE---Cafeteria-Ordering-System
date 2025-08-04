@@ -115,5 +115,12 @@ namespace FOCS.Application.Services
                 return false;
             }
         }
+
+        public async Task<PagedResult<OrderWrapResponse>> GetListOrderWraps(UrlQueryParameters urlQueryParameters, string storeId)
+        {
+            var ordersWrap = _orderWrapRepo.AsQueryable().Include(x => x.Orders).Where(x => x.StoreId == Guid.Parse(storeId));
+
+            return new PagedResult<OrderWrapResponse>(new List<OrderWrapResponse>(), 1, 1, 1);
+        }
     }
 }
