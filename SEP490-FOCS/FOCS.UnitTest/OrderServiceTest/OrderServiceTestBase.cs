@@ -33,7 +33,7 @@ namespace FOCS.UnitTest.OrderServiceTest
         protected readonly Mock<IMobileTokenSevice> _mockMobileTokenService;
         protected readonly Mock<IPricingService> _mockPricingService;
         protected readonly Mock<IPromotionService> _mockPromotionService;
-        protected readonly Mock<DiscountContext> _mockDiscountContext;
+        protected readonly DiscountContext _discountContext;
         protected readonly Mock<IRepository<SystemConfiguration>> _mockSystemConfig;
         protected readonly Mock<IStoreSettingService> _mockStoreSettingService;
         protected readonly Mock<ICouponUsageService> _mockCouponUsageService;
@@ -61,7 +61,6 @@ namespace FOCS.UnitTest.OrderServiceTest
             _mockMobileTokenService = new Mock<IMobileTokenSevice>();
             _mockPricingService = new Mock<IPricingService>();
             _mockPromotionService = new Mock<IPromotionService>();
-            _mockDiscountContext = new Mock<DiscountContext>();
             _mockSystemConfig = new Mock<IRepository<SystemConfiguration>>();
             _mockStoreSettingService = new Mock<IStoreSettingService>();
             _mockCouponUsageService = new Mock<ICouponUsageService>();
