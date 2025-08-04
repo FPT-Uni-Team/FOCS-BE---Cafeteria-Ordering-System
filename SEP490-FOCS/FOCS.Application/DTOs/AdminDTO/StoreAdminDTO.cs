@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace FOCS.Application.DTOs.AdminServiceDTO
 {
@@ -11,6 +12,8 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         [JsonPropertyName("address")]
         public string Address { get; set; }
         [JsonPropertyName("phone_number")]
+        [StringLength(11, ErrorMessage = "Phone number must have 10 to 11 digits.", MinimumLength = 10)]
+        [RegularExpression(@"^\d+$", ErrorMessage = "Phone number must be digits.")]
         public string PhoneNumber { get; set; }
         [JsonPropertyName("custom_tax_rate")]
         public double? CustomTaxRate { get; set; }
