@@ -37,9 +37,9 @@ namespace FOCS.Controllers
         }
 
         [HttpPost]
-        public async Task<DiscountResultDTO> CreateOrderAsync([FromBody] CreateOrderRequest request)
+        public async Task<DiscountResultDTO> CreateOrderAsync([FromBody] CreateOrderRequest request, [FromHeader(Name = "actorId")] string actorId)
         {
-            return await _orderService.CreateOrderAsync(request, UserId);
+            return await _orderService.CreateOrderAsync(request, UserId ?? actorId);
         }
 
         [HttpPost("{actorId}/apply-discount")]
