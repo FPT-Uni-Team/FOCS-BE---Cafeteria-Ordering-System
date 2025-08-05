@@ -24,6 +24,22 @@ namespace FOCS.Controllers
             return Ok(rs);
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetFeedback(Guid id, [FromHeader(Name = "storeId")] string storeId)
+        {
+            var feedback = await _feedbackService.GetFeedbackByIdAsync(id, storeId);
+
+            return Ok(feedback);
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateFeedback(Guid id, UpdatePublicCommentRequest request, [FromHeader(Name = "storeId")] string storeId)
+        {
+            var feedback = await _feedbackService.GetFeedbackByIdAsync(id, storeId);
+
+            return Ok(feedback);
+        }
+
         [HttpPost]
         public async Task<IActionResult> SubmitFeedback([FromForm] CreateFeedbackRequest request, [FromHeader(Name = "storeId")] string storeId)
         {

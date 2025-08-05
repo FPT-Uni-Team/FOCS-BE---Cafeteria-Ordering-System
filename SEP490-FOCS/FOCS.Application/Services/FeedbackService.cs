@@ -61,6 +61,22 @@ namespace FOCS.Application.Services
             }
         }
 
+        public async Task<FeedbackDTO> UpdatePublicCommentRequest(Guid id, UpdatePublicCommentRequest request, string storeId)
+        {
+            var feedback = await _feedbackRepository.GetByIdAsync(id);
+
+            ConditionCheck.CheckCondition(feedback != null, Errors.Common.NotFound);
+
+            feedback.IsPublic = request.IsPublic;
+            feedback.UpdatedAt = DateTime.UtcNow;
+            feedback.UpdatedBy = storeId;
+
+            _feedbackRepository.Update(feedback);
+            await _feedbackRepository.SaveChangesAsync();
+
+            return _mapper.Map<FeedbackDTO>(feedback);
+        }
+
         public async Task<PagedResult<FeedbackDTO>> GetAllFeedbacksAsync(UrlQueryParameters query, string storeId)
         {
             var feedbackQuery = _feedbackRepository.AsQueryable().Where(p => p.StoreId == Guid.Parse(storeId));

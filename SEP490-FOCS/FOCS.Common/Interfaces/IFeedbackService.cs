@@ -54,6 +54,7 @@ namespace FOCS.Common.Interfaces
             /// Ẩn hoặc hiện một feedback trên giao diện công khai (IsPublic).
             /// </summary>
             Task<bool> SetFeedbackVisibilityAsync(Guid feedbackId, bool isPublic, string storeId);
+            Task<FeedbackDTO> UpdatePublicCommentRequest(Guid id, UpdatePublicCommentRequest request, string storeId);
         }
     }
 
