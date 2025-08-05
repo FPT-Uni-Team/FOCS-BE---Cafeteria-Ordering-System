@@ -148,6 +148,7 @@ namespace FOCS.Application.Services
 
                 _mapper.Map(request, isExist);
 
+                isExist!.Id = Id;
                 isExist!.CreatedBy = storeId.ToString();
                 isExist.UpdatedAt = DateTime.UtcNow;
                 isExist.UpdatedBy = storeId.ToString();
