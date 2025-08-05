@@ -48,13 +48,10 @@ namespace FOCS.UnitTest.AuthServiceTest
             _userStoreRepositoryMock = new Mock<IRepository<UserStore>>();
             _mobileTokenDeviceRepositoryMock = new Mock<IRepository<MobileTokenDevice>>();
             _signInManagerMock = new Mock<SignInManager<User>>(
-                    _userManagerMock.Object,
-                    new Mock<IHttpContextAccessor>().Object,
-                    new Mock<IUserClaimsPrincipalFactory<User>>().Object,
-                    new Mock<IOptions<IdentityOptions>>().Object,
-                    new Mock<ILogger<SignInManager<User>>>().Object,
-                    new Mock<IAuthenticationSchemeProvider>().Object
-                );
+                            _userManagerMock.Object,
+                            Mock.Of<IHttpContextAccessor>(),
+                            Mock.Of<IUserClaimsPrincipalFactory<User>>(),
+                            null, null, null, null);
 
             _authService = new AuthService(
                 _userManagerMock.Object,
