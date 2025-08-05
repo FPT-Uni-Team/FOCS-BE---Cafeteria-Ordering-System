@@ -118,20 +118,6 @@ namespace FOCS.Application.Services
             var storeSettings = await _storeSettingService.GetStoreSettingAsync(order.StoreId, userId); 
             ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.StoreNotFound);
 
-            //if(order.DiscountResult == null)
-            //{
-            //    order.DiscountResult = new DiscountResultDTO();
-
-            //    var dictPrice = order.Items
-            //       .Distinct()
-            //       .Select(x => (x.MenuItemId, x.VariantId))
-            //       .ToDictionary();
-
-            //    var price = await _pricingService.CalculatePriceOfProducts(dictPrice, store!.Id.ToString());
-
-            //    order.DiscountResult.TotalPrice = (decimal)price;
-            //}
-
             //save order and order detail
             await SaveOrderAsync(order, tableInStore.FirstOrDefault(), store, userId);
 
