@@ -42,7 +42,6 @@ namespace FOCS.Application.Services.ApplyStrategy
             }
             else
             {
-                discountApplyPromotion.AppliedCouponCode = null;
                 discountApplyPromotion.Messages.Add("MaxDiscountStrategy: Promotion discount is higher, applied.");
                 return discountApplyPromotion;
             }
