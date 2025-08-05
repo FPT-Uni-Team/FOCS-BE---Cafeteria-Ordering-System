@@ -62,7 +62,7 @@ namespace FOCS.Application.Services.ApplyStrategy
 
             foreach (var item in order.Items)
             {
-                if(item.Variants != null)
+                if (item.Variants != null && item.Variants.Count > 0)
                 {
                     foreach (var itemVariant in item.Variants)
                     {
@@ -74,7 +74,8 @@ namespace FOCS.Application.Services.ApplyStrategy
                         totalOrderAmount += itemTotalPrice;
                         result.TotalPrice += (decimal)itemTotalPrice;
                     }
-                } else
+                }
+                else
                 {
                     var price = await _pricingService.GetPriceByProduct(item.MenuItemId, null, order.StoreId);
                     double itemUnitPrice = price.ProductPrice + (price.VariantPrice ?? 0);
@@ -84,6 +85,7 @@ namespace FOCS.Application.Services.ApplyStrategy
                     totalOrderAmount += itemTotalPrice;
                     result.TotalPrice += (decimal)itemTotalPrice;
                 }
+
             }
 
             HashSet<Guid>? acceptedItems = coupon.AcceptForItems?.Select(Guid.Parse).ToHashSet();
@@ -121,13 +123,30 @@ namespace FOCS.Application.Services.ApplyStrategy
                         continue;
                 }
 
-                if(item.Variants == null)
+                if (item.Variants == null || item.Variants.Count <= 0)
                 {
                     if (coupon.MinimumItemQuantity.HasValue && item.Quantity < coupon.MinimumItemQuantity)
                         continue;
+
+                    var key = (item.MenuItemId, (Guid?)null);
+                    if (!pricingDict.TryGetValue(key, out double unitPrice)) continue;
+
+                    double itemDiscount = CalculateDiscount(coupon.DiscountType, coupon.Value, unitPrice) * item.Quantity;
+                    totalDiscount += itemDiscount;
+
+                    result.ItemDiscountDetails.Add(new DiscountItemDetail
+                    {
+                        DiscountAmount = (decimal)itemDiscount,
+                        ItemCode = GenerateItemCode(item),
+                        ItemName = item.MenuItemId.ToString(),
+                        Quantity = item.Quantity,
+                        Source = $"Coupon {coupon.DiscountType}"
+                    });
+
+                    continue;
                 }
 
-                foreach(var itemVariant in item.Variants)
+                foreach (var itemVariant in item.Variants)
                 {
                     if (coupon.MinimumItemQuantity.HasValue && itemVariant.Quantity < coupon.MinimumItemQuantity)
                         continue;
@@ -147,6 +166,7 @@ namespace FOCS.Application.Services.ApplyStrategy
                         Source = $"Coupon {coupon.DiscountType}"
                     });
                 }
+
             }
 
             result.TotalDiscount = (decimal)totalDiscount;
