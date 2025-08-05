@@ -13,7 +13,7 @@ namespace FOCS.Common.Models
         public long OrderCode { get; set; }
 
         [JsonPropertyName("amount")]
-        public int Amount { get; set; }
+        public double Amount { get; set; }
 
         [JsonPropertyName("description")]
         public string? Description {  get; set; }
