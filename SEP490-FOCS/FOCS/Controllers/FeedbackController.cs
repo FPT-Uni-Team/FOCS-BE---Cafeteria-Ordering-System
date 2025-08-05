@@ -35,7 +35,7 @@ namespace FOCS.Controllers
         [HttpPatch("{id}")]
         public async Task<IActionResult> UpdateFeedback(Guid id, UpdatePublicCommentRequest request, [FromHeader(Name = "storeId")] string storeId)
         {
-            var feedback = await _feedbackService.GetFeedbackByIdAsync(id, storeId);
+            var feedback = await _feedbackService.UpdatePublicCommentRequest(id, request, storeId);
 
             return Ok(feedback);
         }
