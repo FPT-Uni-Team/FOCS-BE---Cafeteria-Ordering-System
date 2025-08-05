@@ -361,7 +361,7 @@ namespace FOCS.Application.Services
                     : query.OrderBy(p => p.Email),
                 "first_name" => isDescending
                     ? query.OrderByDescending(p => p.FirstName)
-                    : query.OrderBy(p => p.LastName),
+                    : query.OrderBy(p => p.FirstName),
                 "last_name" => isDescending
                     ? query.OrderByDescending(p => p.LastName)
                     : query.OrderBy(p => p.LastName),
