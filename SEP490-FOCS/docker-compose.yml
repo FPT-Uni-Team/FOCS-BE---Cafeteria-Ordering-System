@@ -7,5 +7,31 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5000:80"
+    depends_on: 
+      - redis
+      - sqlserver
+      - rabbitmq
     environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=SEP490FOCS;User Id=sa;Password=123;Encrypt=False;TrustServerCertificate=True;
+      - Redis__ConnectionString=redis:6379
+      - RabbitMQ__HostName=rabbitmq
       - ASPNETCORE_ENVIRONMENT=Production
+    restart: always
+  
+  redis: 
+    image: redis:7
+    container_name: redis
+    ports: 
+      - "1433:1433"
+    environment: 
+      SA_PASSWORD: ""
+      ACCEPT_EULA: "Y"
+    restart: always
+
+   rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  
+      - "15672:15672" 
+    restart: always
