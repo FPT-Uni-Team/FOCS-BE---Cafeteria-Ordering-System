@@ -18,15 +18,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
     restart: always
 
-  redis: 
-    image: redis:7
-    container_name: redis
-    ports: 
-      - "6379:6379"
-    restart: always
-
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/mssql/server:2019-latest
     container_name: sqlserver
     ports:
       - "1433:1433"
@@ -35,10 +28,17 @@ services:
       ACCEPT_EULA: "Y"
     restart: always
 
+  redis: 
+    image: redis:7
+    container_name: redis
+    ports: 
+      - "6379:6379"
+    restart: always
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "5672:5672"  
+      - "15672:15672" 
     restart: always
