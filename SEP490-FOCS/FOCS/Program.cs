@@ -47,6 +47,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.Configure<EmailModels>(builder.Configuration.GetSection("EmailSettings")); // Bind EmailSettings from appsettings.json to EmailModels class
 builder.Services.Configure<OrderBatchingOptions>(builder.Configuration.GetSection("OrderBatchingOptions"));
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(80);
+});
+
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDBContext>()
     .AddDefaultTokenProviders();
