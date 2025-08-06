@@ -4,7 +4,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: SEP490-FOCS/Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "5000:80"
     environment:
