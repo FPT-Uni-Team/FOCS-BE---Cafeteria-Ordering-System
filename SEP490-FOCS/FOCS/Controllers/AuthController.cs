@@ -1,11 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Formats.Asn1;
+﻿using FOCS.Common.Constants;
+using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
-using System.Security.Claims;
-using MimeKit.Cryptography;
-using FOCS.Common.Exceptions;
 using FOCS.Common.Utils;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,10 +28,16 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<bool> RegisterAsync(RegisterRequest registerRequest)
+        public async Task<bool> RegisterAsUserAsync(RegisterRequest registerRequest)
         {
             ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
-            return await _authService.RegisterAsync(registerRequest, storeIdGuid);
+            return await _authService.RegisterAsync(registerRequest, storeIdGuid, Roles.User);
+        }
+
+        [HttpPost("admin/register")]
+        public async Task<bool> RegisterAsAdminAsync(RegisterRequest registerRequest)
+        {
+            return await _authService.RegisterAsync(registerRequest, Guid.Empty, Roles.Admin);
         }
 
         [HttpPost("logout")]
