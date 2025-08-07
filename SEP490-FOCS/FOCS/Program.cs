@@ -239,6 +239,7 @@ builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(@"/app/dataprotection-keys"))
     .SetApplicationName("SEP490FOCS");
 
+
 builder.Services.Configure<IdentityOptions>(options =>
 {
     // Password settings.
