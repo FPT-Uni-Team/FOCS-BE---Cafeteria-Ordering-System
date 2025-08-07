@@ -15,6 +15,7 @@ namespace FOCS.Common.Exceptions
             public const string Title = "title";
             public const string Email = "email";
             public const string StoreId = "store_id";
+            public const string BrandId = "brand_id";
             public const string UserId = "user_id";
             public const string MenuItemId = "menu_item_id";
             public const string CategoryId = "category_id";
@@ -45,6 +46,7 @@ namespace FOCS.Common.Exceptions
         public static class Common
         {
             public const string NotFound = "Not found";
+            public const string BrandNotFound = "Brand Not found";
             public const string StoreNotFound = "Store Not found";
             public const string UserNotFound = "User Not found";
             public const string Empty = "Empty";
