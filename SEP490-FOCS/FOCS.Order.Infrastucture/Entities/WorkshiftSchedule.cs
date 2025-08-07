@@ -18,6 +18,8 @@ namespace FOCS.Order.Infrastucture.Entities
         public Guid WorkshiftId {  get; set; }
         public Workshift Workshift { get; set; }
 
+        public ICollection<StaffWorkshiftRegistration>? StaffWorkshiftRegistrations { get; set; }
+ 
         public Guid StoreId {  get; set; }
 
         public DateTime? CreatedAt { get; set; }
