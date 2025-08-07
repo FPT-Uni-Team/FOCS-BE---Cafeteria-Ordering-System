@@ -74,7 +74,7 @@ namespace FOCS.Controllers
             var result = await _authService.ConfirmEmailAsync(email, token);
             if (result)
             {
-                return Redirect(_configuration["applicationProductUrl:BaseStoreFrontUrl"] + "/en/sign-in");
+                return Redirect(_configuration["applicationProductUrl:BaseStoreFrontUrl"] + "/vi/sign-in");
             }
             else
             {
