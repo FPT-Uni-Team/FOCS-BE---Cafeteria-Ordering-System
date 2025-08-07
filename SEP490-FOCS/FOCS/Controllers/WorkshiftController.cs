@@ -18,6 +18,12 @@ namespace FOCS.Controllers
             _workshiftScheduleService = workshiftScheduleService;
         }
 
+        [HttpPost("list")]
+        public async Task<PagedResult<WorkshiftResponse>> ListWorkshiftStaff([FromBody] UrlQueryParameters urlQueryParameters, [FromHeader(Name = "storeId")] string storeId)
+        {
+            return await _workshiftScheduleService.ListAll(urlQueryParameters, storeId);
+        }
+
         // ========== Workshift Schedule ==========
 
         [HttpPost("schedule")]

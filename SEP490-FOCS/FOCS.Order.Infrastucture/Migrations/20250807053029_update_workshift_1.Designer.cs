@@ -4,6 +4,7 @@ using FOCS.Order.Infrastucture.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FOCS.Order.Infrastucture.Migrations
 {
     [DbContext(typeof(OrderDbContext))]
-    partial class OrderDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250807053029_update_workshift_1")]
+    partial class update_workshift_1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -875,10 +878,6 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Property<Guid>("StaffId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("StaffName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -1180,7 +1179,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Workshifts");
+                    b.ToTable("WorkshiftSchedules");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.WorkshiftSchedule", b =>
@@ -1224,7 +1223,7 @@ namespace FOCS.Order.Infrastucture.Migrations
 
                     b.HasIndex("WorkshiftId");
 
-                    b.ToTable("WorkshiftSchedules");
+                    b.ToTable("Workshifts");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.CartItem", b =>
@@ -1494,7 +1493,7 @@ namespace FOCS.Order.Infrastucture.Migrations
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.StaffWorkshiftRegistration", b =>
                 {
                     b.HasOne("FOCS.Order.Infrastucture.Entities.WorkshiftSchedule", "WorkshiftSchedule")
-                        .WithMany("StaffWorkshiftRegistrations")
+                        .WithMany()
                         .HasForeignKey("WorkshiftScheduleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1608,11 +1607,6 @@ namespace FOCS.Order.Infrastucture.Migrations
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Workshift", b =>
                 {
                     b.Navigation("WorkshiftSchedules");
-                });
-
-            modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.WorkshiftSchedule", b =>
-                {
-                    b.Navigation("StaffWorkshiftRegistrations");
                 });
 #pragma warning restore 612, 618
         }

@@ -29,5 +29,6 @@ namespace FOCS.Common.Interfaces
         Task<List<StaffWorkshiftRegistrationResponse>> GetRegistrationsByStaffAsync(Guid staffId, DateTime? fromDate, DateTime? toDate);
         Task<bool> CancelRegistrationAsync(Guid registrationId);
         Task<bool> ApproveRegistrationAsync(Guid registrationId);
+        Task<PagedResult<WorkshiftResponse>> ListAll(UrlQueryParameters urlQueryParameters, string storeId);
     }
 }

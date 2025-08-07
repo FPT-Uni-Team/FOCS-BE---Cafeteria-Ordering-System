@@ -14,6 +14,7 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public Guid StaffId { get; set; }
 
+        public string StaffName { get; set; }
 
         public Guid WorkshiftScheduleId { get; set; }
         public WorkshiftSchedule WorkshiftSchedule { get; set; }

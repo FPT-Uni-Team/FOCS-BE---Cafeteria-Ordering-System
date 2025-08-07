@@ -111,6 +111,24 @@ namespace FOCS.Application.Services
             return true;
         }
 
+        public async Task<bool> RemoveCategory(Guid id, string storeId)
+        {
+            try
+            {
+                var cate = await _categoryRepository.GetByIdAsync(id);
+
+                ConditionCheck.CheckCondition(cate != null, Errors.Common.NotFound);
+
+                _categoryRepository.Remove(cate);
+                await _categoryRepository.SaveChangesAsync();
+
+                return true;
+            } catch(Exception ex)
+            {
+                return false;
+            }
+        }
+
         public async Task<MenuCategoryDTO> UpdateCategoryAsync(UpdateCategoryRequest request, Guid categoryId, string? storeId)
         {
             var cate = (await _categoryRepository.FindAsync(x => x.Id == categoryId))?.FirstOrDefault();

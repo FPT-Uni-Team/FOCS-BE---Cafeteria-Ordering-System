@@ -38,6 +38,22 @@ namespace FOCS.Common.Models
         public TimeSpan EndTime { get; set; }
     }
 
+    public class WorkshiftResponse
+    {
+        public DateTime WorkDate { get; set; }
+
+        public List<StaffWorkshiftResponse> Shift { get; set; }
+    }
+
+    public class StaffWorkshiftResponse
+    {
+        public string StaffName { get; set; }
+
+        public TimeSpan StartTime { get; set; }
+
+        public TimeSpan EndTime { get; set; }
+    }
+
     public class StaffWorkshiftRegistrationDto
     {
         public Guid Id { get; set; }

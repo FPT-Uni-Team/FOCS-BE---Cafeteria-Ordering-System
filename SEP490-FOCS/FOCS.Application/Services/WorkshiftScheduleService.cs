@@ -34,6 +34,64 @@ namespace FOCS.Application.Services
         }
 
         // ========== Workshift Schedule ==========
+        public async Task<PagedResult<WorkshiftResponse>> ListAll(UrlQueryParameters urlQueryParameters, string storeId)
+        {
+            var workshiftsQuery = _workshiftRepository.AsQueryable()
+                .Include(x => x.WorkshiftSchedules)
+                    .ThenInclude(y => y.StaffWorkshiftRegistrations)
+                .Where(x => x.StoreId == Guid.Parse(storeId));
+
+            if (!string.IsNullOrWhiteSpace(urlQueryParameters.SearchBy) &&
+                !string.IsNullOrWhiteSpace(urlQueryParameters.SearchValue))
+            {
+                var searchBy = urlQueryParameters.SearchBy.ToLower();
+                var searchValue = urlQueryParameters.SearchValue.ToLower();
+
+                workshiftsQuery = searchBy switch
+                {
+                    "name" => workshiftsQuery.Where(w =>
+                        w.WorkshiftSchedules.Any(s =>
+                            s.Name != null && s.Name.ToLower().Contains(searchValue))),
+
+                    "staff" => workshiftsQuery.Where(w =>
+                        w.WorkshiftSchedules.Any(s =>
+                            s.StaffWorkshiftRegistrations.Any(r =>
+                                r.StaffName != null && r.StaffName.ToLower().Contains(searchValue)))),
+
+                    _ => workshiftsQuery
+                };
+            }
+
+            int page = urlQueryParameters.Page <= 0 ? 1 : urlQueryParameters.Page;
+            int pageSize = urlQueryParameters.PageSize <= 0 ? 10 : urlQueryParameters.PageSize;
+
+            int totalItems = await workshiftsQuery.CountAsync();
+
+            var workshifts = await workshiftsQuery
+                .OrderByDescending(x => x.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var mapWorkshifts = workshifts.Select(x => new WorkshiftResponse
+            {
+                WorkDate = x.WorkDate,
+                Shift = x.WorkshiftSchedules.Select(y => new StaffWorkshiftResponse
+                {
+                    StartTime = y.StartTime,
+                    EndTime = y.EndTime,
+                    StaffName = y.StaffWorkshiftRegistrations
+                                    .Select(r => r.StaffName)
+                                    .Where(name => !string.IsNullOrEmpty(name))
+                                    .FirstOrDefault()
+                }).ToList()
+            }).ToList();
+
+            return new PagedResult<WorkshiftResponse>(mapWorkshifts, totalItems, page, pageSize);
+
+        }
+
+
         public async Task<WorkshiftScheduleDto> CreateScheduleAsync(Guid storeId, DateTime workDate)
         {
             var workshiftExist = await _workshiftRepository.AsQueryable().AnyAsync(x => x.StoreId == storeId && x.WorkDate == workDate);
@@ -291,7 +349,6 @@ namespace FOCS.Application.Services
             await _staffWorkshiftRepository.SaveChangesAsync();
             return true;
         }
-
 
         public async Task BulkRegisterStaffToShiftsAsync(BulkRegisterRequest request)
         {
