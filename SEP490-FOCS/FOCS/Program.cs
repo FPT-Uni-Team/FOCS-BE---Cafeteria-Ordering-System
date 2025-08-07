@@ -142,13 +142,31 @@ builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection(
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sql => sql.MigrationsAssembly("FOCS.Infrastructure.Identity")
+        sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null
+            );
+            sqlOptions.MigrationsAssembly("FOCS.Infrastructure.Identity");
+        }
     ));
+
 builder.Services.AddDbContext<OrderDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sql => sql.MigrationsAssembly("FOCS.Order.Infrastucture")
+        sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null
+            );
+            sqlOptions.MigrationsAssembly("FOCS.Order.Infrastucture");
+        }
     ));
+
 
 //auto mapper
 builder.Services.AddAutoMapper(typeof(MappingProfiles).Assembly);
