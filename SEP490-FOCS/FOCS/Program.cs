@@ -218,8 +218,8 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo(@"/var/app/dataprotection-keys"))
-    .SetApplicationName("MyFocsApp");
+    .PersistKeysToFileSystem(new DirectoryInfo(@"/app/dataprotection-keys"))
+    .SetApplicationName("SEP490FOCS");
 
 
 builder.Services.Configure<IdentityOptions>(options =>
