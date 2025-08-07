@@ -83,16 +83,6 @@ namespace FOCS.Application.Services
 
         public async Task<AuthResult> LoginAsync(LoginRequest request, Guid storeId)
         {
-            var store = await _storeRepository.GetByIdAsync(storeId);
-            if (store == null)
-            {
-                return new AuthResult
-                {
-                    IsSuccess = false,
-                    Errors = new List<string>() { Errors.Common.StoreNotFound }
-                };
-            }
-
             var user = await _userManager.FindByEmailAsync(request.Email);
 
             if (user == null)
@@ -126,6 +116,10 @@ namespace FOCS.Application.Services
                 };
             }
 
+            var store = await _storeRepository.GetByIdAsync(storeId);
+            if (store != null)
+            {
+
             var userStores = await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(user.Id));
             if (await _userManager.IsInRoleAsync(user, Roles.User) && !userStores.Any(x => x.UserId == Guid.Parse(user.Id) && x.StoreId == storeId))
             {
@@ -142,10 +136,12 @@ namespace FOCS.Application.Services
                 {
                     await _userStoreRepository.AddAsync(_mapper.Map<UserStore>(newUserStore));
                     await _userStoreRepository.SaveChangesAsync();
-                } catch(Exception ex)
+                    }
+                    catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
                 }
+            }
             }
 
             return await GenerateAuthResult(user, storeId);
@@ -294,7 +290,8 @@ namespace FOCS.Application.Services
                 await _mobileTokenDevice.SaveChangesAsync();
 
                 return true;
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return false;
             }
@@ -313,9 +310,13 @@ namespace FOCS.Application.Services
             claims.AddRange(new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim("StoreId", storeId.ToString())
+                new Claim(ClaimTypes.Email, user.Email)
             }.Concat(roles.Select(role => new Claim(ClaimTypes.Role, role))));
+
+            if (storeId != Guid.Empty)
+            {
+                claims.Add(new Claim("StoreId", storeId.ToString()));
+            }
 
             var accessToken = _tokenService.GenerateAccessToken(claims);
             var refreshToken = _tokenService.GenerateRefreshToken();

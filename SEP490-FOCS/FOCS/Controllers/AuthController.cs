@@ -7,7 +7,7 @@ using System.Security.Claims;
 using MimeKit.Cryptography;
 using FOCS.Common.Exceptions;
 using FOCS.Common.Utils;
-using FOCS.Order.Infrastucture.Entities;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
@@ -25,9 +25,9 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<AuthResult> LoginAsync(LoginRequest loginRequest, [FromHeader] string storeId)
+        public async Task<AuthResult> LoginAsync(LoginRequest loginRequest)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
+            var storeIdGuid = Guid.TryParse(StoreId, out Guid tryParseGuid) ? tryParseGuid : Guid.Empty;
             return await _authService.LoginAsync(loginRequest, storeIdGuid);
         }
 
