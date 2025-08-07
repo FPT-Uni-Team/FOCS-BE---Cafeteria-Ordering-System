@@ -217,7 +217,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddDataProtection();
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(@"/var/app/dataprotection-keys"))
+    .SetApplicationName("MyFocsApp");
+
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
