@@ -180,6 +180,19 @@ namespace FOCS.Application.Services
                 };
             }
 
+            if (query.Filters?.Any() == true)
+            {
+                foreach (var (key, value) in query.Filters)
+                {
+                    var filterValue = value.ToLower();
+                    storeQuery = key.ToLowerInvariant() switch
+                    {
+                        "brand" => storeQuery.Where(p => p.Brand.Name.ToLower().Contains(filterValue)),
+                        _ => storeQuery
+                    };
+                }
+            }
+
             // Pagination
             var total = await storeQuery.CountAsync();
             var items = await storeQuery
