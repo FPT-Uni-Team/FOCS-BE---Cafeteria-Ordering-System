@@ -9,7 +9,6 @@ using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
-using System.Runtime.CompilerServices;
 
 namespace FOCS.Application.Services
 {
@@ -169,6 +168,19 @@ namespace FOCS.Application.Services
                     "customtaxrate" => desc ? storeQuery.OrderByDescending(s => s.CustomTaxRate) : storeQuery.OrderBy(s => s.CustomTaxRate),
                     _ => storeQuery
                 };
+            }
+
+            if (query.Filters?.Any() == true)
+            {
+                foreach (var (key, value) in query.Filters)
+                {
+                    var filterValue = value.ToLower();
+                    storeQuery = key.ToLowerInvariant() switch
+                    {
+                        "brand" => storeQuery.Where(p => p.Brand.Name.ToLower().Contains(filterValue)),
+                        _ => storeQuery
+                    };
+                }
             }
 
             // Pagination
