@@ -33,6 +33,27 @@ namespace FOCS.Application.Services
             _mapper = mapper;
         }
 
+        public async Task<string> CreateAsync(WorkshiftResponse request, string storeId)
+        {
+            var createWorkshift = await CreateScheduleAsync(Guid.Parse(storeId), request.WorkDate);
+
+            ConditionCheck.CheckCondition(createWorkshift != null, Errors.Common.NotFound);
+
+            foreach(var item in request.Shift)
+            {
+                var createCurrent = await AddWorkShiftToScheduleAsync(createWorkshift.Id, new CreateWorkShiftDto
+                {
+                    Name = item.StaffName,
+                    StartTime = item.StartTime,
+                    EndTime = item.EndTime
+                }, storeId);
+
+                ConditionCheck.CheckCondition(createCurrent != null, Errors.Common.IsExist);
+            }
+
+            return createWorkshift.Id.ToString();
+        }
+
         // ========== Workshift Schedule ==========
         public async Task<PagedResult<WorkshiftResponse>> ListAll(UrlQueryParameters urlQueryParameters, string storeId)
         {
@@ -108,7 +129,6 @@ namespace FOCS.Application.Services
             };
 
             await _workshiftRepository.AddAsync(newWorkshift);
-            await _workshiftRepository.SaveChangesAsync();
 
             return new WorkshiftScheduleDto
             {
