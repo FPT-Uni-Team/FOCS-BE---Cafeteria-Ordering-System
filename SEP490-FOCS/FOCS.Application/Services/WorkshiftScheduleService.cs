@@ -43,7 +43,7 @@ namespace FOCS.Application.Services
             {
                 var createCurrent = await AddWorkShiftToScheduleAsync(createWorkshift.Id, new CreateWorkShiftDto
                 {
-                    StaffId = item.StaffId,
+                    StaffId = item.StaffId,   
                     Name = item.StaffName,
                     StartTime = item.StartTime,
                     EndTime = item.EndTime
@@ -118,7 +118,7 @@ namespace FOCS.Application.Services
         {
             var workshiftExist = await _workshiftRepository.AsQueryable().AnyAsync(x => x.StoreId == storeId && x.WorkDate == workDate);
 
-            ConditionCheck.CheckCondition(workshiftExist == null, Errors.Common.IsExist, "workdate");
+            ConditionCheck.CheckCondition(!workshiftExist, Errors.Common.IsExist, "workdate");
 
             var newWorkshift = new Workshift
             {
@@ -230,6 +230,17 @@ namespace FOCS.Application.Services
                 };
 
                 await _workshiftScheduleRepository.AddAsync(newWorkshiftSchedule);
+
+                var newStaffRegister = new StaffWorkshiftRegistration
+                {
+                    Id = Guid.NewGuid(),
+                    StaffId = (Guid)workShiftDto.StaffId,
+                    StaffName = workShiftDto.Name,
+                    Status = Common.Enums.WorkshiftStatus.Pending,
+                    WorkshiftScheduleId = newWorkshiftSchedule.Id
+                };
+
+                await _staffWorkshiftRepository.AddAsync(newStaffRegister);
                 await _workshiftScheduleRepository.SaveChangesAsync();
 
                 return true;
@@ -264,19 +275,31 @@ namespace FOCS.Application.Services
             }
         }
 
-        public async Task<WorkShiftDto?> GetWorkShiftByIdAsync(Guid workShiftId)
+        public async Task<WorkshiftResponse?> GetWorkShiftByIdAsync(Guid workShiftId, string storeId)
         {
-            var workshiftExist = await _workshiftScheduleRepository.AsQueryable().FirstOrDefaultAsync(x => x.Id == workShiftId);
+            var workshiftsQuery = await _workshiftRepository.AsQueryable()
+                                .Include(x => x.WorkshiftSchedules)
+                                    .ThenInclude(y => y.StaffWorkshiftRegistrations)
+                                .FirstOrDefaultAsync(x => x.StoreId == Guid.Parse(storeId) && x.Id == workShiftId);
 
-            ConditionCheck.CheckCondition(workshiftExist != null, Errors.Common.IsExist, "id");
+            ConditionCheck.CheckCondition(workshiftsQuery != null, Errors.Common.NotFound);
 
-            return new WorkShiftDto
+            var rs = new WorkshiftResponse
             {
-                ScheduleId = workshiftExist.Id,
-                Name = workshiftExist.Name,
-                StartTime = workshiftExist.StartTime,
-                EndTime = workshiftExist.EndTime,
+                WorkDate = workshiftsQuery.WorkDate,
+                Shift = workshiftsQuery.WorkshiftSchedules.Select(y => new StaffWorkshiftResponse
+                {
+                    StartTime = y.StartTime,
+                    EndTime = y.EndTime,
+                    StaffName = y.StaffWorkshiftRegistrations
+                                   .Select(r => r.StaffName)
+                                   .Where(name => !string.IsNullOrEmpty(name))
+                                   .FirstOrDefault()
+                }).ToList()
             };
+
+            return rs;
+
         }
 
 

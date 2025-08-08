@@ -19,8 +19,7 @@ namespace FOCS.Common.Interfaces
         Task<bool> AddWorkShiftToScheduleAsync(Guid scheduleId, CreateWorkShiftDto workShiftDto, string storeId);
         Task<List<WorkShiftDto>> GetWorkShiftsByScheduleAsync(Guid scheduleId);
         Task<bool> DeleteWorkShiftAsync(Guid workShiftId);
-        Task<WorkShiftDto?> GetWorkShiftByIdAsync(Guid workShiftId);
-
+        Task<WorkshiftResponse?> GetWorkShiftByIdAsync(Guid workShiftId, string storeId);
 
         // ========== Staff Registration ==========
         Task BulkRegisterStaffToShiftsAsync(BulkRegisterRequest request);
