@@ -43,6 +43,7 @@ namespace FOCS.Application.Services
             {
                 var createCurrent = await AddWorkShiftToScheduleAsync(createWorkshift.Id, new CreateWorkShiftDto
                 {
+                    StaffId = item.StaffId,
                     Name = item.StaffName,
                     StartTime = item.StartTime,
                     EndTime = item.EndTime

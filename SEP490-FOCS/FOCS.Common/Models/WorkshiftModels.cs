@@ -33,6 +33,7 @@ namespace FOCS.Common.Models
 
     public class CreateWorkShiftDto
     {
+        public Guid? StaffId {  get; set; }
         public string Name { get; set; } = default!;
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
@@ -47,7 +48,8 @@ namespace FOCS.Common.Models
 
     public class StaffWorkshiftResponse
     {
-        public Guid StaffId {  get; set; }
+
+        public Guid StaffId { get; set; }
         public string StaffName { get; set; }
 
         public TimeSpan StartTime { get; set; }
