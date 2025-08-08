@@ -43,7 +43,7 @@ namespace FOCS.Application.Services
             {
                 var createCurrent = await AddWorkShiftToScheduleAsync(createWorkshift.Id, new CreateWorkShiftDto
                 {
-                    StaffId = item.StaffId,
+                    StaffId = item.StaffId,   
                     Name = item.StaffName,
                     StartTime = item.StartTime,
                     EndTime = item.EndTime
@@ -118,7 +118,7 @@ namespace FOCS.Application.Services
         {
             var workshiftExist = await _workshiftRepository.AsQueryable().AnyAsync(x => x.StoreId == storeId && x.WorkDate == workDate);
 
-            ConditionCheck.CheckCondition(workshiftExist == null, Errors.Common.IsExist, "workdate");
+            ConditionCheck.CheckCondition(!workshiftExist, Errors.Common.IsExist, "workdate");
 
             var newWorkshift = new Workshift
             {
