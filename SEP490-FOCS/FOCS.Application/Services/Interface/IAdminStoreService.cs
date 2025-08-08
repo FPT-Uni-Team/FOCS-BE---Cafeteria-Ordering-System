@@ -13,5 +13,6 @@ namespace FOCS.Application.Services.Interface
         Task<bool> DeleteStoreAsync(Guid id, string userId);
         Task<bool> UpdateConfigPayment(UpdateConfigPaymentRequest request, string storeId);
         Task<bool> CreatePaymentAsync(CreatePaymentRequest request, string storeId);
+        Task<StoreAdminDTO> GetById(Guid id);
     }
 }
