@@ -183,6 +183,7 @@ namespace FOCS.Application.Services
             if (promotion == null) return false;
 
             await ValidateUser(userId, promotion.StoreId);
+            //ConditionCheck.CheckCondition(!promotion.IsActive, Errors.PromotionError.PromotionActive, Errors.FieldName.IsActive);
             promotion.IsDeleted = true;
             UpdateAuditFields(promotion, userId);
             await _promotionRepository.SaveChangesAsync();
