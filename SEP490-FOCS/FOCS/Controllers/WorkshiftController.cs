@@ -84,9 +84,9 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("shift/{workShiftId}")]
-        public async Task<ActionResult<WorkShiftDto?>> GetWorkShiftByIdAsync(Guid workShiftId)
+        public async Task<ActionResult<WorkshiftResponse?>> GetWorkShiftByIdAsync(Guid workShiftId)
         {
-            var result = await _workshiftScheduleService.GetWorkShiftByIdAsync(workShiftId);
+            var result = await _workshiftScheduleService.GetWorkShiftByIdAsync(workShiftId, StoreId);
             return result == null ? NotFound() : Ok(result);
         }
 
