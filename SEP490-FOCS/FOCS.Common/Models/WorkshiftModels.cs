@@ -48,8 +48,8 @@ namespace FOCS.Common.Models
 
     public class StaffWorkshiftResponse
     {
-
         public Guid StaffId { get; set; }
+
         public string StaffName { get; set; }
 
         public TimeSpan StartTime { get; set; }
