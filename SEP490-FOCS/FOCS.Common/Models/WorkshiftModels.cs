@@ -41,6 +41,7 @@ namespace FOCS.Common.Models
 
     public class WorkshiftResponse
     {
+        public Guid? Id { get; set; }
         public DateTime WorkDate { get; set; }
 
         public List<StaffWorkshiftResponse> Shift { get; set; }

@@ -97,6 +97,7 @@ namespace FOCS.Application.Services
 
             var mapWorkshifts = workshifts.Select(x => new WorkshiftResponse
             {
+                Id = x.Id,
                 WorkDate = x.WorkDate,
                 Shift = x.WorkshiftSchedules.Select(y => new StaffWorkshiftResponse
                 {
