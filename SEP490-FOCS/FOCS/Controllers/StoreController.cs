@@ -29,6 +29,16 @@ namespace FOCS.Controllers
             return Ok(created);
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetStore(Guid id)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var created = await _adminStoreService.GetById(id);
+            return Ok(created);
+        }
+
         [HttpPost("stores")]
         public async Task<IActionResult> GetStores([FromBody] UrlQueryParameters query)
         {

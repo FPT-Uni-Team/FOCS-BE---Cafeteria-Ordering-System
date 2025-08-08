@@ -9,6 +9,8 @@ using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using MimeKit.Cryptography;
+using System.Runtime.CompilerServices;
 
 namespace FOCS.Application.Services
 {
@@ -32,6 +34,14 @@ namespace FOCS.Application.Services
             _brandRepository = brandRepository;
         }
 
+        public async Task<StoreAdminDTO> GetById(Guid id)
+        {
+            var store = await _storeRepository.GetByIdAsync(id);
+
+            ConditionCheck.CheckCondition(store != null, Errors.Common.NotFound);
+
+            return _mapper.Map<StoreAdminDTO>(store);
+        }
         public async Task<StoreAdminDTO> CreateStoreAsync(StoreAdminDTO dto, string userId)
         {
             await CheckValidInput(userId, dto.BrandId);
