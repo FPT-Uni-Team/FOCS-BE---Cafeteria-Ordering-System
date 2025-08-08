@@ -30,5 +30,6 @@ namespace FOCS.Common.Interfaces
         Task<bool> CancelRegistrationAsync(Guid registrationId);
         Task<bool> ApproveRegistrationAsync(Guid registrationId);
         Task<PagedResult<WorkshiftResponse>> ListAll(UrlQueryParameters urlQueryParameters, string storeId);
+        Task<string> CreateAsync(WorkshiftResponse request, string storeId);
     }
 }

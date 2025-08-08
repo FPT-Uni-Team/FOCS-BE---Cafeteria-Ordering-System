@@ -1,13 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Formats.Asn1;
+﻿using FOCS.Common.Constants;
+using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
-using System.Security.Claims;
-using MimeKit.Cryptography;
-using FOCS.Common.Exceptions;
 using FOCS.Common.Utils;
-using FOCS.Order.Infrastucture.Entities;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
@@ -25,17 +21,23 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<AuthResult> LoginAsync(LoginRequest loginRequest, [FromHeader] string storeId)
+        public async Task<AuthResult> LoginAsync(LoginRequest loginRequest)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
+            var storeIdGuid = Guid.TryParse(StoreId, out Guid tryParseGuid) ? tryParseGuid : Guid.Empty;
             return await _authService.LoginAsync(loginRequest, storeIdGuid);
         }
 
         [HttpPost("register")]
-        public async Task<bool> RegisterAsync(RegisterRequest registerRequest)
+        public async Task<bool> RegisterAsUserAsync(RegisterRequest registerRequest)
         {
             ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
-            return await _authService.RegisterAsync(registerRequest, storeIdGuid);
+            return await _authService.RegisterAsync(registerRequest, storeIdGuid, Roles.User);
+        }
+
+        [HttpPost("admin/register")]
+        public async Task<bool> RegisterAsAdminAsync(RegisterRequest registerRequest)
+        {
+            return await _authService.RegisterAsync(registerRequest, Guid.Empty, Roles.Admin);
         }
 
         [HttpPost("logout")]
@@ -74,7 +76,7 @@ namespace FOCS.Controllers
             var result = await _authService.ConfirmEmailAsync(email, token);
             if (result)
             {
-                return Redirect(_configuration["applicationProductUrl:BaseStoreFrontUrl"] + "/en/sign-in");
+                return Redirect(_configuration["applicationProductUrl:BaseStoreFrontUrl"] + "/vi/sign-in");
             }
             else
             {
