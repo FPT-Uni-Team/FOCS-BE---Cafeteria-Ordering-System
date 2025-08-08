@@ -187,7 +187,7 @@ namespace FOCS.Application.Services
                     var filterValue = value.ToLower();
                     storeQuery = key.ToLowerInvariant() switch
                     {
-                        "brand" => storeQuery.Where(p => p.Brand.Name.ToLower().Contains(filterValue)),
+                        "brand_id" => storeQuery.Where(p => p.Brand.Id.ToString().Equals(filterValue)),
                         _ => storeQuery
                     };
                 }
