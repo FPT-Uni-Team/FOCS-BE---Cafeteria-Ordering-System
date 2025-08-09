@@ -134,6 +134,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddSingleton<IRedisCacheService, RedisCacheService>();
 ;
 builder.Services.AddHostedService<OrderBatchingService>();
+builder.Services.AddHostedService<ScanToDeleteCartItem>();
 //builder.Services.AddHostedService<CartFlushBackgroundService>();
 
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
