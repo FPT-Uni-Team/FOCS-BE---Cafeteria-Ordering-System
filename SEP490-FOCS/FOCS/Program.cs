@@ -134,6 +134,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddSingleton<IRedisCacheService, RedisCacheService>();
 ;
 builder.Services.AddHostedService<OrderBatchingService>();
+builder.Services.AddHostedService<ScanToDeleteCartItem>();
 //builder.Services.AddHostedService<CartFlushBackgroundService>();
 
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
@@ -270,7 +271,8 @@ builder.Services.AddCors(options =>
                            "https://adminfocssite.vercel.app",
                            "https://focs-site.vercel.app",
                            "http://localhost:3000",
-                           "https://localhost:3000")
+                           "https://localhost:3000",
+                           "https://focs.vercel.app")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials(); 
