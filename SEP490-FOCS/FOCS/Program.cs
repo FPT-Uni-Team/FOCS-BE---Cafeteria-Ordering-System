@@ -270,7 +270,8 @@ builder.Services.AddCors(options =>
                            "https://adminfocssite.vercel.app",
                            "https://focs-site.vercel.app",
                            "http://localhost:3000",
-                           "https://localhost:3000")
+                           "https://localhost:3000",
+                           "https://focs.vercel.app")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials(); 
