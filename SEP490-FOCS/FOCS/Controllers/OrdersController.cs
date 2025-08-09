@@ -49,7 +49,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("{orderId}")]
-        public async Task<OrderDTO> GetOrderDetailAsync(Guid orderId)
+        public async Task<OrderDTO> GetOrderDetailAsync(Guid orderId)   
         {
             return await _orderService.GetUserOrderDetailAsync(Guid.Parse(UserId), orderId);
         }

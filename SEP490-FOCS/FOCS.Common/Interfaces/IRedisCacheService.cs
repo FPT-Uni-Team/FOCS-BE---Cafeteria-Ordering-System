@@ -14,5 +14,9 @@ namespace FOCS.Common.Interfaces
         Task<bool> ExistsAsync(string key);
 
         Task<List<string>> GetKeysByPatternAsync(string pattern);
+
+        Task<Dictionary<string, T>> GetAllAsync<T>(string pattern = "*");
+
+
     }
 }
