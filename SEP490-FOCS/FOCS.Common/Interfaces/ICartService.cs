@@ -29,5 +29,6 @@ namespace FOCS.Common.Interfaces
         /// Tạo Redis key dựa theo actor (user hoặc guest) + table
         /// </summary>
         string GetCartKey(Guid tableId, string storeId);
+        Task<List<ScanModelResponse>> ScanAndRemoveExpiryItem();
     }
 }
