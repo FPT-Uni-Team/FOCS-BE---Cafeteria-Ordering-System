@@ -300,7 +300,7 @@ builder.Services.AddMassTransit(x =>
 });
 
 
-builder.Services.AddSignalR().AddStackExchangeRedis("103.173.228.119:6379");
+builder.Services.AddSignalR().AddStackExchangeRedis("redis:6379, password: Hxs03122003@");
 
 builder.Services.AddAuthentication();
 
