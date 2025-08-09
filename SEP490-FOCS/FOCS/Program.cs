@@ -299,9 +299,8 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-
-builder.Services.AddSignalR().AddStackExchangeRedis("redis:6379, password: Hxs03122003@");
-
+builder.Services.AddSignalR()
+    .AddStackExchangeRedis("redis:6379,password=Hxs03122003@,abortConnect=false,connectTimeout=10000");
 builder.Services.AddAuthentication();
 
 var app = builder.Build();
