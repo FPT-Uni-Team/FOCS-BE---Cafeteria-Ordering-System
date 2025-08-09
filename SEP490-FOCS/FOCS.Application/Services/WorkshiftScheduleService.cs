@@ -117,9 +117,17 @@ namespace FOCS.Application.Services
 
         public async Task<WorkshiftScheduleDto> CreateScheduleAsync(Guid storeId, DateTime workDate)
         {
-            var workshiftExist = await _workshiftRepository.AsQueryable().AnyAsync(x => x.StoreId == storeId && x.WorkDate == workDate);
+            var workshiftExist = await _workshiftRepository.AsQueryable().FirstOrDefaultAsync(x => x.StoreId == storeId && x.WorkDate == workDate);
 
-            ConditionCheck.CheckCondition(!workshiftExist, Errors.Common.IsExist, "workdate");
+            if(workshiftExist != null)
+            {
+                return new WorkshiftScheduleDto
+                {
+                    StoreId = storeId,
+                    WorkDate = workDate,
+                    Id = workshiftExist.Id
+                };
+            }
 
             var newWorkshift = new Workshift
             {
