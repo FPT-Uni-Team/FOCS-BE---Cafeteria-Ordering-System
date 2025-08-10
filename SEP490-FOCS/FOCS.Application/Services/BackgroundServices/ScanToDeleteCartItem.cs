@@ -37,6 +37,7 @@ namespace FOCS.Application.Services.BackgroundServices
 
                         if(removeItems != null)
                         {
+                            _loggerJobScanDel.LogInformation("Removed item {item}", removeItems);
                             _loggerJobScanDel.LogInformation("Removed item ids: {Ids}", string.Join(", ", removeItems.Select(x => x.RemovedId)));
                         } else
                         {
@@ -44,10 +45,10 @@ namespace FOCS.Application.Services.BackgroundServices
                         }
                     }catch(Exception ex)
                     {
-                        _loggerJobScanDel.LogError("Error when scan: ", ex.Message);
+                        _loggerJobScanDel.LogError("Error when scan: {msg}", ex.Message);
                     }
                 }
-                var delay = TimeSpan.FromSeconds(30);
+                var delay = TimeSpan.FromMinutes(2);
                 await Task.Delay(delay, stoppingToken);
             }
 

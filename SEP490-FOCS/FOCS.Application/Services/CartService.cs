@@ -229,7 +229,7 @@ namespace FOCS.Application.Services
                     .ToList();
 
                 if (expiredItems.Any())
-                {
+                {   
                     rs[kvp.Key] = expiredItems;
                 }
             }

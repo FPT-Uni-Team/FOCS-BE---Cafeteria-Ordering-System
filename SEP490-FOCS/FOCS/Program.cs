@@ -18,6 +18,7 @@ using FOCS.NotificationService.Services;
 using FOCS.Order.Infrastucture.Context;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Order.Infrastucture.Interfaces;
+using FOCS.Order.Infrastucture.Migrations;
 using FOCS.Realtime.Hubs;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,8 +28,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using StackExchange.Redis;
 using System.Security.Claims;
 using System.Text;
+using OrderEntity = FOCS.Order.Infrastucture.Entities.Order;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,7 +81,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<ITableService, TableService>()
                 .AddScoped<IUnitOfWork, UnitOfWork<ApplicationDBContext>>()
                 .AddScoped<IMenuItemVariantService, MenuItemVariantService>()
-                .AddScoped<IRepository<Order>, Repository<Order, OrderDbContext>>()
+                .AddScoped<IRepository<OrderEntity>, Repository<OrderEntity, OrderDbContext>>()
                 .AddScoped<IRepository<MenuItem>, Repository<MenuItem, OrderDbContext>>()
                 .AddScoped<IRepository<Brand>, Repository<Brand, OrderDbContext>>()
                 .AddScoped<IRepository<Store>, Repository<Store, OrderDbContext>>()
@@ -236,8 +239,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+var redis = ConnectionMultiplexer.Connect("redis:6379,password=Hxs03122003@,abortConnect=false,connectTimeout=10000");
+
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo(@"/app/dataprotection-keys"))
+    .PersistKeysToStackExchangeRedis(redis, "DataProduction-Keys")
     .SetApplicationName("SEP490FOCS");
 
 
