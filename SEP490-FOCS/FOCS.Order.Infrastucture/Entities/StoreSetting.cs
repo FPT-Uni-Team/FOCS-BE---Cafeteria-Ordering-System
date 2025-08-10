@@ -20,7 +20,7 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public PaymentConfig PaymentConfig { get; set; }
 
-        public string LogoUrl { get; set; }
+        public string LogoUrl { get; set; } = "";
 
         public bool IsSelfService { get; set; }
 
