@@ -239,7 +239,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-var redis = ConnectionMultiplexer.Connect("redis:6379");
+var redis = ConnectionMultiplexer.Connect("redis:6379,password=Hxs03122003%40,abortConnect=false,connectTimeout=10000");
 
 builder.Services.AddDataProtection()
     .PersistKeysToStackExchangeRedis(redis, "DataProduction-Keys")
