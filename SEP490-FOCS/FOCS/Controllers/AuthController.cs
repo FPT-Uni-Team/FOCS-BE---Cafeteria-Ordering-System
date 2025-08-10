@@ -1,4 +1,5 @@
-﻿using FOCS.Common.Constants;
+﻿using FOCS.Application.Services;
+using FOCS.Common.Constants;
 using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
@@ -13,10 +14,12 @@ namespace FOCS.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IConfiguration _configuration;
+        private readonly OtpService _smsService;
 
-        public AuthController(IAuthService authService, IConfiguration configuration)
+        public AuthController(IAuthService authService, IConfiguration configuration, OtpService smsService)
         {
             _authService = authService;
+            _smsService = smsService;
             _configuration = configuration;
         }
 
@@ -48,6 +51,20 @@ namespace FOCS.Controllers
         public async Task Logout()
         {
             await _authService.LogoutAsync(UserId);
+        }
+
+        [HttpPost("send-otp")]
+        public async Task<IActionResult> SendOTP([FromQuery] string phone)
+        {
+            await _smsService.SendOtpAsync(phone);
+            return Ok();
+        }
+
+        [HttpPost("verify-otp")]
+        public async Task<IActionResult> VerifyOTP([FromQuery] string phone, [FromQuery] string otp)
+        {
+            await _smsService.VerifyOtpAsync(phone, otp);
+            return Ok();
         }
 
         [HttpPost("forgot-password")]

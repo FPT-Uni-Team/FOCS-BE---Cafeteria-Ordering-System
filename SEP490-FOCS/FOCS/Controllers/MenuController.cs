@@ -39,25 +39,13 @@ namespace FOCS.Controllers
         [HttpPost("most-order")]
         public async Task<List<MenuItemInsightResponse>> GetProductsMostOrder()
         {
-            return await _menuInsightService.GetMostOrderedProductsAsync(TimeSpan.FromDays(7), StoreId);
-        }
-
-        [HttpPost("suggest-based-on-history")]
-        public async Task GetProductsSuggestBasedOnHistoryOrder()
-        {
-
+            return await _menuInsightService.GetProductOrderNearingWithCurrent(Guid.Parse(UserId), 5);
         }
 
         [HttpPost("popular-now")]
-        public async Task GetProductsPopularNow()
+        public async Task<List<MenuItemInsightResponse>> GetProductsPopularNow()
         {
-
-        }
-
-        [HttpPost("best-promotion")]
-        public async Task GetProductBasedOnBestPromotion()
-        {
-
+            return await _menuInsightService.GetMostOrderedProductsAsync(TimeSpan.FromDays(7), StoreId);
         }
 
         [HttpPost("{itemId}")]

@@ -561,29 +561,35 @@ namespace FOCS.Application.Services
             }
         }
 
-        private static IQueryable<Order.Infrastucture.Entities.Order> ApplyFilters(IQueryable<Order.Infrastucture.Entities.Order> query, UrlQueryParameters parameters)
+        private static IQueryable<Order.Infrastucture.Entities.Order> ApplyFilters(
+    IQueryable<Order.Infrastucture.Entities.Order> query,
+    UrlQueryParameters parameters)
         {
-            if (parameters.Filters?.Any() != true) return query;
+            if (parameters.Filters?.Any() != true)
+                return query;
 
             foreach (var (key, value) in parameters.Filters)
             {
-                query = key.ToLowerInvariant() switch
+                if (key.Equals("status", StringComparison.OrdinalIgnoreCase))
                 {
-                  /*  "promotion_type" when Enum.TryParse<PromotionType>(value, true, out var promotionType) =>
-                        query.Where(p => p.PromotionType == promotionType),
-                    "start_date" => query.Where(p => p.StartDate >= DateTime.Parse(value)),
-                    "end_date" => query.Where(p => p.EndDate <= DateTime.Parse(value)),
-                    "status" when Enum.TryParse<PromotionStatus>(value, true, out var status) =>
-                        status switch
+                    var statusValues = value.Split('-')
+                                            .Select(v => v.Trim())
+                                            .ToList();
+
+                    var statuses = new List<OrderStatus>();
+                    foreach (var sv in statusValues)
+                    {
+                        if (Enum.TryParse<OrderStatus>(sv, true, out var parsedStatus))
                         {
-                            PromotionStatus.Incomming => query.Where(p => p.StartDate > DateTime.UtcNow),
-                            PromotionStatus.OnGoing => query.Where(p => p.StartDate <= DateTime.UtcNow && p.EndDate >= DateTime.UtcNow),
-                            PromotionStatus.Expired => query.Where(p => p.EndDate < DateTime.UtcNow),
-                            PromotionStatus.UnAvailable => query.Where(p => p.IsActive == false),
-                            _ => query
-                        },
-                    _ => query*/
-                };
+                            statuses.Add(parsedStatus);
+                        }
+                    }
+
+                    if (statuses.Any())
+                    {
+                        query = query.Where(o => statuses.Contains(o.OrderStatus));
+                    }
+                }
             }
 
             return query;

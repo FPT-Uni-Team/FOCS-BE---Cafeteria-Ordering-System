@@ -135,7 +135,11 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IRepository<SystemConfiguration>, Repository<SystemConfiguration, OrderDbContext>>()
                 .AddSingleton<ICloudinaryService, CloudinaryService>()
                 .AddSingleton<IRedisCacheService, RedisCacheService>();
-;
+
+builder.Services.AddSingleton<OtpService>();
+builder.Services.Configure<EsmsSettings>(builder.Configuration.GetSection("eSMS"));
+builder.Services.AddSingleton<SmsService>();
+
 builder.Services.AddHostedService<OrderBatchingService>();
 builder.Services.AddHostedService<ScanToDeleteCartItem>();
 //builder.Services.AddHostedService<CartFlushBackgroundService>();
@@ -290,7 +294,7 @@ builder.Services.AddMassTransit(x =>
 
     x.UsingRabbitMq((ctx, cfg) =>
     {
-        cfg.Host("103.173.228.119", 5672, "/", h =>
+        cfg.Host("103.185.184.27", 5672, "/", h =>
         {
             h.Username("guest");
             h.Password("guest");

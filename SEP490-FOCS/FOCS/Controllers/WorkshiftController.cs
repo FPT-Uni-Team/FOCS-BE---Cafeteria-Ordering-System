@@ -30,7 +30,7 @@ namespace FOCS.Controllers
         public async Task<string> CreateAsync(WorkshiftResponse request, [FromHeader(Name = "storeId")] string storeId)
         {
             return await _workshiftScheduleService.CreateAsync(request, storeId);
-        }
+        }   
 
         [HttpPost("schedule")]
         public async Task<ActionResult<WorkshiftScheduleDto>> CreateScheduleAsync([FromQuery] DateTime workDate)
