@@ -60,7 +60,5 @@ namespace FOCS.Controllers
             var rs = await _feedbackService.GetFeedbackByMenuItemAsync(menuItemId, storeId);
             return Ok(rs);
         }
-
-
     }
 }

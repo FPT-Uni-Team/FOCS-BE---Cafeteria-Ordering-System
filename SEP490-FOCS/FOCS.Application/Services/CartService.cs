@@ -211,7 +211,6 @@ namespace FOCS.Application.Services
                     }
                 }
             }
-
             return rs;
         }
 
