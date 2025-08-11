@@ -1,5 +1,6 @@
 ﻿using FOCS.Common.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -14,10 +15,12 @@ namespace FOCS.Application.Services
         private readonly IDatabase _database;
         private readonly IConnectionMultiplexer _connection;
 
-        public RedisCacheService(IConfiguration configuration)
+        private readonly ILogger<RedisCacheService> _loggerRedis;
+        public RedisCacheService(IConfiguration configuration, ILogger<RedisCacheService> loggerRedis)
         {
             var connectionString = configuration.GetConnectionString("Redis")
                                 ?? configuration["Redis:ConnectionString"];
+            _loggerRedis = loggerRedis;
 
             _connection = ConnectionMultiplexer.Connect(connectionString);
             _database = _connection.GetDatabase();
@@ -41,16 +44,49 @@ namespace FOCS.Application.Services
         public async Task<Dictionary<string, T>> GetAllAsync<T>(string pattern = "*")
         {
             var server = _connection.GetServer(_connection.GetEndPoints().First());
-            var keys = server.Keys(pattern: pattern);
             var result = new Dictionary<string, T>();
+            const int batchSize = 1000;
 
+            var keys = server.Keys(pattern: pattern, pageSize: batchSize);
+
+            var batchKeys = new List<RedisKey>(batchSize);
             foreach (var key in keys)
             {
-                var value = await _database.StringGetAsync(key);
-                result[key] = JsonSerializer.Deserialize<T>(value);
+                batchKeys.Add(key);
+                if (batchKeys.Count >= batchSize)
+                {
+                    var values = await _database.StringGetAsync(batchKeys.ToArray());
+                    for (int i = 0; i < batchKeys.Count; i++)
+                    {
+                        if (values[i].HasValue)
+                        {
+                            var obj = JsonSerializer.Deserialize<T>(values[i]);
+                            result[batchKeys[i]] = obj;
+                        } else
+                        {
+                            _loggerRedis.LogInformation($"The key: {key} is empty value");
+                        }
+                    }
+                    batchKeys.Clear();
+                }
             }
+            // Process remaining keys
+            if (batchKeys.Count > 0)
+            {
+                var values = await _database.StringGetAsync(batchKeys.ToArray());
+                for (int i = 0; i < batchKeys.Count; i++)
+                {
+                    if (values[i].HasValue)
+                    {
+                        var obj = JsonSerializer.Deserialize<T>(values[i]);
+                        result[batchKeys[i]] = obj;
+                    }
+                }
+            }
+
             return result;
         }
+
 
         public async Task<bool> ExistsAsync(string key)
         {
