@@ -131,7 +131,7 @@ namespace FOCS.Application.Services
                 return await GenerateAuthResult(user, null);
             }
 
-            var store = await _storeRepository.GetByIdAsync(storeId);
+            var store = await _storeRepository.GetByIdAsync(Guid.Parse(storeId));
             if (store != null)
             {
 
