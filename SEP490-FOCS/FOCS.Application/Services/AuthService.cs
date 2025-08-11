@@ -85,7 +85,7 @@ namespace FOCS.Application.Services
             return await _emailService.SendPasswordResetLinkAsync(email, resetToken);
         }
 
-        public async Task<AuthResult> LoginAsync(LoginRequest request, Guid storeId)
+        public async Task<AuthResult> LoginAsync(LoginRequest request, string? storeId = null)
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
 
@@ -125,18 +125,23 @@ namespace FOCS.Application.Services
                 await _optService.SendOtpAsync(user.PhoneNumber);
             }
 
+            if(storeId == null)
+            {
+                return await GenerateAuthResult(user, null);
+            }
+
             var store = await _storeRepository.GetByIdAsync(storeId);
             if (store != null)
             {
 
                 var userStores = await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(user.Id));
-                if (await _userManager.IsInRoleAsync(user, Roles.User) && !userStores.Any(x => x.UserId == Guid.Parse(user.Id) && x.StoreId == storeId))
+                if (await _userManager.IsInRoleAsync(user, Roles.User) && !userStores.Any(x => x.UserId == Guid.Parse(user.Id) && x.StoreId == Guid.Parse(storeId)))
                 {
                     var newUserStore = new UserStoreDTO
                     {
                         Id = Guid.NewGuid(),
                         UserId = Guid.Parse(user.Id),
-                        StoreId = storeId,
+                        StoreId = Guid.Parse(storeId),
                         BlockReason = null,
                         JoinDate = DateTime.UtcNow,
                         Status = Common.Enums.UserStoreStatus.Active
@@ -153,7 +158,7 @@ namespace FOCS.Application.Services
                 }
             }
 
-            return await GenerateAuthResult(user, storeId);
+            return await GenerateAuthResult(user, Guid.Parse(storeId));
 
         }
 
@@ -308,7 +313,7 @@ namespace FOCS.Application.Services
         }
 
         #region private method
-        private async Task<AuthResult> GenerateAuthResult(User user, Guid storeId)
+        private async Task<AuthResult> GenerateAuthResult(User user, Guid? storeId = null)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]!);
@@ -323,7 +328,7 @@ namespace FOCS.Application.Services
                 new Claim(ClaimTypes.Email, user.Email)
             }.Concat(roles.Select(role => new Claim(ClaimTypes.Role, role))));
 
-            if (storeId != Guid.Empty)
+            if (storeId != Guid.Empty && storeId != null)
             {
                 claims.Add(new Claim("StoreId", storeId.ToString()));
             }

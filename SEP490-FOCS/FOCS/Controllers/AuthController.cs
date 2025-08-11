@@ -26,12 +26,7 @@ namespace FOCS.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync(LoginRequest loginRequest)
         {
-            if(!Guid.TryParse(StoreId, out Guid tryParseGuid))
-            {
-                return BadRequest();
-            }
-
-            return Ok(await _authService.LoginAsync(loginRequest, tryParseGuid));
+            return Ok(await _authService.LoginAsync(loginRequest, StoreId));
         }
 
         [HttpPost("register")]
