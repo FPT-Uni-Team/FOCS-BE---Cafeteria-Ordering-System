@@ -109,8 +109,13 @@ namespace FOCS.Application.Services
             var store = await _storeRepository.GetByIdAsync(order.StoreId);
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
 
-            var tableInStore = await _tableRepository.FindAsync(x => x.StoreId == store.Id && x.Id == order.TableId);
-            ConditionCheck.CheckCondition(tableInStore.Count() < 1 || tableInStore.Count() > 1 || tableInStore.FirstOrDefault() != null, Errors.OrderError.TableNotFound);
+            Table? table = null;
+
+            if(order.OrderType == OrderType.DineIn)
+            {
+                table = await _tableRepository.AsQueryable().FirstOrDefaultAsync(x => x.Id == order.TableId && x.StoreId == order.StoreId);
+                ConditionCheck.CheckCondition(table != null, Errors.OrderError.TableNotFound);
+            }
 
             // Validate menu items
             await ValidateMenuItemsAsync(order.Items);
@@ -119,7 +124,7 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.StoreNotFound);
 
             //save order and order detail
-            await SaveOrderAsync(order, tableInStore.FirstOrDefault(), store, userId);
+            await SaveOrderAsync(order, table, store, userId);
 
             return order.DiscountResult;
         }
@@ -335,7 +340,7 @@ namespace FOCS.Application.Services
         }
 
         #region private methods
-        private async Task SaveOrderAsync(CreateOrderRequest order, Table table, Store store, string userId)
+        private async Task SaveOrderAsync(CreateOrderRequest order, Table? table, Store store, string userId)
         {
             Random randomNum = new Random();
 
@@ -346,6 +351,34 @@ namespace FOCS.Application.Services
                 {
                     var coupon = await _couponRepository.FindAsync(x => x.Code == order.DiscountResult.AppliedCouponCode);
                     couponCurrent = coupon.FirstOrDefault()?.Id;
+                }
+
+                //remaining time for order
+                int remainingTimeOrder = 0;
+                {
+                    var dictProduct = order.Items.ToDictionary(
+                            item => item.MenuItemId,
+                            item => item.Variants.Select(x => x.VariantId) ?? new List<Guid>()
+                        );
+
+                    var variantGroupItems = await _menuItemRepository.AsQueryable()
+                                                                    .Where(x => dictProduct.Keys.Contains(x.Id))
+                                                                    .Include(x => x.MenuItemVariantGroups)
+                                                                        .ThenInclude(y => y.MenuItemVariantGroupItems)
+                                                                    .Select(z => z.MenuItemVariantGroups
+                                                                        .Select(v => v.MenuItemVariantGroupItems)
+                                                                        .ToList())
+                                                                    .ToListAsync();
+
+                    var currnetRemainingTimeOrder = variantGroupItems
+                            .SelectMany(listLevel2 => listLevel2) 
+                            .SelectMany(listLevel3 => listLevel3) 
+                            .Where(item => item.IsActive && item.IsAvailable)
+                            .Sum(item => item.PrepPerTime * item.QuantityPerTime);
+
+                    remainingTimeOrder = (await _orderRepository.AsQueryable()
+                        .Where(x => x.PaymentStatus == PaymentStatus.Paid && x.OrderStatus == OrderStatus.Confirmed)
+                        .SumAsync(x => (int?)x.RemainingTime.Value.Minutes ?? 0)) + currnetRemainingTimeOrder;
                 }
 
                 var orderCreate = new Order.Infrastucture.Entities.Order
@@ -369,7 +402,8 @@ namespace FOCS.Application.Services
                         _ => PaymentStatus.Unpaid
                     },
                     CreatedBy = userId,
-                    TableId = table.Id
+                    TableId = order.OrderType == OrderType.DineIn ? order.TableId : null,
+                    RemainingTime = TimeSpan.FromMinutes(remainingTimeOrder)
                 };
 
                 var ordersDetailCreate = new List<OrderDetail>();
@@ -438,11 +472,8 @@ namespace FOCS.Application.Services
                 _tableRepository.Update(table);
 
                 await _orderRepository.AddAsync(orderCreate);
-                await _orderRepository.SaveChangesAsync();
 
                 await _orderDetailRepository.AddRangeAsync(ordersDetailCreate);
-                await _orderDetailRepository.SaveChangesAsync();
-
                 await _tableRepository.SaveChangesAsync();
 
                 //code order for payment hook

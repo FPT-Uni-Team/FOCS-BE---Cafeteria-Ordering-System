@@ -13,12 +13,6 @@ namespace FOCS.Common.Models
         [JsonPropertyName("price")]
         public double Price { get; set; }
 
-        [JsonPropertyName("prep_per_time")]
-        public int PrepPerTime { get; set; }
-
-        [JsonPropertyName("quantity_per_time")]
-        public int QuantityPerTime { get; set; }
-
         [JsonPropertyName("is_available")]
         public bool IsAvailable { get; set; }
     }

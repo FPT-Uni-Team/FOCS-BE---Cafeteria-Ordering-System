@@ -19,6 +19,10 @@ namespace FOCS.Order.Infrastucture.Entities
         public Guid WorkshiftScheduleId { get; set; }
         public WorkshiftSchedule WorkshiftSchedule { get; set; }
 
+        public Guid WorkshiftId {  get; set; }
+
+        public Workshift Workshift { get; set; }
+
         public WorkshiftStatus Status { get; set; }
 
         public DateTime? CreatedAt { get; set; }

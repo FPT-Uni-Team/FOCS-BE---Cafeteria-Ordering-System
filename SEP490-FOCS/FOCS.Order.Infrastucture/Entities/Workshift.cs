@@ -21,5 +21,6 @@ namespace FOCS.Order.Infrastucture.Entities
         public string? UpdatedBy { get; set; }
 
         public ICollection<WorkshiftSchedule> WorkshiftSchedules { get; set; }
+        public ICollection<StaffWorkshiftRegistration> StaffWorkshiftRegistrations { get; set; }
     }
 }
