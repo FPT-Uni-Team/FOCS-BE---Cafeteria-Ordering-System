@@ -125,6 +125,7 @@ namespace FOCS.Application.Services
                 await _optService.SendOtpAsync(user.PhoneNumber);
             }
 
+
             if(storeId == null || string.IsNullOrEmpty(storeId))
             {
                 return await GenerateAuthResult(user, null);
