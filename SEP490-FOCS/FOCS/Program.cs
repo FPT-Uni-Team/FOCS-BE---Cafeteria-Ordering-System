@@ -25,6 +25,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -243,10 +244,19 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-var redis = ConnectionMultiplexer.Connect("redis:6379,password=Hxs03122003%40,abortConnect=false,connectTimeout=10000");
+var options = ConfigurationOptions.Parse("103.185.184.27:6379");
+options.Password = "Hxs03122003";
+options.AbortOnConnectFail = false;
+options.ConnectRetry = 5;
+options.SyncTimeout = 10000;
+
+var redis = ConnectionMultiplexer.Connect(options);
+
+builder.Services.AddSignalR()
+    .AddStackExchangeRedis("103.185.184.27:6379,password=Hxs03122003,abortConnect=false,connectTimeout=10000");
 
 builder.Services.AddDataProtection()
-    .PersistKeysToStackExchangeRedis(redis, "DataProduction-Keys")
+    .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys")
     .SetApplicationName("SEP490FOCS");
 
 
@@ -309,8 +319,7 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-builder.Services.AddSignalR()
-    .AddStackExchangeRedis("redis:6379,password=Hxs03122003%40,abortConnect=false,connectTimeout=10000");
+
 builder.Services.AddAuthentication();
 
 var app = builder.Build();
