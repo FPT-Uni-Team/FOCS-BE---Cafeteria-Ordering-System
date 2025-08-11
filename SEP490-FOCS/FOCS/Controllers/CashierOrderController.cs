@@ -9,6 +9,7 @@ namespace FOCS.Controllers
     [ApiController]
     public class CashierOrderController : FocsController
     {
+
         private readonly ICashierService _cashierService;
 
         public CashierOrderController(ICashierService cashierService)
