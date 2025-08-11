@@ -35,13 +35,13 @@ namespace FOCS.Application.Services.BackgroundServices
 
                         var removeItems = await cartService.ScanAndRemoveExpiryItem();
 
-                        if(removeItems != null)
+                        if(removeItems != null && removeItems.Count > 0)
                         {
                             _loggerJobScanDel.LogInformation("Removed item {item}", removeItems);
                             _loggerJobScanDel.LogInformation("Removed item ids: {Ids}", string.Join(", ", removeItems.Select(x => x.RemovedId)));
                         } else
                         {
-                            _loggerJobScanDel.LogInformation("not found any item");
+                            _loggerJobScanDel.LogInformation("not found any item to remove");
                         }
                     }catch(Exception ex)
                     {
