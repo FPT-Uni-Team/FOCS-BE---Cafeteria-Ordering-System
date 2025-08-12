@@ -12,5 +12,6 @@ namespace FOCS.Common.Interfaces
     {
         Task<bool> ChangeStatusProductionOrder(UpdateStatusProductionOrderRequest dto);
         Task<PagedResult<OrderWrapResponse>> GetListOrderWraps(UrlQueryParameters urlQueryParameters, string storeId);
+        Task<List<SendOrderWrapDTO>> GetOrderWrapDetail(string code, string storeId);
     }
 }

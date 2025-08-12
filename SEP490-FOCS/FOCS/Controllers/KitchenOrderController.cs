@@ -28,5 +28,11 @@ namespace FOCS.Controllers
         {
             return await _orderWrapService.GetListOrderWraps(urlQueryParameters, storeId);
         }
+
+        [HttpGet("{code}")]
+        public async Task<List<SendOrderWrapDTO>> GetOrderWrapDetail(string code)
+        {
+            return await _orderWrapService.GetOrderWrapDetail(code, StoreId);
+        }
     }
 }
