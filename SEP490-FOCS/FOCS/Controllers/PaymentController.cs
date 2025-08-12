@@ -51,7 +51,7 @@ namespace FOCS.Controllers
 
             var payOSService = _payOSServiceFactory.Create(store.PayOSClientId!, store.PayOSApiKey!, store.PayOSChecksumKey!);
 
-            var paymentLink = await payOSService.CreatePaymentLink((int)Math.Round(request.Amount), request.OrderCode, request.Description, null, returnUrl: "https://focs.site/api/payment/webhook",cancelUrl: "https://focs.site/api/payment/cancel", buyerName: UserId, buyerPhone: "09123912763");
+            var paymentLink = await payOSService.CreatePaymentLink((int)Math.Round(request.Amount), request.OrderCode, request.Description, null, returnUrl: $"https://focs-site.vercel.app/en/{order.StoreId}/{request.TableId}/payment/success?statusString=00", cancelUrl: $"https://focs-site.vercel.app/en/{order.StoreId}/{request.TableId}/payment/fail?statusString=01", buyerName: UserId, buyerPhone: "09123912763");
             
             return string.IsNullOrEmpty(paymentLink) ? BadRequest() : Ok(paymentLink);
         }

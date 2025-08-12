@@ -18,6 +18,9 @@ namespace FOCS.Common.Models
         [JsonPropertyName("description")]
         public string? Description {  get; set; }
 
+        [JsonPropertyName("table_id")]
+        public Guid? TableId { get; set; }
+
         [JsonPropertyName("items")]
         public object? Items {  get; set; }
     }
