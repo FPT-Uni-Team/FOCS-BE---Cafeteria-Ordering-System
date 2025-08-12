@@ -122,5 +122,19 @@ namespace FOCS.Application.Services
 
             return new PagedResult<OrderWrapResponse>(new List<OrderWrapResponse>(), 1, 1, 1);
         }
+
+        public async Task<List<SendOrderWrapDTO>> GetOrderWrapDetail(string code, string storeId)
+        {
+            var orderWrap = await _orderWrapRepo.AsQueryable().FirstOrDefaultAsync(x => x.Code == code && x.StoreId == Guid.Parse(storeId));
+            var orders = await _orderWrapRepo.AsQueryable().Include(x => x.Orders).Where(x => x.Code == code && x.StoreId == Guid.Parse(storeId)).SelectMany(x => x.Orders).ToListAsync();
+
+            //return orders.Select(x => new SendOrderWrapDTO
+            //{
+            //    OrderWrapCode = orderWrap.Code,
+
+            //});
+
+            return new List<SendOrderWrapDTO>();
+        }
     }
 }

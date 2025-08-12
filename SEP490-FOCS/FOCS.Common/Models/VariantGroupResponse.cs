@@ -20,6 +20,12 @@ namespace FOCS.Application.DTOs
         [JsonPropertyName("max_select")]
         public int MaxSelect { get; set; }
 
+        [JsonPropertyName("prep_per_time")]
+        public int? PrepPerTime { get; set; }
+
+        [JsonPropertyName("quantity_pre_time")]
+        public int? QuantityPerTime {  get; set; }
+
         [JsonPropertyName("variants")]
         public List<MenuItemVariantDTO> Variants { get; set; }
     }

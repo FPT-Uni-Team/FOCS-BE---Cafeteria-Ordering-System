@@ -29,6 +29,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using static MassTransit.ValidationResultExtensions;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static Org.BouncyCastle.Asn1.Cmp.Challenge;
 
@@ -133,25 +134,38 @@ namespace FOCS.Application.Services
         {
             if(orderRequest.CouponCode == null)
             {
-                var dictPrice = orderRequest.Items
-                   .Distinct()
-                   .Select(x => (x.MenuItemId, x.Variants.Select(v => v.VariantId)))
-                   .ToDictionary();
+                var rs = new DiscountResultDTO();
 
-                var price = await _pricingService.CalculatePriceOfProducts(dictPrice, storeId);
-
-                return new DiscountResultDTO
+                double totalOrderAmount = 0;
+                var pricingDict = new Dictionary<(Guid MenuItemId, Guid? VariantId), double>();
+                foreach (var item in orderRequest.Items)
                 {
-                    AppliedCouponCode = null,
-                    AppliedPromotions = null,
-                    TotalDiscount = 0,
-                    TotalPrice = (decimal)price,
-                    IsUsePoint = orderRequest.IsUseLoyatyPoint,
-                    ItemDiscountDetails = new List<DiscountItemDetail>(),
-                    Messages = null,
-                    OrderCode = null,
-                    Point = 0
-                };
+                    if (item.Variants != null && item.Variants.Count > 0)
+                    {
+                        foreach (var itemVariant in item.Variants)
+                        {
+                            var price = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, Guid.Parse(storeId));
+                            double itemUnitPrice = price.ProductPrice + (price.VariantPrice ?? 0);
+                            double itemTotalPrice = itemUnitPrice * itemVariant.Quantity;
+
+                            pricingDict[(item.MenuItemId, itemVariant.VariantId)] = itemUnitPrice;
+                            totalOrderAmount += itemTotalPrice;
+                            rs.TotalPrice += (decimal)itemTotalPrice;
+                        }
+                    }
+                    else
+                    {
+                        var price = await _pricingService.GetPriceByProduct(item.MenuItemId, null, Guid.Parse(storeId));
+                        double itemUnitPrice = price.ProductPrice + (price.VariantPrice ?? 0);
+                        double itemTotalPrice = itemUnitPrice * item.Quantity;
+
+                        pricingDict[(item.MenuItemId, null)] = itemUnitPrice;
+                        totalOrderAmount += itemTotalPrice;
+                        rs.TotalPrice += (decimal)itemTotalPrice;
+                    }
+                }
+
+                return rs;
             }
 
             await _promotionService.IsValidPromotionCouponAsync(orderRequest.CouponCode!, userId.ToString(), orderRequest.StoreId);
