@@ -249,11 +249,21 @@ namespace FOCS.Application.Services
                 .OrderByDescending(x => x.DiscountValue)
                 .FirstOrDefaultAsync();
 
-            decimal totalBeforeDiscount = discountResult.TotalPrice;
-            decimal fixedDiscountAmount = (decimal)promotionFixed?.DiscountValue!;
-            decimal percentDiscountAmount = promotionPercent != null
+            decimal fixedDiscountAmount = 0;
+            decimal percentDiscountAmount = 0;
+            var totalBeforeDiscount = discountResult.TotalPrice;
+
+            if (promotionFixed != null)
+            {
+                fixedDiscountAmount = (decimal)promotionFixed?.DiscountValue!;
+            }
+
+            if(promotionPercent != null)
+            {
+                percentDiscountAmount = promotionPercent != null
                 ? totalBeforeDiscount * ((decimal)promotionPercent.DiscountValue! / 100)
-                : 0;
+               : 0;
+            }
 
             if (fixedDiscountAmount == 0 && percentDiscountAmount == 0)
                 return discountResult;
