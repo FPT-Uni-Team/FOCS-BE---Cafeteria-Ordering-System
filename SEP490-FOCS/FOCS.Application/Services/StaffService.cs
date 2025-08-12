@@ -150,6 +150,22 @@ namespace FOCS.Application.Services
             return await GetStaffListByRoleAsync(query, storeId, roleToGet);
         }
 
+        public async Task<StaffProfileDTO> UpdateManagerProfileAsync(StaffProfileDTO dto, string managerId, string adminId)
+        {
+            var manager = await ValidatePermissionAsync(managerId, adminId, checkAdmin: true);
+
+            dto.Email = manager.Email;
+            _mapper.Map(dto, manager);
+            manager.UpdatedAt = DateTime.UtcNow;
+            manager.UpdatedBy = managerId;
+
+            await _userManager.UpdateAsync(manager);
+
+            var result = _mapper.Map<StaffProfileDTO>(manager);
+            result.Roles = await _userManager.GetRolesAsync(manager);
+            return result;
+        }
+
         public async Task<bool> DeleteManagerAsync(string managerId, string adminId)
         {
             var staff = await ValidatePermissionAsync(managerId, adminId, checkAdmin: true);

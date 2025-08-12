@@ -34,16 +34,22 @@ namespace FOCS.Controllers
             return await _staffService.CreateManagerAsync(dto, StoreId, UserId);
         }
 
-        [HttpGet("{staffId}")]
-        public async Task<StaffProfileDTO> GetManagerProfileAsync(string staffId)
+        [HttpGet("{managerId}")]
+        public async Task<StaffProfileDTO> GetManagerProfileAsync(string managerId)
         {
-            return await _staffService.GetStaffProfileAsync(staffId, UserId);
+            return await _staffService.GetStaffProfileAsync(managerId, UserId);
         }
 
-        [HttpDelete("{staffId}")]
-        public async Task<IActionResult> DeleteStaffProfileAsync(string staffId)
+        [HttpPut("{managerId}")]
+        public async Task<StaffProfileDTO> UpdateStaffProfileAsync(StaffProfileDTO dto, string managerId)
         {
-            var isDeleted = await _staffService.DeleteManagerAsync(staffId, UserId);
+            return await _staffService.UpdateManagerProfileAsync(dto, managerId, UserId);
+        }
+
+        [HttpDelete("{managerId}")]
+        public async Task<IActionResult> DeleteStaffProfileAsync(string managerId)
+        {
+            var isDeleted = await _staffService.DeleteManagerAsync(managerId, UserId);
             if (!isDeleted)
             {
                 return NotFound();
