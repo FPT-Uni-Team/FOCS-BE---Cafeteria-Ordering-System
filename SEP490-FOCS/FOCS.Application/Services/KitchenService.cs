@@ -75,7 +75,7 @@ namespace FOCS.Application.Services
                 var orderWrapModel = new OrderWrap
                 {
                     Id = orderWrapId,
-                    Code = random.Next(5).ToString(),
+                    Code = random.Next(99999).ToString(),
                     OrderWrapStatus = Common.Enums.OrderWrapStatus.Created,
                     StoreId = currentStoreId,
                     Orders = orders
