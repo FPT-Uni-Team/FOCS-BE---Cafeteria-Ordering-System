@@ -67,7 +67,7 @@ namespace FOCS.Application.Services
                     var user = await _userManager.FindByIdAsync(userId);
 
                     //if guest
-                    if(user != null)
+                    if (user != null)
                     {
                         ConditionCheck.CheckCondition(user!.FOCSPoint < applyDiscountOrderRequest.Point, Errors.OrderError.NotEnoughPoint);
 
@@ -80,10 +80,11 @@ namespace FOCS.Application.Services
 
                         finalDiscountResult.IsUsePoint = true;
                         finalDiscountResult.Point = applyDiscountOrderRequest.Point;
+                    } else
+                    {
+                        finalDiscountResult.IsUsePoint = false;
+                        finalDiscountResult.Point = 0;
                     }
-
-                    finalDiscountResult.IsUsePoint = false;
-                    finalDiscountResult.Point = 0;
                 }
             }
 
