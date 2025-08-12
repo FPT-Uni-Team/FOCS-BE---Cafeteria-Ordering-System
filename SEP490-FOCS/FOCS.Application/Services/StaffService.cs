@@ -221,9 +221,9 @@ namespace FOCS.Application.Services
             await _userStoreRepository.AddAsync(_mapper.Map<UserStore>(newUserStore));
             await _userStoreRepository.SaveChangesAsync();
 
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(staff);
+            //var token = await _userManager.GenerateEmailConfirmationTokenAsync(staff);
 
-            await _emailService.SendEmailConfirmationAsync(staff.Email, token);
+            //await _emailService.SendEmailConfirmationAsync(staff.Email, token);
 
             return staff;
         }
