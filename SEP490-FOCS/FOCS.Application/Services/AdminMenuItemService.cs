@@ -44,7 +44,7 @@ namespace FOCS.Application.Services
 
         public async Task<MenuItemAdminDTO> CreateMenuAsync(MenuItemAdminDTO dto, string storeId)
         {
-            var isExist = await _menuRepository.AsQueryable().AnyAsync(x => x.Name == dto.Name);
+            var isExist = await _menuRepository.AsQueryable().AnyAsync(x => x.Name == dto.Name && !x.IsDeleted);
 
             ConditionCheck.CheckCondition(!isExist, Errors.Common.IsExist, "name");
 
