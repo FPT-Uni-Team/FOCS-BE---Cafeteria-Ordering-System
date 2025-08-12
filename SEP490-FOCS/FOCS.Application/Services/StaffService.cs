@@ -199,7 +199,8 @@ namespace FOCS.Application.Services
                 LastName = request.LastName,
                 UserName = request.Email.Split("@")[0],
                 PhoneNumber = request.Phone,
-                IsActive = true
+                IsActive = true,
+                EmailConfirmed = true
             };
 
             var result = await _userManager.CreateAsync(staff, request.Password);
