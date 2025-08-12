@@ -26,7 +26,7 @@ namespace FOCS.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync(LoginRequest loginRequest)
         {
-            return Ok(await _authService.LoginAsync(loginRequest, StoreId));
+            return (await _authService.LoginAsync(loginRequest, StoreId)).IsSuccess == true ? Ok(await _authService.LoginAsync(loginRequest, StoreId)) : BadRequest(await _authService.LoginAsync(loginRequest, StoreId));
         }
 
         [HttpPost("register")]
