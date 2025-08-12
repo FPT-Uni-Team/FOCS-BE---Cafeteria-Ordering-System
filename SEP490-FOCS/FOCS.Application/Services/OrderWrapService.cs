@@ -155,13 +155,25 @@ namespace FOCS.Application.Services
             var orderWrap = await _orderWrapRepo.AsQueryable().FirstOrDefaultAsync(x => x.Code == code && x.StoreId == Guid.Parse(storeId));
             var orders = await _orderWrapRepo.AsQueryable().Include(x => x.Orders).Where(x => x.Code == code && x.StoreId == Guid.Parse(storeId)).SelectMany(x => x.Orders).ToListAsync();
 
-            //return orders.Select(x => new SendOrderWrapDTO
-            //{
-            //    OrderWrapCode = orderWrap.Code,
+            var orderDto = _mapper.Map<List<OrderDTO>>(orders);
 
-            //});
+            var orderWrapRes = orderDto
+                    .SelectMany(order => order.OrderDetails)
+                    .GroupBy(detail => detail.MenuItemId)
+                    .Select(group => new SendOrderWrapDTO
+                    {
+                        OrderWrapId = orderWrap.Id,
+                        MenuItemId = group.Key,
+                        MenuItemName = group.First().MenuItemName,
+                        Variants = group.Select(detail => new VariantWrapOrder
+                        {
+                            VariantId = detail.VariantId,
+                            VariantName = detail.VariantName,
+                            Note = detail.Note
+                        }).ToList()
+                    }).ToList();
 
-            return new List<SendOrderWrapDTO>();
+            return orderWrapRes;
         }
     }
 }
