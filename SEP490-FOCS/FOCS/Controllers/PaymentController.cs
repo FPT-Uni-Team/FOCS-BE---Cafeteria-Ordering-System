@@ -85,7 +85,7 @@ namespace FOCS.Controllers
             if (request.Status != "00")
                 return Unauthorized();
 
-            await _orderService.MarkAsPaid(long.Parse(request.OrderCode), StoreId);
+            await _orderService.MarkAsPaid(long.Parse(request.OrderCode), order.StoreId.ToString());
 
             return Ok();
         }
