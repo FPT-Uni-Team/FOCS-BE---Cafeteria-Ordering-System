@@ -153,7 +153,7 @@ namespace FOCS.Application.Services
         public async Task<List<SendOrderWrapDTO>> GetOrderWrapDetail(string code, string storeId)
         {
             var orderWrap = await _orderWrapRepo.AsQueryable().FirstOrDefaultAsync(x => x.Code == code && x.StoreId == Guid.Parse(storeId));
-            var orders = await _orderWrapRepo.AsQueryable().Include(x => x.Orders).Where(x => x.Code == code && x.StoreId == Guid.Parse(storeId)).SelectMany(x => x.Orders).ToListAsync();
+            var orders = await _orderWrapRepo.AsQueryable().Include(x => x.Orders).ThenInclude(x => x.OrderDetails).Where(x => x.Code == code && x.StoreId == Guid.Parse(storeId)).SelectMany(x => x.Orders).ToListAsync();
 
             var orderDto = _mapper.Map<List<OrderDTO>>(orders);
 
