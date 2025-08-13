@@ -94,7 +94,7 @@ namespace FOCS.Application.Services
                 return new AuthResult
                 {
                     IsSuccess = false,
-                    Errors = new List<string>() { Errors.Common.NotFound }
+                    Errors = new List<string>() { Errors.Common.UserNotFound }
                 };
             }
 
@@ -132,30 +132,34 @@ namespace FOCS.Application.Services
             }
 
             var store = await _storeRepository.GetByIdAsync(Guid.Parse(storeId));
-            if (store != null)
+            if (store == null)
             {
-
-                var userStores = await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(user.Id));
-                if (await _userManager.IsInRoleAsync(user, Roles.User) && !userStores.Any(x => x.UserId == Guid.Parse(user.Id) && x.StoreId == Guid.Parse(storeId)))
+                return new AuthResult
                 {
-                    var newUserStore = new UserStoreDTO
-                    {
-                        Id = Guid.NewGuid(),
-                        UserId = Guid.Parse(user.Id),
-                        StoreId = Guid.Parse(storeId),
-                        BlockReason = null,
-                        JoinDate = DateTime.UtcNow,
-                        Status = Common.Enums.UserStoreStatus.Active
-                    };
-                    try
-                    {
-                        await _userStoreRepository.AddAsync(_mapper.Map<UserStore>(newUserStore));
-                        await _userStoreRepository.SaveChangesAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
+                    IsSuccess = false,
+                    Errors = new List<string>() { Errors.Common.StoreNotFound }
+                };
+            }
+            var userStores = await _userStoreRepository.FindAsync(x => x.UserId == Guid.Parse(user.Id));
+            if (await _userManager.IsInRoleAsync(user, Roles.User) && !userStores.Any(x => x.UserId == Guid.Parse(user.Id) && x.StoreId == Guid.Parse(storeId)))
+            {
+                var newUserStore = new UserStoreDTO
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = Guid.Parse(user.Id),
+                    StoreId = Guid.Parse(storeId),
+                    BlockReason = null,
+                    JoinDate = DateTime.UtcNow,
+                    Status = Common.Enums.UserStoreStatus.Active
+                };
+                try
+                {
+                    await _userStoreRepository.AddAsync(_mapper.Map<UserStore>(newUserStore));
+                    await _userStoreRepository.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
                 }
             }
 
