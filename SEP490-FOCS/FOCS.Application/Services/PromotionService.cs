@@ -118,7 +118,7 @@ namespace FOCS.Application.Services
         {
             ConditionCheck.CheckCondition(promotionId == dto.Id, Errors.Common.NotFound, Errors.FieldName.Id);
             var promotion = await GetAvailablePromotionById(promotionId);
-            if (promotion == null) return false;
+            ConditionCheck.CheckCondition(promotion != null, Errors.Common.NotFound, Errors.FieldName.Id);
             await ValidateStoreExists(storeId);
             await ValidateUser(userId, promotion.StoreId);
             await ValidatePromotionUniqueness(dto, storeId);
