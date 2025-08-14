@@ -5,12 +5,10 @@ using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
 using System.Linq.Expressions;
 
@@ -20,6 +18,7 @@ namespace FOCS.UnitTest.AuthServiceTest
     {
         protected readonly Mock<UserManager<User>> _userManagerMock;
         protected readonly Mock<SignInManager<User>> _signInManagerMock;
+        protected readonly Mock<OtpService> _optServiceMock;
         protected readonly Mock<IConfiguration> _configurationMock;
         protected readonly Mock<IMapper> _mapperMock;
         protected readonly Mock<IEmailService> _emailServiceMock;
@@ -38,6 +37,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             _userManagerMock = new Mock<UserManager<User>>(
                 userStore.Object, null, null, null, null, null, null, null, null);
 
+            _optServiceMock = new Mock<OtpService>();
             _configurationMock = new Mock<IConfiguration>();
             _mapperMock = new Mock<IMapper>();
             _emailServiceMock = new Mock<IEmailService>();
@@ -56,6 +56,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             _authService = new AuthService(
                 _userManagerMock.Object,
                 _signInManagerMock.Object,
+                _optServiceMock.Object,
                 _configurationMock.Object,
                 _mapperMock.Object,
                 _emailServiceMock.Object,

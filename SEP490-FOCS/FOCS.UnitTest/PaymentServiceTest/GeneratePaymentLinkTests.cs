@@ -138,7 +138,7 @@ namespace FOCS.UnitTest.PaymentServiceTest
                 .ReturnsAsync(NewSetting());
             _payOsServiceMock
                 .Setup(p => p.CreatePaymentLink(
-                    req.Amount, req.OrderCode, req.Description,
+                    (int)req.Amount, req.OrderCode, req.Description,
                     null,
                     "https://focs.site/api/payment/webhook",
                     "https://focs.site/api/payment/cancel",
@@ -153,7 +153,7 @@ namespace FOCS.UnitTest.PaymentServiceTest
 
             _factoryMock.Verify(f => f.Create("cid", "key", "chk"), Times.Once);
             _payOsServiceMock.Verify(p => p.CreatePaymentLink(
-                req.Amount, req.OrderCode, req.Description,
+                (int)req.Amount, req.OrderCode, req.Description,
                 null,
                 "https://focs.site/api/payment/webhook",
                 "https://focs.site/api/payment/cancel",

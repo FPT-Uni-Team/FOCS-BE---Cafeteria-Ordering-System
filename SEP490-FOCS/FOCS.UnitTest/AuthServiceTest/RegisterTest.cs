@@ -1,4 +1,5 @@
-﻿using FOCS.Common.Models;
+﻿using FOCS.Common.Constants;
+using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -35,7 +36,7 @@ namespace FOCS.UnitTest.AuthServiceTest
                 .Returns(new UserStore());
 
             // Act
-            var result = await _authService.RegisterAsync(request, storeId);
+            var result = await _authService.RegisterAsync(request, storeId, Roles.User);
 
             // Assert
             Assert.True(result);
@@ -59,7 +60,7 @@ namespace FOCS.UnitTest.AuthServiceTest
 
             // Act
             await Assert.ThrowsAsync<Exception>(() =>
-                _authService.RegisterAsync(request, storeId));
+                _authService.RegisterAsync(request, storeId, Roles.User));
 
             // Assert
             _storeRepositoryMock.Verify(x => x.GetByIdAsync(storeId), Times.Once);
@@ -86,7 +87,7 @@ namespace FOCS.UnitTest.AuthServiceTest
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<Exception>(() =>
-                _authService.RegisterAsync(request, storeId));
+                _authService.RegisterAsync(request, storeId, Roles.User));
 
             Assert.Contains("Email already exists", exception.Message);
             Assert.Contains("Password too weak", exception.Message);
@@ -121,7 +122,7 @@ namespace FOCS.UnitTest.AuthServiceTest
                 .Returns(new UserStore());
 
             // Act
-            await _authService.RegisterAsync(request, storeId);
+            await _authService.RegisterAsync(request, storeId, Roles.User);
 
             // Assert
             Assert.NotNull(capturedUser);
@@ -161,7 +162,7 @@ namespace FOCS.UnitTest.AuthServiceTest
                 .Returns(new UserStore());
 
             // Act
-            await _authService.RegisterAsync(request, storeId);
+            await _authService.RegisterAsync(request, storeId, Roles.User);
 
             // Assert
             Assert.NotNull(capturedUserStoreDTO);
@@ -199,7 +200,7 @@ namespace FOCS.UnitTest.AuthServiceTest
                 .Returns(new UserStore());
 
             // Act
-            await _authService.RegisterAsync(request, storeId);
+            await _authService.RegisterAsync(request, storeId, Roles.User);
 
             // Assert
             _userManagerMock.Verify(x => x.AddToRoleAsync(It.IsAny<User>(), "User"), Times.Once);
@@ -233,7 +234,7 @@ namespace FOCS.UnitTest.AuthServiceTest
                 .Returns(new UserStore());
 
             // Act
-            await _authService.RegisterAsync(request, storeId);
+            await _authService.RegisterAsync(request, storeId, Roles.User);
 
             // Assert
             _userManagerMock.Verify(x => x.GenerateEmailConfirmationTokenAsync(It.IsAny<User>()), Times.Once);
@@ -267,7 +268,7 @@ namespace FOCS.UnitTest.AuthServiceTest
                 .Returns(mappedUserStore);
 
             // Act
-            await _authService.RegisterAsync(request, storeId);
+            await _authService.RegisterAsync(request, storeId, Roles.User);
 
             // Assert
             _userStoreRepositoryMock.Verify(x => x.AddAsync(mappedUserStore), Times.Once);
@@ -302,7 +303,7 @@ namespace FOCS.UnitTest.AuthServiceTest
                 .Returns(new UserStore());
 
             // Act
-            await _authService.RegisterAsync(request, storeId);
+            await _authService.RegisterAsync(request, storeId, Roles.User);
 
             // Assert
             Assert.Equal(storeId, capturedUserStoreDTO.StoreId);
@@ -337,7 +338,7 @@ namespace FOCS.UnitTest.AuthServiceTest
                 .Returns(new UserStore());
 
             // Act
-            await _authService.RegisterAsync(request, storeId);
+            await _authService.RegisterAsync(request, storeId, Roles.User);
 
             // Assert
             Assert.Equal(customEmail, capturedUser.Email);
@@ -366,7 +367,7 @@ namespace FOCS.UnitTest.AuthServiceTest
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<Exception>(() =>
-                _authService.RegisterAsync(request, storeId));
+                _authService.RegisterAsync(request, storeId, Roles.User));
 
             Assert.Contains("Email 'test@example.com' is already taken.", exception.Message);
             Assert.Contains("Passwords must be at least 6 characters.", exception.Message);

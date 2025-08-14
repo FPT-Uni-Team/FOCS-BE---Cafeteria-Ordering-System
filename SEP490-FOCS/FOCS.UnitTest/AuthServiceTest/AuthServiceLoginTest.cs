@@ -21,7 +21,7 @@ namespace FOCS.UnitTest.AuthServiceTest
                 .ReturnsAsync((Store)null);
 
             // Act
-            var result = await _authService.LoginAsync(request, storeId);
+            var result = await _authService.LoginAsync(request, storeId.ToString());
 
             // Assert
             Assert.False(result.IsSuccess);
@@ -41,7 +41,7 @@ namespace FOCS.UnitTest.AuthServiceTest
                 .ReturnsAsync((User)null);
 
             // Act
-            var result = await _authService.LoginAsync(request, storeId);
+            var result = await _authService.LoginAsync(request, storeId.ToString());
 
             // Assert
             Assert.False(result.IsSuccess);
@@ -62,7 +62,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             SetupPasswordCheck(user, request.Password, false);
 
             // Act
-            var result = await _authService.LoginAsync(request, storeId);
+            var result = await _authService.LoginAsync(request, storeId.ToString());
 
             // Assert
             Assert.False(result.IsSuccess);
@@ -86,7 +86,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             SetupEmailService(true);
 
             // Act
-            var result = await _authService.LoginAsync(request, storeId);
+            var result = await _authService.LoginAsync(request, storeId.ToString());
 
             // Assert
             Assert.False(result.IsSuccess);
@@ -118,7 +118,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             SetupRepositoryAdd(_userRefreshTokenRepositoryMock);
 
             // Act
-            var result = await _authService.LoginAsync(request, storeId);
+            var result = await _authService.LoginAsync(request, storeId.ToString());
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -155,7 +155,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             SetupRepositoryAdd(_userRefreshTokenRepositoryMock);
 
             // Act
-            var result = await _authService.LoginAsync(request, storeId);
+            var result = await _authService.LoginAsync(request, storeId.ToString());
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -184,7 +184,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             SetupRepositoryAdd(_userRefreshTokenRepositoryMock);
 
             // Act
-            var result = await _authService.LoginAsync(request, storeId);
+            var result = await _authService.LoginAsync(request, storeId.ToString());
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -218,7 +218,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             SetupRepositoryAdd(_userRefreshTokenRepositoryMock);
 
             // Act
-            var result = await _authService.LoginAsync(request, storeId);
+            var result = await _authService.LoginAsync(request, storeId.ToString());
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -248,7 +248,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             SetupRepositoryAdd(_userRefreshTokenRepositoryMock);
 
             // Act
-            var result = await _authService.LoginAsync(request, storeId);
+            var result = await _authService.LoginAsync(request, storeId.ToString());
 
             // Assert
             Assert.True(result.IsSuccess);
@@ -290,7 +290,7 @@ namespace FOCS.UnitTest.AuthServiceTest
             SetupRepositoryAdd(_userRefreshTokenRepositoryMock);
 
             // Act
-            var result = await _authService.LoginAsync(request, storeId);
+            var result = await _authService.LoginAsync(request, storeId.ToString());
 
             // Assert
             Assert.True(result.IsSuccess);

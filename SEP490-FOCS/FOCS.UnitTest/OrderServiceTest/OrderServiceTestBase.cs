@@ -106,7 +106,7 @@ namespace FOCS.UnitTest.OrderServiceTest
                 TableId = _validTableId,
                 Items = new List<OrderItemDTO>
                 {
-                    new OrderItemDTO { MenuItemId = Guid.NewGuid(), VariantId = null, Quantity = 1 }
+                    new OrderItemDTO { MenuItemId = Guid.NewGuid(), Variants = null, Quantity = 1 }
                 }
             };
         }
@@ -124,7 +124,7 @@ namespace FOCS.UnitTest.OrderServiceTest
         // Helper to setup mock pricing
         protected void SetupDefaultPricing(double totalPrice)
         {
-            _mockPricingService.Setup(p => p.CalculatePriceOfProducts(It.IsAny<Dictionary<Guid, Guid?>>(), _validStoreId.ToString()))
+            _mockPricingService.Setup(p => p.CalculatePriceOfProducts(It.IsAny<Dictionary<Guid, IEnumerable<Guid>?>>(), _validStoreId.ToString()))
                                .ReturnsAsync(totalPrice);
         }
 

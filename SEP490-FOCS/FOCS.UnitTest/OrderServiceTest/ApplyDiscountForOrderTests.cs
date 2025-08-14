@@ -1,5 +1,6 @@
 ﻿using FOCS.Common.Exceptions;
 using FOCS.Common.Models;
+using FOCS.Order.Infrastucture.Entities;
 using Moq;
 
 namespace FOCS.UnitTest.OrderServiceTest
@@ -10,6 +11,7 @@ namespace FOCS.UnitTest.OrderServiceTest
         public async Task ApplyDiscountForOrder_ShouldThrow_WhenCouponCodeNull()
         {
             // Arrange
+            var storeId = Guid.NewGuid().ToString();
             var request = new ApplyDiscountOrderRequest
             {
                 StoreId = _validStoreId,
@@ -18,7 +20,7 @@ namespace FOCS.UnitTest.OrderServiceTest
 
             // Act & Assert
             var ex = await Assert.ThrowsAsync<Exception>(async () =>
-                await _orderService.ApplyDiscountForOrder(request, _validUserId));
+                await _orderService.ApplyDiscountForOrder(request, _validUserId, storeId));
 
             Assert.Equal(Errors.Common.NotFound + "@", ex.Message);
         }
@@ -27,6 +29,7 @@ namespace FOCS.UnitTest.OrderServiceTest
         public async Task ApplyDiscountForOrder_ShouldThrow_WhenPromotionInvalid()
         {
             // Arrange
+            var storeId = Guid.NewGuid().ToString();
             var request = new ApplyDiscountOrderRequest
             {
                 StoreId = _validStoreId,
@@ -43,7 +46,7 @@ namespace FOCS.UnitTest.OrderServiceTest
 
             // Act & Assert
             var ex = await Assert.ThrowsAsync<Exception>(async () =>
-                await _orderService.ApplyDiscountForOrder(request, _validUserId));
+                await _orderService.ApplyDiscountForOrder(request, _validUserId, storeId));
 
             Assert.Equal(Errors.Common.NotFound, ex.Message);
         }
@@ -52,6 +55,7 @@ namespace FOCS.UnitTest.OrderServiceTest
         public async Task ApplyDiscountForOrder_ShouldThrow_WhenStoreSettingNotFound()
         {
             // Arrange
+            var storeId = Guid.NewGuid().ToString();
             var request = new ApplyDiscountOrderRequest
             {
                 StoreId = _validStoreId,
@@ -73,7 +77,7 @@ namespace FOCS.UnitTest.OrderServiceTest
 
             // Act & Assert
             var ex = await Assert.ThrowsAsync<Exception>(async () =>
-                await _orderService.ApplyDiscountForOrder(request, _validUserId));
+                await _orderService.ApplyDiscountForOrder(request, _validUserId, storeId));
 
             Assert.Equal(Errors.Common.NotFound + "@", ex.Message);
         }

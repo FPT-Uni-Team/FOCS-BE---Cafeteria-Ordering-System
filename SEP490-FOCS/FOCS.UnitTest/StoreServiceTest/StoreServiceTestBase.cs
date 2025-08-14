@@ -15,6 +15,7 @@ namespace FOCS.UnitTest.StoreServiceTest
 {
     public abstract class StoreServiceTestBase
     {
+        protected readonly Mock<IRepository<Brand>> _mockBrandRepository;
         protected readonly Mock<IRepository<Store>> _mockStoreRepository;
         protected readonly Mock<IRepository<StoreSetting>> _mockStoreSettingRepository;
         protected readonly Mock<IRepository<PaymentAccount>> _mockPaymentAccountRepository;
@@ -44,7 +45,8 @@ namespace FOCS.UnitTest.StoreServiceTest
                 _mockPaymentAccountRepository.Object,
                 _mockStoreSettingRepository.Object,
                 _mockMapper.Object,
-                _mockDataProtectionProvider.Object);
+                _mockDataProtectionProvider.Object,
+                _mockBrandRepository.Object);
         }
 
         protected StoreAdminDTO CreateValidStoreAdminDTO()
