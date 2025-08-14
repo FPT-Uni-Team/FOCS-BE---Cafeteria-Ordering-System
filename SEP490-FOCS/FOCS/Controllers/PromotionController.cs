@@ -32,10 +32,7 @@ namespace FOCS.Controllers
         [HttpPost("list")]
         public async Task<IActionResult> GetPromotions([FromBody] UrlQueryParameters query)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid),
-                                                    Errors.Common.InvalidGuidFormat,
-                                                    Errors.FieldName.StoreId);
-            var result = await _promotionService.GetPromotionsByStoreAsync(query, storeIdGuid, UserId);
+            var result = await _promotionService.GetPromotionsByStoreAsync(query, StoreId, UserId);
             return Ok(result);
         }
 
@@ -45,10 +42,7 @@ namespace FOCS.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), 
-                                                    Errors.Common.InvalidGuidFormat, 
-                                                    Errors.FieldName.StoreId);
-            var created = await _promotionService.CreatePromotionAsync(dto, storeIdGuid, UserId);
+            var created = await _promotionService.CreatePromotionAsync(dto, StoreId, UserId);
             return Ok(created);
         }
 
@@ -58,10 +52,7 @@ namespace FOCS.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid),
-                                                    Errors.Common.InvalidGuidFormat,
-                                                    Errors.FieldName.StoreId);
-            var success = await _promotionService.UpdatePromotionAsync(promotionId, dto, storeIdGuid, UserId);
+            var success = await _promotionService.UpdatePromotionAsync(promotionId, dto, StoreId, UserId);
             return success ? Ok() : NotFound();
         }
 

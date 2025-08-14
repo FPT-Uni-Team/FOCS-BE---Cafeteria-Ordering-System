@@ -58,8 +58,11 @@ namespace FOCS.Application.Services
             _pricingService = pricingService;
         }
 
-        public async Task<PromotionDTO> CreatePromotionAsync(PromotionDTO dto, Guid storeId, string userId)
+        public async Task<PromotionDTO> CreatePromotionAsync(PromotionDTO dto, string storeIdstr, string userId)
         {
+            ConditionCheck.CheckCondition(Guid.TryParse(storeIdstr, out Guid storeId),
+                                                    Errors.Common.InvalidGuidFormat,
+                                                    Errors.FieldName.StoreId);
             await ValidateStoreExists(storeId);
             await ValidateUser(userId, storeId);
             await ValidatePromotionDto(dto);
@@ -81,8 +84,11 @@ namespace FOCS.Application.Services
             return _mapper.Map<PromotionDTO>(newPromotion);
         }
 
-        public async Task<PagedResult<PromotionDTO>> GetPromotionsByStoreAsync(UrlQueryParameters query, Guid storeId, string userId)
+        public async Task<PagedResult<PromotionDTO>> GetPromotionsByStoreAsync(UrlQueryParameters query, string storeIdStr, string userId)
         {
+            ConditionCheck.CheckCondition(Guid.TryParse(storeIdStr, out Guid storeId),
+                                                    Errors.Common.InvalidGuidFormat,
+                                                    Errors.FieldName.StoreId);
             await ValidateUser(userId, storeId);
             var promotionQuery = _promotionRepository.AsQueryable().Include(p => p.PromotionItemConditions)
                 .Include(p => p.Coupons)
@@ -114,11 +120,14 @@ namespace FOCS.Application.Services
             return _mapper.Map<PromotionDTO>(promotion);
         }
 
-        public async Task<bool> UpdatePromotionAsync(Guid promotionId, PromotionDTO dto, Guid storeId, string userId)
+        public async Task<bool> UpdatePromotionAsync(Guid promotionId, PromotionDTO dto, string storeIdStr, string userId)
         {
+            ConditionCheck.CheckCondition(Guid.TryParse(storeIdStr, out Guid storeId),
+                                                    Errors.Common.InvalidGuidFormat,
+                                                    Errors.FieldName.StoreId);
             ConditionCheck.CheckCondition(promotionId == dto.Id, Errors.Common.NotFound, Errors.FieldName.Id);
             var promotion = await GetAvailablePromotionById(promotionId);
-            if (promotion == null) return false;
+            ConditionCheck.CheckCondition(promotion != null, Errors.Common.NotFound, Errors.FieldName.Id);
             await ValidateStoreExists(storeId);
             await ValidateUser(userId, promotion.StoreId);
             await ValidatePromotionUniqueness(dto, storeId);
