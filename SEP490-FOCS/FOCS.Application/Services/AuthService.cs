@@ -45,12 +45,13 @@ namespace FOCS.Application.Services
 
         private readonly IRepository<UserStore> _userStoreRepository;
 
-        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, OtpService optService,
+        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, 
+            //OtpService optService,
             IConfiguration config, IMapper mapper, IEmailService emailService, ITokenService tokenService,
             IRepository<UserRefreshToken> userRepo, IRepository<Store> storeRepository, ILogger<AuthService> logger, IRepository<UserStore> userStoreRepository, IRepository<MobileTokenDevice> mobileTokenDevice)
         {
             _userManager = userManager;
-            _optService = optService;
+            //_optService = optService;
             _signInManager = signInManager;
             _configuration = config;
             _mapper = mapper;
@@ -122,7 +123,7 @@ namespace FOCS.Application.Services
 
             if (!user.PhoneNumberConfirmed)
             {
-                await _optService.SendOtpAsync(user.PhoneNumber);
+                //await _optService.SendOtpAsync(user.PhoneNumber);
             }
 
 
