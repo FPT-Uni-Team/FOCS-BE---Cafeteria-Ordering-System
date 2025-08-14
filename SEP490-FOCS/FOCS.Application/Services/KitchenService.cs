@@ -42,8 +42,10 @@ namespace FOCS.Application.Services
 
             // Group orders by StoreId
             var mapOrderWithStore = pendingOrders
-                .GroupBy(o => o.StoreId)
+                .GroupBy(o => o.StoreId)    
                 .ToDictionary(g => g.Key, g => g.ToList());
+
+            Random random = new Random();
 
             foreach (var item in mapOrderWithStore)
             {
@@ -73,6 +75,7 @@ namespace FOCS.Application.Services
                 var orderWrapModel = new OrderWrap
                 {
                     Id = orderWrapId,
+                    Code = random.Next(99999).ToString(),
                     OrderWrapStatus = Common.Enums.OrderWrapStatus.Created,
                     StoreId = currentStoreId,
                     Orders = orders

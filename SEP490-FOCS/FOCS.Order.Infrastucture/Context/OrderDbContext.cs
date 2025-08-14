@@ -39,6 +39,11 @@ namespace FOCS.Order.Infrastucture.Context
 
         public DbSet<UserStore> UserStores { get; set; }
 
+        public DbSet<WorkshiftSchedule> WorkshiftSchedules { get; set; }
+        public DbSet<Workshift> Workshifts { get; set; }
+        public DbSet<StaffWorkshiftRegistration> StaffWorkshiftRegistrations { get; set; }
+
+
         public DbSet<Promotion> Promotions { get; set; }
         public DbSet<PromotionItemCondition> PromotionItemConditions { get; set; }
         public DbSet<Coupon> Coupons { get; set; }

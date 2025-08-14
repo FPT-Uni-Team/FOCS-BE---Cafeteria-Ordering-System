@@ -21,6 +21,8 @@ namespace FOCS.Realtime.Hubs
 
             public static string PaymentSuccess(int tableNumber) => $"Bàn {tableNumber} thanh toán thành công";
             public static string NewOrderAtTable(int tableId) => $"Bàn {tableId} vừa tạo đơn mới";
+
+            public const string PushStaff = "Push";
         }
     }
 }

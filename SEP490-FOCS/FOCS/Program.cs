@@ -18,17 +18,21 @@ using FOCS.NotificationService.Services;
 using FOCS.Order.Infrastucture.Context;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Order.Infrastucture.Interfaces;
+using FOCS.Order.Infrastucture.Migrations;
 using FOCS.Realtime.Hubs;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using StackExchange.Redis;
 using System.Security.Claims;
 using System.Text;
+using OrderEntity = FOCS.Order.Infrastucture.Entities.Order;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +50,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.Configure<EmailModels>(builder.Configuration.GetSection("EmailSettings")); // Bind EmailSettings from appsettings.json to EmailModels class
 builder.Services.Configure<OrderBatchingOptions>(builder.Configuration.GetSection("OrderBatchingOptions"));
+
 
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDBContext>()
@@ -75,9 +80,10 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IRepository<VariantGroup>, Repository<VariantGroup, OrderDbContext>>()
                 .AddScoped<IRepository<OrderWrap>, Repository<OrderWrap, OrderDbContext>>()
                 .AddScoped<ITableService, TableService>()
+                .AddScoped<IOrderWrapService, OrderWrapService>()
                 .AddScoped<IUnitOfWork, UnitOfWork<ApplicationDBContext>>()
                 .AddScoped<IMenuItemVariantService, MenuItemVariantService>()
-                .AddScoped<IRepository<Order>, Repository<Order, OrderDbContext>>()
+                .AddScoped<IRepository<OrderEntity>, Repository<OrderEntity, OrderDbContext>>()
                 .AddScoped<IRepository<MenuItem>, Repository<MenuItem, OrderDbContext>>()
                 .AddScoped<IRepository<Brand>, Repository<Brand, OrderDbContext>>()
                 .AddScoped<IRepository<Store>, Repository<Store, OrderDbContext>>()
@@ -119,16 +125,25 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IRepository<MenuItemCategories>, Repository<MenuItemCategories, OrderDbContext>>()
                 .AddScoped<IRepository<Table>, Repository<Table, OrderDbContext>>()
                 .AddScoped<IAdminMenuItemService, AdminMenuItemService>()
+                .AddScoped<IWorkshiftScheduleService, WorkshiftScheduleService>()
                 .AddScoped<IRepository<MenuItemVariantGroupItem>, Repository<MenuItemVariantGroupItem, OrderDbContext>>()
                 .AddScoped<IRepository<MenuItemVariantGroup>, Repository<MenuItemVariantGroup, OrderDbContext>>()
                 .AddScoped<IMenuItemCategoryService, MenuItemCategoryService>()
                 .AddScoped<IRepository<MenuItemVariantGroup>, Repository<MenuItemVariantGroup, OrderDbContext>>()
                 .AddScoped<IRepository<MenuItemImage>, Repository<MenuItemImage, OrderDbContext>>()
+                .AddScoped<IRepository<Workshift>, Repository<Workshift, OrderDbContext>>()
+                .AddScoped<IRepository<WorkshiftSchedule>, Repository<WorkshiftSchedule, OrderDbContext>>()
+                .AddScoped<IRepository<StaffWorkshiftRegistration>, Repository<StaffWorkshiftRegistration, OrderDbContext>>()
                 .AddScoped<IRepository<SystemConfiguration>, Repository<SystemConfiguration, OrderDbContext>>()
                 .AddSingleton<ICloudinaryService, CloudinaryService>()
                 .AddSingleton<IRedisCacheService, RedisCacheService>();
-;
+
+builder.Services.AddSingleton<OtpService>();
+builder.Services.Configure<EsmsSettings>(builder.Configuration.GetSection("eSMS"));
+builder.Services.AddSingleton<SmsService>();
+
 builder.Services.AddHostedService<OrderBatchingService>();
+builder.Services.AddHostedService<ScanToDeleteCartItem>();
 //builder.Services.AddHostedService<CartFlushBackgroundService>();
 
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
@@ -137,13 +152,31 @@ builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection(
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sql => sql.MigrationsAssembly("FOCS.Infrastructure.Identity")
+        sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null
+            );
+            sqlOptions.MigrationsAssembly("FOCS.Infrastructure.Identity");
+        }
     ));
+
 builder.Services.AddDbContext<OrderDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sql => sql.MigrationsAssembly("FOCS.Order.Infrastucture")
+        sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null
+            );
+            sqlOptions.MigrationsAssembly("FOCS.Order.Infrastucture");
+        }
     ));
+
 
 //auto mapper
 builder.Services.AddAutoMapper(typeof(MappingProfiles).Assembly);
@@ -212,7 +245,21 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddDataProtection();
+var options = ConfigurationOptions.Parse("103.185.184.27:6379");
+options.Password = "Hxs03122003";
+options.AbortOnConnectFail = false;
+options.ConnectRetry = 5;
+options.SyncTimeout = 10000;
+
+var redis = ConnectionMultiplexer.Connect(options);
+
+builder.Services.AddSignalR()
+    .AddStackExchangeRedis("103.185.184.27:6379,password=Hxs03122003,abortConnect=false,connectTimeout=10000");
+
+builder.Services.AddDataProtection()
+    .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys")
+    .SetApplicationName("SEP490FOCS");
+
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -244,7 +291,8 @@ builder.Services.AddCors(options =>
                            "https://adminfocssite.vercel.app",
                            "https://focs-site.vercel.app",
                            "http://localhost:3000",
-                           "https://localhost:3000")
+                           "https://localhost:3000",
+                           "https://focs.vercel.app")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials(); 
@@ -257,7 +305,7 @@ builder.Services.AddMassTransit(x =>
 
     x.UsingRabbitMq((ctx, cfg) =>
     {
-        cfg.Host("103.173.228.119", 5672, "/", h =>
+        cfg.Host("103.185.184.27", 5672, "/", h =>
         {
             h.Username("guest");
             h.Password("guest");
@@ -272,8 +320,6 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-
-builder.Services.AddSignalR().AddStackExchangeRedis("103.173.228.119:6379");
 
 builder.Services.AddAuthentication();
 

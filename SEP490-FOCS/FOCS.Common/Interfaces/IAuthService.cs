@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
-using FOCS.Common.Models;
+﻿using FOCS.Common.Models;
 
 namespace FOCS.Common.Interfaces
 {
     public interface IAuthService
     {
-        Task<bool> RegisterAsync(RegisterRequest request, Guid StoreId);
-        Task<AuthResult> LoginAsync(LoginRequest request, Guid StoreId);
+        Task<bool> RegisterAsync(RegisterRequest request, Guid StoreId, string roles);
+        Task<AuthResult> LoginAsync(LoginRequest request, string? StoreId = null);
         Task<AuthResult> RefreshTokenAsync(string refreshToken, Guid storeId);
         Task LogoutAsync(string userId);
         Task<bool> ConfirmEmailAsync(string email, string token);

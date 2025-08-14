@@ -14,6 +14,7 @@ using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.NotificationService.Models;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Realtime.Hubs;
+using MailKit;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using static MassTransit.ValidationResultExtensions;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static Org.BouncyCastle.Asn1.Cmp.Challenge;
 
@@ -108,8 +110,13 @@ namespace FOCS.Application.Services
             var store = await _storeRepository.GetByIdAsync(order.StoreId);
             ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound);
 
-            var tableInStore = await _tableRepository.FindAsync(x => x.StoreId == store.Id && x.Id == order.TableId);
-            ConditionCheck.CheckCondition(tableInStore.Count() < 1 || tableInStore.Count() > 1 || tableInStore.FirstOrDefault() != null, Errors.OrderError.TableNotFound);
+            Table? table = null;
+
+            if(order.OrderType == OrderType.DineIn)
+            {
+                table = await _tableRepository.AsQueryable().FirstOrDefaultAsync(x => x.Id == order.TableId && x.StoreId == order.StoreId);
+                ConditionCheck.CheckCondition(table != null, Errors.OrderError.TableNotFound);
+            }
 
             // Validate menu items
             await ValidateMenuItemsAsync(order.Items);
@@ -117,29 +124,49 @@ namespace FOCS.Application.Services
             var storeSettings = await _storeSettingService.GetStoreSettingAsync(order.StoreId, userId); 
             ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.StoreNotFound);
 
-            if(order.DiscountResult == null)
-            {
-                order.DiscountResult = new DiscountResultDTO();
-
-                var dictPrice = order.Items
-                   .Distinct()
-                   .Select(x => (x.MenuItemId, x.VariantId))
-                   .ToDictionary();
-
-                var price = await _pricingService.CalculatePriceOfProducts(dictPrice, store!.Id.ToString());
-
-                order.DiscountResult.TotalPrice = (decimal)price;
-            }
-
             //save order and order detail
-            await SaveOrderAsync(order, tableInStore.FirstOrDefault(), store, userId);
+            await SaveOrderAsync(order, table, store, userId);
 
             return order.DiscountResult;
         }
 
-        public async Task<DiscountResultDTO> ApplyDiscountForOrder(ApplyDiscountOrderRequest orderRequest, string userId)
+        public async Task<DiscountResultDTO> ApplyDiscountForOrder(ApplyDiscountOrderRequest orderRequest, string userId, string storeId)
         {
-            ConditionCheck.CheckCondition(orderRequest.CouponCode != null, Errors.Common.NotFound);
+            if(orderRequest.CouponCode == null)
+            {
+                var rs = new DiscountResultDTO();
+
+                double totalOrderAmount = 0;
+                var pricingDict = new Dictionary<(Guid MenuItemId, Guid? VariantId), double>();
+                foreach (var item in orderRequest.Items)
+                {
+                    if (item.Variants != null && item.Variants.Count > 0)
+                    {
+                        foreach (var itemVariant in item.Variants)
+                        {
+                            var price = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, Guid.Parse(storeId));
+                            double itemUnitPrice = price.ProductPrice + (price.VariantPrice ?? 0);
+                            double itemTotalPrice = itemUnitPrice * itemVariant.Quantity;
+
+                            pricingDict[(item.MenuItemId, itemVariant.VariantId)] = itemUnitPrice;
+                            totalOrderAmount += itemTotalPrice;
+                            rs.TotalPrice += (decimal)itemTotalPrice;
+                        }
+                    }
+                    else
+                    {
+                        var price = await _pricingService.GetPriceByProduct(item.MenuItemId, null, Guid.Parse(storeId));
+                        double itemUnitPrice = price.ProductPrice + (price.VariantPrice ?? 0);
+                        double itemTotalPrice = itemUnitPrice * item.Quantity;
+
+                        pricingDict[(item.MenuItemId, null)] = itemUnitPrice;
+                        totalOrderAmount += itemTotalPrice;
+                        rs.TotalPrice += (decimal)itemTotalPrice;
+                    }
+                }
+
+                return rs;
+            }
 
             await _promotionService.IsValidPromotionCouponAsync(orderRequest.CouponCode!, userId.ToString(), orderRequest.StoreId);
 
@@ -327,7 +354,7 @@ namespace FOCS.Application.Services
         }
 
         #region private methods
-        private async Task SaveOrderAsync(CreateOrderRequest order, Table table, Store store, string userId)
+        private async Task SaveOrderAsync(CreateOrderRequest order, Table? table, Store store, string userId)
         {
             Random randomNum = new Random();
 
@@ -338,6 +365,34 @@ namespace FOCS.Application.Services
                 {
                     var coupon = await _couponRepository.FindAsync(x => x.Code == order.DiscountResult.AppliedCouponCode);
                     couponCurrent = coupon.FirstOrDefault()?.Id;
+                }
+
+                //remaining time for order
+                int remainingTimeOrder = 0;
+                {
+                    var dictProduct = order.Items.ToDictionary(
+                            item => item.MenuItemId,
+                            item => item.Variants.Select(x => x.VariantId) ?? new List<Guid>()
+                        );
+
+                    var variantGroupItems = await _menuItemRepository.AsQueryable()
+                                                                    .Where(x => dictProduct.Keys.Contains(x.Id))
+                                                                    .Include(x => x.MenuItemVariantGroups)
+                                                                        .ThenInclude(y => y.MenuItemVariantGroupItems)
+                                                                    .Select(z => z.MenuItemVariantGroups
+                                                                        .Select(v => v.MenuItemVariantGroupItems)
+                                                                        .ToList())
+                                                                    .ToListAsync();
+
+                    var currnetRemainingTimeOrder = variantGroupItems
+                            .SelectMany(listLevel2 => listLevel2) 
+                            .SelectMany(listLevel3 => listLevel3) 
+                            .Where(item => item.IsActive && item.IsAvailable)
+                            .Sum(item => item.PrepPerTime * item.QuantityPerTime);
+
+                    remainingTimeOrder = (await _orderRepository.AsQueryable()
+                        .Where(x => x.PaymentStatus == PaymentStatus.Paid && x.OrderStatus == OrderStatus.Confirmed)
+                        .SumAsync(x => (int?)x.RemainingTime.Value.Minutes ?? 0)) + currnetRemainingTimeOrder;
                 }
 
                 var orderCreate = new Order.Infrastucture.Entities.Order
@@ -361,7 +416,8 @@ namespace FOCS.Application.Services
                         _ => PaymentStatus.Unpaid
                     },
                     CreatedBy = userId,
-                    TableId = table.Id
+                    TableId = order.OrderType == OrderType.DineIn ? order.TableId : null,
+                    RemainingTime = TimeSpan.FromMinutes(remainingTimeOrder)
                 };
 
                 var ordersDetailCreate = new List<OrderDetail>();
@@ -375,16 +431,30 @@ namespace FOCS.Application.Services
 
                         var productId = Guid.Parse(itemCodes[0]);
 
-                        Guid? variantId = null;
-                        if (itemCodes.Length > 1 && Guid.TryParse(itemCodes[1], out var parsedVariantId))
+                        var variantIds = new List<Guid>();
+                        if (itemCodes.Length > 1)
                         {
-                            variantId = parsedVariantId;
+                            var variantIdStrings = itemCodes[1].Split(",", StringSplitOptions.RemoveEmptyEntries);
+                            foreach (var variantIdStr in variantIdStrings)
+                            {
+                                if (Guid.TryParse(variantIdStr, out var vId))
+                                {
+                                    variantIds.Add(vId);
+                                }
+                            }
                         }
 
-                        var price = await _pricingService.GetPriceByProduct(productId, variantId, order.StoreId);
-                        var unitPrice = (double)(price.ProductPrice + price.VariantPrice)!;
+                        var price = await _pricingService.GetPriceByProduct(productId, null, order.StoreId);
+                        double totalVariantPrice = 0;
+                        foreach (var vId in variantIds)
+                        {
+                            var variantPrice = await _pricingService.GetPriceByProduct(productId, vId, order.StoreId);
+                            totalVariantPrice += variantPrice.VariantPrice ?? 0;
+                        }
 
-                        ordersDetailCreate.Add(new OrderDetail
+                        double unitPrice = (double)(price.ProductPrice + totalVariantPrice);
+
+                        ordersDetailCreate.AddRange(variantIds.Select(x => new OrderDetail
                         {
                             Id = Guid.NewGuid(),
                             Quantity = item.Quantity,
@@ -392,10 +462,11 @@ namespace FOCS.Application.Services
                             TotalPrice = unitPrice - (double)item.DiscountAmount,
                             Note = "",
                             MenuItemId = productId,
-                            VariantId = variantId,
+                            VariantId = x,
                             OrderId = orderCreate.Id
-                        });
+                        }).ToList());
                     }
+
                 }
 
                 if (order.DiscountResult.IsUsePoint.HasValue && order.DiscountResult.IsUsePoint == true)
@@ -415,11 +486,8 @@ namespace FOCS.Application.Services
                 _tableRepository.Update(table);
 
                 await _orderRepository.AddAsync(orderCreate);
-                await _orderRepository.SaveChangesAsync();
 
                 await _orderDetailRepository.AddRangeAsync(ordersDetailCreate);
-                await _orderDetailRepository.SaveChangesAsync();
-
                 await _tableRepository.SaveChangesAsync();
 
                 //code order for payment hook
@@ -440,14 +508,22 @@ namespace FOCS.Application.Services
                 
                 await _publishEndpoint.Publish(notifyEventModel);
 
-                var orderDataExchangeRealtime = order.Items.Select(x => new OrderRedisModel
-                {
-                    MenuItemId = x.MenuItemId,
-                    VariantId = x.VariantId,
-                    Quantity = x.Quantity,
-                    Note = x.Note
-                }).ToList();
-                await _realtimeService.SendToGroupAsync<OrderHub, List<OrderRedisModel>>(SignalRGroups.User(store.Id, table.Id, Guid.Parse(userId)), Constants.Method.OrderCreated, orderDataExchangeRealtime);
+                var orderDataExchangeRealtime = order.Items
+                        .SelectMany(item => item.Variants.Select(variant => new OrderRedisModel
+                        {
+                            MenuItemId = item.MenuItemId,
+                            VariantId = variant.VariantId,
+                            Quantity = item.Quantity,
+                            Note = item.Note
+                        }))
+                        .ToList();
+
+                await _realtimeService.SendToGroupAsync<OrderHub, List<OrderRedisModel>>(
+                    SignalRGroups.User(store.Id, table.Id, Guid.Parse(userId)),
+                    Constants.Method.OrderCreated,
+                    orderDataExchangeRealtime
+                );
+
             }
             catch (Exception ex)
             {
@@ -507,7 +583,11 @@ namespace FOCS.Application.Services
         private async Task ValidateMenuItemsAsync(IEnumerable<OrderItemDTO> items)
         {
             var menuItemIds = items.Select(i => i.MenuItemId).ToList();
-            var variantIds = items.Where(i => i.VariantId.HasValue).Select(i => i.VariantId.Value).ToList();
+            var variantIds = items
+                .SelectMany(i => i.Variants ?? new List<CartVariantRedisModel>())
+                .Select(v => v.VariantId)
+                .Distinct()
+                .ToList();
 
             var existingMenuItems = await _menuItemRepository.FindAsync(x => menuItemIds.Contains(x.Id));
             var existingVariants = await _variantRepository.FindAsync(x => variantIds.Contains(x.Id));
@@ -515,35 +595,46 @@ namespace FOCS.Application.Services
             foreach (var item in items)
             {
                 ConditionCheck.CheckCondition(existingMenuItems.Any(x => x.Id == item.MenuItemId), Errors.OrderError.MenuItemNotFound);
-
-                if (item.VariantId.HasValue)
-                    ConditionCheck.CheckCondition(existingVariants.Any(x => x.Id == item.VariantId), Errors.OrderError.MenuItemNotFound);
+                if(item.Variants != null)
+                {
+                    foreach (var itemVariant in item.Variants)
+                    {
+                        if (itemVariant.VariantId != null)
+                            ConditionCheck.CheckCondition(existingVariants.Any(x => x.Id == itemVariant.VariantId), Errors.OrderError.MenuItemNotFound);
+                    }
+                }
             }
         }
 
-        private static IQueryable<Order.Infrastucture.Entities.Order> ApplyFilters(IQueryable<Order.Infrastucture.Entities.Order> query, UrlQueryParameters parameters)
+        private static IQueryable<Order.Infrastucture.Entities.Order> ApplyFilters(
+    IQueryable<Order.Infrastucture.Entities.Order> query,
+    UrlQueryParameters parameters)
         {
-            if (parameters.Filters?.Any() != true) return query;
+            if (parameters.Filters?.Any() != true)
+                return query;
 
             foreach (var (key, value) in parameters.Filters)
             {
-                query = key.ToLowerInvariant() switch
+                if (key.Equals("status", StringComparison.OrdinalIgnoreCase))
                 {
-                  /*  "promotion_type" when Enum.TryParse<PromotionType>(value, true, out var promotionType) =>
-                        query.Where(p => p.PromotionType == promotionType),
-                    "start_date" => query.Where(p => p.StartDate >= DateTime.Parse(value)),
-                    "end_date" => query.Where(p => p.EndDate <= DateTime.Parse(value)),
-                    "status" when Enum.TryParse<PromotionStatus>(value, true, out var status) =>
-                        status switch
+                    var statusValues = value.Split('-')
+                                            .Select(v => v.Trim())
+                                            .ToList();
+
+                    var statuses = new List<OrderStatus>();
+                    foreach (var sv in statusValues)
+                    {
+                        if (Enum.TryParse<OrderStatus>(sv, true, out var parsedStatus))
                         {
-                            PromotionStatus.Incomming => query.Where(p => p.StartDate > DateTime.UtcNow),
-                            PromotionStatus.OnGoing => query.Where(p => p.StartDate <= DateTime.UtcNow && p.EndDate >= DateTime.UtcNow),
-                            PromotionStatus.Expired => query.Where(p => p.EndDate < DateTime.UtcNow),
-                            PromotionStatus.UnAvailable => query.Where(p => p.IsActive == false),
-                            _ => query
-                        },
-                    _ => query*/
-                };
+                            statuses.Add(parsedStatus);
+                        }
+                    }
+
+                    if (statuses.Any())
+                    {
+                        query = query.Where(o => statuses.Contains(o.OrderStatus));
+                    }
+                }
             }
 
             return query;

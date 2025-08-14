@@ -1,10 +1,10 @@
 ﻿using FOCS.Common.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -13,23 +13,78 @@ namespace FOCS.Application.Services
     public class RedisCacheService : IRedisCacheService
     {
         private readonly IDatabase _database;
+        private readonly IConnectionMultiplexer _connection;
 
-        public RedisCacheService(IConfiguration configuration)
+        private readonly ILogger<RedisCacheService> _loggerRedis;
+        public RedisCacheService(IConfiguration configuration, ILogger<RedisCacheService> loggerRedis)
         {
             var connectionString = configuration.GetConnectionString("Redis")
-                            ?? configuration["Redis:ConnectionString"];
+                                ?? configuration["Redis:ConnectionString"];
+            _loggerRedis = loggerRedis;
 
-            var redis = ConnectionMultiplexer.Connect(connectionString);
-            _database = redis.GetDatabase();
+            _connection = ConnectionMultiplexer.Connect(connectionString);
+            _database = _connection.GetDatabase();
         }
 
         public async Task<List<string>> GetKeysByPatternAsync(string pattern)
         {
-            var endpoints = _database.Multiplexer.GetEndPoints();
-            var server = _database.Multiplexer.GetServer(endpoints.First());
+            var endpoints = _connection.GetEndPoints();
+            var server = _connection.GetServer(endpoints.First());
 
             var keys = server.Keys(pattern: pattern).ToList();
             return keys.Select(k => k.ToString()).ToList();
+        }
+
+        public async Task<IEnumerable<RedisKey>> GetAllKeysAsync(string pattern = "*")
+        {
+            var server = _connection.GetServer(_connection.GetEndPoints().First());
+            return server.Keys(pattern: pattern);
+        }
+
+        public async Task<Dictionary<string, T>> GetAllAsync<T>(string pattern = "*")
+        {
+            var server = _connection.GetServer(_connection.GetEndPoints().First());
+            var result = new Dictionary<string, T>();
+            const int batchSize = 1000;
+
+            var keys = server.Keys(pattern: pattern, pageSize: batchSize);
+
+            var batchKeys = new List<RedisKey>(batchSize);
+            foreach (var key in keys)
+            {
+                batchKeys.Add(key);
+                if (batchKeys.Count >= batchSize)
+                {
+                    var values = await _database.StringGetAsync(batchKeys.ToArray());
+                    for (int i = 0; i < batchKeys.Count; i++)
+                    {
+                        if (values[i].HasValue)
+                        {
+                            var obj = JsonSerializer.Deserialize<T>(values[i]);
+                            result[batchKeys[i]] = obj;
+                        } else
+                        {
+                            _loggerRedis.LogInformation($"The key: {key} is empty value");
+                        }
+                    }
+                    batchKeys.Clear();
+                }
+            }
+            // Process remaining keys
+            if (batchKeys.Count > 0)
+            {
+                var values = await _database.StringGetAsync(batchKeys.ToArray());
+                for (int i = 0; i < batchKeys.Count; i++)
+                {
+                    if (values[i].HasValue)
+                    {
+                        var obj = JsonSerializer.Deserialize<T>(values[i]);
+                        result[batchKeys[i]] = obj;
+                    }
+                }
+            }
+
+            return result;
         }
 
 

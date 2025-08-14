@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace FOCS.Common.Models
 {
@@ -11,8 +7,11 @@ namespace FOCS.Common.Models
     {
         [JsonPropertyName("name")]
         public string Name { get; set; }
+
         [JsonPropertyName("default_tax_rate")]
+        [Range(0.01, 1.0, ErrorMessage = "Default Tax Rate must between 0.01 and 1")]
         public double DefaultTaxRate { get; set; }
+
         [JsonPropertyName("is_active")]
         public bool IsActive { get; set; }
     }

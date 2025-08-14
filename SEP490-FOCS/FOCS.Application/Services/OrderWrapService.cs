@@ -1,4 +1,6 @@
-﻿using FOCS.Common.Constants;
+﻿using AutoMapper;
+using FOCS.Application.DTOs.AdminServiceDTO;
+using FOCS.Common.Constants;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Common.Repositories;
@@ -14,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using OrderEntity = FOCS.Order.Infrastucture.Entities.Order;
 
 namespace FOCS.Application.Services
@@ -29,13 +32,16 @@ namespace FOCS.Application.Services
 
         private readonly IMobileTokenSevice _mobileTokenService;
 
-        public OrderWrapService(IRepository<OrderWrap> orderWrapRepo, IMobileTokenSevice mobileTokenService, IRealtimeService realtimeService, IPublishEndpoint publishEndpoint, IRepository<OrderEntity> orderRepo)
+        private readonly IMapper _mapper;
+
+        public OrderWrapService(IRepository<OrderWrap> orderWrapRepo, IMapper mapper, IMobileTokenSevice mobileTokenService, IRealtimeService realtimeService, IPublishEndpoint publishEndpoint, IRepository<OrderEntity> orderRepo)
         {
             _orderWrapRepo = orderWrapRepo;
             _publishEndpoint = publishEndpoint;
             _realtimeService = realtimeService;
             _orderRepo = orderRepo;
             _mobileTokenService = mobileTokenService;
+            _mapper = mapper;
         }
 
         public async Task<bool> ChangeStatusProductionOrder(UpdateStatusProductionOrderRequest dto)
@@ -114,6 +120,60 @@ namespace FOCS.Application.Services
             {
                 return false;
             }
+        }
+
+        public async Task<PagedResult<OrderWrapResponse>> GetListOrderWraps(UrlQueryParameters query, string storeId)
+        {
+            var ordersWrapQuery = _orderWrapRepo.AsQueryable().Include(x => x.Orders).Where(x => x.StoreId == Guid.Parse(storeId));
+
+            //promotionQuery = ApplyFilters(promotionQuery, query);
+            //promotionQuery = ApplySearch(promotionQuery, query);
+            //promotionQuery = ApplySort(promotionQuery, query);
+
+            var total = await ordersWrapQuery.CountAsync();
+            var items = await ordersWrapQuery
+                .Skip((query.Page - 1) * query.PageSize)
+                .Take(query.PageSize)
+            .ToListAsync();
+
+            var rs = ordersWrapQuery.Select(x => new OrderWrapResponse
+            {
+                Code = x.Code,
+                Status = x.OrderWrapStatus,
+                Orders = x.Orders.Select(z => new OrderKithcenResponse
+                {
+                    Code = z.OrderCode.ToString(),
+                    Amount = z.TotalAmount
+                }).ToList()
+            }).ToList();
+
+            return new PagedResult<OrderWrapResponse>(rs, total, query.Page, query.PageSize);
+        }
+
+        public async Task<List<SendOrderWrapDTO>> GetOrderWrapDetail(string code, string storeId)
+        {
+            var orderWrap = await _orderWrapRepo.AsQueryable().FirstOrDefaultAsync(x => x.Code == code && x.StoreId == Guid.Parse(storeId));
+            var orders = await _orderWrapRepo.AsQueryable().Include(x => x.Orders).ThenInclude(x => x.OrderDetails).Where(x => x.Code == code && x.StoreId == Guid.Parse(storeId)).SelectMany(x => x.Orders).ToListAsync();
+
+            var orderDto = _mapper.Map<List<OrderDTO>>(orders);
+
+            var orderWrapRes = orderDto
+                    .SelectMany(order => order.OrderDetails)
+                    .GroupBy(detail => detail.MenuItemId)
+                    .Select(group => new SendOrderWrapDTO
+                    {
+                        OrderWrapId = orderWrap.Id,
+                        MenuItemId = group.Key,
+                        MenuItemName = group.First().MenuItemName,
+                        Variants = group.Select(detail => new VariantWrapOrder
+                        {
+                            VariantId = detail.VariantId,
+                            VariantName = detail.VariantName,
+                            Note = detail.Note
+                        }).ToList()
+                    }).ToList();
+
+            return orderWrapRes;
         }
     }
 }

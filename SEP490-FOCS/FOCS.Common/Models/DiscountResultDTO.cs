@@ -19,13 +19,13 @@ namespace FOCS.Common.Models
         public string? AppliedCouponCode { get; set; }
 
         [JsonPropertyName("applied_promotions")]
-        public List<string> AppliedPromotions { get; set; } = new();
+        public List<string>? AppliedPromotions { get; set; } = new();
 
         [JsonPropertyName("item_discount_details")]
-        public List<DiscountItemDetail> ItemDiscountDetails { get; set; } = new();
+        public List<DiscountItemDetail>? ItemDiscountDetails { get; set; } = new();
 
         [JsonPropertyName("messages")]
-        public List<string> Messages { get; set; } = new();
+        public List<string>? Messages { get; set; } = new();
 
         [JsonPropertyName("is_discount_applied")]
         public bool IsDiscountApplied => TotalDiscount > 0;

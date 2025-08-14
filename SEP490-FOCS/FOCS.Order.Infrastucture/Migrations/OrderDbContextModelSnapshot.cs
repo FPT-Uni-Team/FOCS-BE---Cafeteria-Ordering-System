@@ -604,6 +604,9 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Property<int>("PaymentStatus")
                         .HasColumnType("int");
 
+                    b.Property<TimeSpan?>("RemainingTime")
+                        .HasColumnType("time");
+
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uniqueidentifier");
 
@@ -686,11 +689,27 @@ namespace FOCS.Order.Infrastucture.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("OrderWrapStatus")
                         .HasColumnType("int");
 
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -854,6 +873,44 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.HasIndex("PromotionId");
 
                     b.ToTable("PromotionItemConditions");
+                });
+
+            modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.StaffWorkshiftRegistration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("StaffName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("WorkshiftScheduleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkshiftScheduleId");
+
+                    b.ToTable("StaffWorkshiftRegistrations");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Store", b =>
@@ -1110,6 +1167,79 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("VariantGroups");
+                });
+
+            modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Workshift", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("WorkDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Workshifts");
+                });
+
+            modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.WorkshiftSchedule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("WorkshiftId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkshiftId");
+
+                    b.ToTable("WorkshiftSchedules");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.CartItem", b =>
@@ -1376,6 +1506,17 @@ namespace FOCS.Order.Infrastucture.Migrations
                     b.Navigation("Promotion");
                 });
 
+            modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.StaffWorkshiftRegistration", b =>
+                {
+                    b.HasOne("FOCS.Order.Infrastucture.Entities.WorkshiftSchedule", "WorkshiftSchedule")
+                        .WithMany("StaffWorkshiftRegistrations")
+                        .HasForeignKey("WorkshiftScheduleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorkshiftSchedule");
+                });
+
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Store", b =>
                 {
                     b.HasOne("FOCS.Order.Infrastucture.Entities.Brand", "Brand")
@@ -1418,6 +1559,17 @@ namespace FOCS.Order.Infrastucture.Migrations
                         .IsRequired();
 
                     b.Navigation("Store");
+                });
+
+            modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.WorkshiftSchedule", b =>
+                {
+                    b.HasOne("FOCS.Order.Infrastucture.Entities.Workshift", "Workshift")
+                        .WithMany("WorkshiftSchedules")
+                        .HasForeignKey("WorkshiftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Workshift");
                 });
 
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Brand", b =>
@@ -1466,6 +1618,16 @@ namespace FOCS.Order.Infrastucture.Migrations
             modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.VariantGroup", b =>
                 {
                     b.Navigation("Variants");
+                });
+
+            modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.Workshift", b =>
+                {
+                    b.Navigation("WorkshiftSchedules");
+                });
+
+            modelBuilder.Entity("FOCS.Order.Infrastucture.Entities.WorkshiftSchedule", b =>
+                {
+                    b.Navigation("StaffWorkshiftRegistrations");
                 });
 #pragma warning restore 612, 618
         }

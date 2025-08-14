@@ -15,6 +15,7 @@ namespace FOCS.Common.Exceptions
             public const string Title = "title";
             public const string Email = "email";
             public const string StoreId = "store_id";
+            public const string BrandId = "brand_id";
             public const string UserId = "user_id";
             public const string MenuItemId = "menu_item_id";
             public const string CategoryId = "category_id";
@@ -45,16 +46,17 @@ namespace FOCS.Common.Exceptions
         public static class Common
         {
             public const string NotFound = "Not found";
+            public const string BrandNotFound = "Brand Not found";
             public const string StoreNotFound = "Store Not found";
             public const string UserNotFound = "User Not found";
             public const string Empty = "Empty";
             public const string IsExist = "Exist in system";
-            public const string InvalidGuidFormat = "Invalid Guid format";
+            public const string InvalidGuidFormat = "Invalid Guid format! Please refresh page and retry.";
         }
 
         public static class Checkout
         {
-            public const string MaxUsedCoupon = "Coupon is max used";
+            public const string MaxUsedCoupon = "Coupon has reached maximum usage";
         }
 
         public static class Variant
@@ -70,7 +72,7 @@ namespace FOCS.Common.Exceptions
 
         public static class StoreSetting
         {
-            public const string StoreSettingNotFound = "No store settings found for this store";
+            public const string StoreSettingNotFound = "Cannot found settings";
             public const string SettingExist = "Store have setting already";
             public const string DiscountStrategyNotConfig = "Discount Strategy is not config in system";
         }
@@ -92,14 +94,14 @@ namespace FOCS.Common.Exceptions
 
         public static class Pricing
         {
-            public const string InvalidPrice = "Prduct price is not set";
+            public const string InvalidPrice = "Product price is not set";
         }
 
         public static class OrderError
         {
             public const string MenuItemNotFound = "Item Not Found";
             public const string CouponIsNotValid = "Coupon is not valid";
-            public const string TableNotFound = "Table is not found in system";
+            public const string TableNotFound = "Table is not found in system! Please";
             public const string NotEnoughPoint = "Loyaty point is not enough";
         }
 
@@ -108,10 +110,10 @@ namespace FOCS.Common.Exceptions
             public const string CouponNotFound = "Coupon code not found";
             public const string CouponMaxUsed = "Coupon is max used";
             public const string CouponAssigned = "Coupon has assigned to another promotion";
-            public const string InvalidPeriodDatetime = "Coupon/Promotion is out of date";
+            public const string InvalidPeriodDatetime = "Coupon period must be within the promotion period";
             public const string PromotionNotFound = "Promotion not found";
-            public const string PromotionActive = "Promotion is active now";
-            public const string PromotionInactive = "Promotion is inactive now";
+            public const string PromotionActive = "Promotion is active";
+            public const string PromotionInactive = "Promotion is inactive";
             public const string PromotionTitleExist = "Promotion with this title exists";
             public const string PromotionOverLapping = "A promotion of this type exists in the specified date range.";
             public const string PromotionInvalidDateToActive = "Invalid date to active promotion";
@@ -126,10 +128,10 @@ namespace FOCS.Common.Exceptions
 
         public static class MenuItemError
         {
-            public const string MenuItemActive = "Item is active now";
-            public const string MenuItemInactive = "Item is inactive now";
-            public const string MenuItemAvailable = "Item is available now";
-            public const string MenuItemUnavailable = "Item is unavailable now";
+            public const string MenuItemActive = "Item is active";
+            public const string MenuItemInactive = "Item is inactive";
+            public const string MenuItemAvailable = "Item is available";
+            public const string MenuItemUnavailable = "Item is unavailable";
         }
     }
 }

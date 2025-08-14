@@ -61,6 +61,22 @@ namespace FOCS.Application.Services
             }
         }
 
+        public async Task<FeedbackDTO> UpdatePublicCommentRequest(Guid id, UpdatePublicCommentRequest request, string storeId)
+        {
+            var feedback = await _feedbackRepository.GetByIdAsync(id);
+
+            ConditionCheck.CheckCondition(feedback != null, Errors.Common.NotFound);
+
+            feedback.IsPublic = request.IsPublic;
+            feedback.UpdatedAt = DateTime.UtcNow;
+            feedback.UpdatedBy = storeId;
+
+            _feedbackRepository.Update(feedback);
+            await _feedbackRepository.SaveChangesAsync();
+
+            return _mapper.Map<FeedbackDTO>(feedback);
+        }
+
         public async Task<PagedResult<FeedbackDTO>> GetAllFeedbacksAsync(UrlQueryParameters query, string storeId)
         {
             var feedbackQuery = _feedbackRepository.AsQueryable().Where(p => p.StoreId == Guid.Parse(storeId));
@@ -176,15 +192,20 @@ namespace FOCS.Application.Services
 
             var isDescending = string.Equals(parameters.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
 
-            return parameters.SortBy.ToLowerInvariant() switch
+            if(parameters.SortBy != null)
             {
-                "created_date" => isDescending
-                    ? query.OrderByDescending(p => p.CreatedAt)
-                    : query.OrderBy(p => p.CreatedAt),
-                "rating" => isDescending
-                    ? query.OrderByDescending(p => p.Rating)
-                    : query.OrderBy(p => p.Rating)
-            };
+                query = parameters.SortBy.ToLowerInvariant() switch
+                {
+                    "created_date" => isDescending
+                        ? query.OrderByDescending(p => p.CreatedAt)
+                        : query.OrderBy(p => p.CreatedAt),
+                    "rating" => isDescending
+                        ? query.OrderByDescending(p => p.Rating)
+                        : query.OrderBy(p => p.Rating)
+                };
+            }
+
+            return query;
         }
 
         #endregion

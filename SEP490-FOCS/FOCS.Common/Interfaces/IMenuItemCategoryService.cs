@@ -24,6 +24,7 @@ namespace FOCS.Common.Interfaces
         Task AssignCategoriesToMenuItem(List<Guid> categoryIds, Guid menuItemId, string StoreId);
         Task<List<MenuCategoryDTO>> ListCategoriesWithMenuItem(Guid menuItemId, string storeId);
         Task<bool> RemoveCategoriesFromProduct(RemoveCategoriesFromProductRequest removeCategoriesFromProductRequest, string storeId);
+        Task<bool> DeleteCategory(Guid cateId, Guid guid);
 
         #endregion
     }

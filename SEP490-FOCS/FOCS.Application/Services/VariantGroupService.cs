@@ -86,7 +86,11 @@ namespace FOCS.Application.Services
             await _variantGroupRepo.SaveChangesAsync();
 
 
-            return _mapper.Map<VariantGroupDetailDTO>(variantGroup);
+            return new VariantGroupDetailDTO
+            {
+                Id = variantGroup.Id,
+                GroupName = variantGroup.Name
+            };
         }
 
         public async Task<VariantGroupDetailDTO> GetVariantGroupDetailAsync(Guid variantGroupId, string storeId)

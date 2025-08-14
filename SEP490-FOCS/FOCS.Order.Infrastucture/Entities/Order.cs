@@ -19,13 +19,13 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public OrderStatus OrderStatus { get; set; }
 
-        public OrderType OrderType {  get; set; }
-        
+        public OrderType OrderType { get; set; }
+
         public PaymentStatus PaymentStatus { get; set; }
 
-        public double SubTotalAmout {  get; set; } // total before tax rate and promotion
+        public double SubTotalAmout { get; set; } // total before tax rate and promotion
         public double TaxAmount { get; set; } // tax rate
-        public double DiscountAmount {  get; set; } // discount follow promotion
+        public double DiscountAmount { get; set; } // discount follow promotion
         public double TotalAmount { get; set; } // total after apply tax and promotion
 
         public bool IsDeleted { get; set; } = false;
@@ -36,17 +36,19 @@ namespace FOCS.Order.Infrastucture.Entities
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
         public string? UpdatedBy { get; set; }
 
+        public TimeSpan? RemainingTime {get ;set;} = TimeSpan.Zero;
+
         //Store
         public Guid StoreId {  get; set; }
         public Store Store { get; set; }
 
         //Coupon
         public Guid? CouponId {  get; set; }
-        public Coupon Coupon {  get; set; } 
+        public Coupon? Coupon {  get; set; } 
 
         //Order wrap 
         public Guid? OrderWrapId { get; set; }
-        public OrderWrap OrderWrap { get; set; }
+        public OrderWrap? OrderWrap { get; set; }
 
         //Table
         public Guid? TableId { get; set; }

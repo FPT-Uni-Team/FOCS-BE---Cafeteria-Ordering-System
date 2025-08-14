@@ -53,29 +53,28 @@ namespace FOCS.Application.Services
 
         public async Task<List<VariantGroupResponse>> GetVariantGroupsWithVariants(Guid menuItemId, Guid storeId)
         {
-            var variantGroups = await _menuItemVariantGroupRepository.AsQueryable().Include(x => x.VariantGroup)
-                                                                        .Where(x => x.MenuItemId == menuItemId).ToListAsync();
+            var variantGroups = await _menuItemVariantGroupRepository
+                .AsQueryable()
+                .Where(x => x.MenuItemId == menuItemId)
+                .Include(x => x.VariantGroup)
+                .Include(x => x.MenuItemVariantGroupItems)
+                    .ThenInclude(i => i.MenuItemVariant)
+                .ToListAsync();
 
-            ConditionCheck.CheckCondition(variantGroups != null, Errors.Common.NotFound);
+            ConditionCheck.CheckCondition(variantGroups.Any(), Errors.Common.NotFound);
 
-            var variantGroupResponses = new List<VariantGroupResponse>();
-
-            foreach (var variantGroup in variantGroups)
+            var result = variantGroups.Select(vg =>
             {
-                var variants = await _menuItemVariantGroupItemRepository
-                    .AsQueryable()
-                    .Where(x => x.MenuItemVariantGroupId == variantGroup.Id)
-                    .Include(v => v.MenuItemVariant)
-                    .Select(v => v.MenuItemVariant)
-                    .ToListAsync();
+                var dto = _mapper.Map<VariantGroupResponse>(vg.VariantGroup);
+                dto.PrepPerTime = 1;
+                dto.QuantityPerTime = 1;
+                dto.Variants = _mapper.Map<List<MenuItemVariantDTO>>(
+                    vg.MenuItemVariantGroupItems.Select(i => i.MenuItemVariant).ToList()
+                );
+                return dto;
+            }).ToList();
 
-                var variantGroupDTO = _mapper.Map<VariantGroupResponse>(variantGroup.VariantGroup);
-                variantGroupDTO.Variants = _mapper.Map<List<MenuItemVariantDTO>>(variants);
-
-                variantGroupResponses.Add(variantGroupDTO);
-            }
-
-            return variantGroupResponses;
+            return result;
         }
 
         public async Task<bool> RemoveVariantGroupsFromProduct(RemoveVariantGroupFromProduct request, Guid menuItemId, string storeId)

@@ -6,6 +6,7 @@ using FOCS.Common.Models.CartModels;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Realtime.Hubs;
+using MassTransit.Initializers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ using Net.payOS.Types;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
@@ -66,10 +68,13 @@ namespace FOCS.Application.Services
 
             if (existingItem != null)
             {
+                existingItem.CreatedTime = DateTime.UtcNow;
                 existingItem.Quantity += item.Quantity;
             }
             else
             {
+                item.CreatedTime = DateTime.UtcNow;
+                item.Id = Guid.NewGuid();
                 cart.Add(item);
             }
 
@@ -119,6 +124,7 @@ namespace FOCS.Application.Services
             if (cartItems == null) return;
 
             var itemToRemove = cartItems.FirstOrDefault(x => x.MenuItemId == menuItemId);
+
             if (itemToRemove == null) return;
 
             if (variants != null && variants.Any())
@@ -163,6 +169,72 @@ namespace FOCS.Application.Services
         }
 
 
+        public async Task<Guid> RemoveItemAsync(string id, Dictionary<string, List<CartItemRedisModel>> allCartItems)
+        {
+            if (!Guid.TryParse(id, out Guid parsedId))
+                return Guid.Empty;
+
+            foreach (var kvp in allCartItems)
+            {
+                var cartItems = kvp.Value;
+                var itemToRemove = cartItems.FirstOrDefault(x => x.Id == parsedId);
+
+                if (itemToRemove != null)
+                {
+                    cartItems.Remove(itemToRemove);
+                    await _redisCacheService.SetAsync(kvp.Key, cartItems);
+                    return parsedId;
+                }
+            }
+
+            return Guid.Empty;
+        }
+
+        public async Task<List<ScanModelResponse>> ScanAndRemoveExpiryItem()
+        {
+            var delItems = await ScanItemsExpiryDate();
+            var rs = new List<ScanModelResponse>();
+
+            foreach (var kvp in delItems)
+            {
+                foreach (var itemProduct in kvp.Value)
+                {
+                    var removedId = await RemoveItemAsync(itemProduct.Id.ToString(), delItems);
+
+                    if (removedId != Guid.Empty)
+                    {
+                        rs.Add(new ScanModelResponse
+                        {
+                            Key = kvp.Key,
+                            RemovedId = removedId
+                        });
+                    }
+                }
+            }
+            return rs;
+        }
+
+
+        private async Task<Dictionary<string, List<CartItemRedisModel>>> ScanItemsExpiryDate()
+        {
+            var rs = new Dictionary<string, List<CartItemRedisModel>>();
+
+            var allItems = await _redisCacheService.GetAllAsync<List<CartItemRedisModel>>();
+
+            foreach (var kvp in allItems)
+            {
+                var expiredItems = kvp.Value
+                    .Where(item => DateTime.UtcNow - item.CreatedTime >= TimeSpan.FromHours(1))
+                    .ToList();
+
+                if (expiredItems.Any())
+                {   
+                    rs[kvp.Key] = expiredItems;
+                }
+            }
+
+            return rs;
+        }
 
         public string GetCartKey(Guid tableId, string storeId)
         {

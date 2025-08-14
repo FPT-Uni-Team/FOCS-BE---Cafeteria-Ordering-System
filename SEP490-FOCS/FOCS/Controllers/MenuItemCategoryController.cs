@@ -10,7 +10,7 @@ using System.Text.Json.Serialization;
 namespace FOCS.Controllers
 {
     [Route("api/menu-item-category")]
-    [Authorize(Roles = Roles.Manager +","+ Roles.Admin)]
+    [Authorize(Roles = Roles.Manager + "," + Roles.Admin)]
     [ApiController]
     public class MenuItemCategoryController : FocsController
     {
@@ -46,7 +46,7 @@ namespace FOCS.Controllers
         }
 
         [HttpDelete("{cateId}")]
-        public async Task<bool> RemoveMenuItemFromCategory(Guid cateId,[FromBody] List<Guid> menuItemIds)
+        public async Task<bool> RemoveMenuItemFromCategory(Guid cateId, [FromBody] List<Guid> menuItemIds)
         {
             return await _menuItemCategoryService.RemoveMenuItemFromCategory(cateId, menuItemIds);
         }
@@ -62,5 +62,15 @@ namespace FOCS.Controllers
         {
             return await _menuItemCategoryService.ListCategoriesWithMenuItems(urlQueryParameters, Guid.Parse(StoreId));
         }
+
+
+        [HttpDelete("{cateId}/category")]
+        public async Task<IActionResult> DeleteCategory(Guid cateId)
+        {
+            var cate = await _menuItemCategoryService.DeleteCategory(cateId, Guid.Parse(StoreId));
+
+            return Ok(cate);
+        }
+
     }
 }

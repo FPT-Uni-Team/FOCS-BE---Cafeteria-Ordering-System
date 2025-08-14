@@ -1,13 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Formats.Asn1;
+﻿using FOCS.Application.Services;
+using FOCS.Common.Constants;
+using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
-using System.Security.Claims;
-using MimeKit.Cryptography;
-using FOCS.Common.Exceptions;
 using FOCS.Common.Utils;
-using FOCS.Order.Infrastucture.Entities;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
@@ -17,31 +14,52 @@ namespace FOCS.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IConfiguration _configuration;
+        private readonly OtpService _smsService;
 
-        public AuthController(IAuthService authService, IConfiguration configuration)
+        public AuthController(IAuthService authService, IConfiguration configuration, OtpService smsService)
         {
             _authService = authService;
+            _smsService = smsService;
             _configuration = configuration;
         }
 
         [HttpPost("login")]
-        public async Task<AuthResult> LoginAsync(LoginRequest loginRequest, [FromHeader] string storeId)
+        public async Task<IActionResult> LoginAsync(LoginRequest loginRequest)
         {
-            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
-            return await _authService.LoginAsync(loginRequest, storeIdGuid);
+            return (await _authService.LoginAsync(loginRequest, StoreId)).IsSuccess == true ? Ok(await _authService.LoginAsync(loginRequest, StoreId)) : BadRequest(await _authService.LoginAsync(loginRequest, StoreId));
         }
 
         [HttpPost("register")]
-        public async Task<bool> RegisterAsync(RegisterRequest registerRequest)
+        public async Task<bool> RegisterAsUserAsync(RegisterRequest registerRequest)
         {
             ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
-            return await _authService.RegisterAsync(registerRequest, storeIdGuid);
+            return await _authService.RegisterAsync(registerRequest, storeIdGuid, Roles.User);
+        }
+
+        [HttpPost("admin/register")]
+        public async Task<bool> RegisterAsAdminAsync(RegisterRequest registerRequest)
+        {
+            return await _authService.RegisterAsync(registerRequest, Guid.Empty, Roles.Admin);
         }
 
         [HttpPost("logout")]
         public async Task Logout()
         {
             await _authService.LogoutAsync(UserId);
+        }
+
+        [HttpPost("send-otp")]
+        public async Task<IActionResult> SendOTP([FromQuery] string phone)
+        {
+            await _smsService.SendOtpAsync(phone);
+            return Ok();
+        }
+
+        [HttpPost("verify-otp")]
+        public async Task<IActionResult> VerifyOTP([FromQuery] string phone, [FromQuery] string otp)
+        {
+            await _smsService.VerifyOtpAsync(phone, otp);
+            return Ok();
         }
 
         [HttpPost("forgot-password")]
@@ -74,7 +92,7 @@ namespace FOCS.Controllers
             var result = await _authService.ConfirmEmailAsync(email, token);
             if (result)
             {
-                return Redirect(_configuration["applicationProductUrl:BaseStoreFrontUrl"] + "/en/sign-in");
+                return Redirect(_configuration["applicationProductUrl:BaseStoreFrontUrl"] + "/vi/sign-in");
             }
             else
             {

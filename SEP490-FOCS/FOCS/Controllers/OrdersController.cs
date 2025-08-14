@@ -37,19 +37,19 @@ namespace FOCS.Controllers
         }
 
         [HttpPost]
-        public async Task<DiscountResultDTO> CreateOrderAsync([FromBody] CreateOrderRequest request)
+        public async Task<DiscountResultDTO> CreateOrderAsync([FromBody] CreateOrderRequest request, [FromHeader(Name = "actorId")] string actorId)
         {
-            return await _orderService.CreateOrderAsync(request, UserId);
+            return await _orderService.CreateOrderAsync(request, UserId ?? actorId);
         }
 
         [HttpPost("{actorId}/apply-discount")]
         public async Task<DiscountResultDTO> ApplyDiscountForOrder([FromBody] ApplyDiscountOrderRequest request, string actorId)
         {
-            return await _orderService.ApplyDiscountForOrder(request, UserId ?? actorId);
+            return await _orderService.ApplyDiscountForOrder(request, UserId ?? actorId, StoreId);
         }
 
         [HttpGet("{orderId}")]
-        public async Task<OrderDTO> GetOrderDetailAsync(Guid orderId)
+        public async Task<OrderDTO> GetOrderDetailAsync(Guid orderId)   
         {
             return await _orderService.GetUserOrderDetailAsync(Guid.Parse(UserId), orderId);
         }

@@ -18,7 +18,7 @@ namespace FOCS.Common.Interfaces
 
         Task<OrderDTO> GetOrderByCodeAsync(long orderCode);
 
-        Task<DiscountResultDTO> ApplyDiscountForOrder(ApplyDiscountOrderRequest request, string userId);
+        Task<DiscountResultDTO> ApplyDiscountForOrder(ApplyDiscountOrderRequest request, string userId, string storeId);
 
 
         #endregion

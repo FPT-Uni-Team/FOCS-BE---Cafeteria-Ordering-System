@@ -63,6 +63,29 @@ namespace FOCS.Application.Services
             }
         }
 
+        public async Task<bool> DeleteCategory(Guid cateId, Guid storeId)
+        {
+            try
+            {
+                var cate = await _categoryService.GetById(cateId, storeId);
+
+                var associateWithProduct = await _menuItemCategoryRepository.AsQueryable().Where(x => x.CategoryId == cateId).ToListAsync();
+
+                if(associateWithProduct != null)
+                {
+                    _menuItemCategoryRepository.RemoveRange(associateWithProduct);
+                }
+
+                await _categoryService.RemoveCategory(cate.Id, storeId.ToString());
+
+                return true;
+
+            } catch(Exception ex)
+            {
+                return false;
+            }
+        }
+
         public async Task<List<MenuCategoryDTO>> ListCategoriesWithMenuItem(Guid menuItemId, string storeId)
         {
             var categories = await _menuItemCategoryRepository.AsQueryable().Include(x => x.Category).Include(x => x.MenuItem).Where(x => x.MenuItemId == menuItemId && x.CreatedBy == storeId).ToListAsync();

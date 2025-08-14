@@ -9,6 +9,7 @@ using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using MimeKit.Cryptography;
 using System.Runtime.CompilerServices;
 
 namespace FOCS.Application.Services
@@ -17,23 +18,33 @@ namespace FOCS.Application.Services
     {
         private readonly IRepository<Store> _storeRepository;
         private readonly IRepository<StoreSetting> _storeSettingRepository;
+        private readonly IRepository<Brand> _brandRepository;
         private readonly IRepository<PaymentAccount> _paymentAccountRepository;
         private readonly IMapper _mapper;
 
         private readonly IDataProtector _dataProtector;
 
-        public AdminStoreService(IRepository<Store> storeRepository, IRepository<PaymentAccount> paymentAccountRepository, IRepository<StoreSetting> storeSettingRepository, IMapper mapper, IDataProtectionProvider dataProtector)
+        public AdminStoreService(IRepository<Store> storeRepository, IRepository<PaymentAccount> paymentAccountRepository, IRepository<StoreSetting> storeSettingRepository, IMapper mapper, IDataProtectionProvider dataProtector, IRepository<Brand> brandRepository)
         {
             _paymentAccountRepository = paymentAccountRepository;
             _storeRepository = storeRepository;
             _storeSettingRepository = storeSettingRepository;
             _mapper = mapper;
             _dataProtector = dataProtector.CreateProtector("PayOS.Protection");
+            _brandRepository = brandRepository;
         }
 
+        public async Task<StoreAdminDTO> GetById(Guid id)
+        {
+            var store = await _storeRepository.GetByIdAsync(id);
+
+            ConditionCheck.CheckCondition(store != null, Errors.Common.NotFound);
+
+            return _mapper.Map<StoreAdminDTO>(store);
+        }
         public async Task<StoreAdminDTO> CreateStoreAsync(StoreAdminDTO dto, string userId)
         {
-            CheckValidInput(userId);
+            await CheckValidInput(userId, dto.BrandId);
 
             var newStore = _mapper.Map<Store>(dto);
             newStore.Id = Guid.NewGuid();
@@ -83,7 +94,8 @@ namespace FOCS.Application.Services
                 await _paymentAccountRepository.SaveChangesAsync();
 
                 return true;
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return false;
             }
@@ -136,7 +148,7 @@ namespace FOCS.Application.Services
 
         public async Task<PagedResult<StoreAdminDTO>> GetAllStoresAsync(UrlQueryParameters query, string userId)
         {
-            CheckValidInput(userId);
+            await CheckValidInput(userId);
             var storeQuery = _storeRepository.AsQueryable().Include(i => i.Brand).Where(s => !s.IsDeleted && s.Brand.CreatedBy.Equals(userId));
 
             // Search
@@ -168,6 +180,19 @@ namespace FOCS.Application.Services
                 };
             }
 
+            if (query.Filters?.Any() == true)
+            {
+                foreach (var (key, value) in query.Filters)
+                {
+                    var filterValue = value.ToLower();
+                    storeQuery = key.ToLowerInvariant() switch
+                    {
+                        "brand_id" => storeQuery.Where(p => p.Brand.Id.ToString().Equals(filterValue)),
+                        _ => storeQuery
+                    };
+                }
+            }
+
             // Pagination
             var total = await storeQuery.CountAsync();
             var items = await storeQuery
@@ -181,7 +206,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> UpdateStoreAsync(Guid id, StoreAdminDTO dto, string userId)
         {
-            CheckValidInput(userId);
+            await CheckValidInput(userId, dto.BrandId);
             var store = await _storeRepository.GetByIdAsync(id);
             if (store == null || store.IsDeleted)
                 return false;
@@ -196,7 +221,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> DeleteStoreAsync(Guid id, string userId)
         {
-            CheckValidInput(userId);
+            await CheckValidInput(userId);
             var store = await _storeRepository.GetByIdAsync(id);
             if (store == null || store.IsDeleted)
                 return false;
@@ -209,12 +234,18 @@ namespace FOCS.Application.Services
             return true;
         }
 
-        public void CheckValidInput(string userId)
+        public async Task CheckValidInput(string userId, Guid? brandId = null)
         {
             //check userId is not null or empty
             if (string.IsNullOrWhiteSpace(userId))
             {
                 throw new ArgumentException("UserId is required(Please login).");
+            }
+
+            if (brandId.HasValue)
+            {
+                var brand = await _brandRepository.GetByIdAsync(brandId);
+                ConditionCheck.CheckCondition(brand != null, Errors.Common.BrandNotFound, Errors.FieldName.BrandId);
             }
         }
     }

@@ -60,10 +60,10 @@ namespace FOCS.Application.Services
 
         public async Task<PromotionDTO> CreatePromotionAsync(PromotionDTO dto, Guid storeId, string userId)
         {
+            await ValidateStoreExists(storeId);
             await ValidateUser(userId, storeId);
             await ValidatePromotionDto(dto);
             await ValidatePromotionUniqueness(dto, storeId);
-            await ValidateStoreExists(storeId);
 
             var coupons = await ValidateCoupons(dto.CouponIds, dto.StartDate, dto.EndDate, storeId);
 
@@ -119,9 +119,9 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(promotionId == dto.Id, Errors.Common.NotFound, Errors.FieldName.Id);
             var promotion = await GetAvailablePromotionById(promotionId);
             if (promotion == null) return false;
+            await ValidateStoreExists(storeId);
             await ValidateUser(userId, promotion.StoreId);
             await ValidatePromotionUniqueness(dto, storeId);
-            await ValidateStoreExists(storeId);
 
             if (promotion.IsActive &&
                     promotion.StartDate <= DateTime.UtcNow && promotion.EndDate >= DateTime.UtcNow)
@@ -135,11 +135,11 @@ namespace FOCS.Application.Services
                 var coupons = await ValidateCoupons(dto.CouponIds, dto.StartDate, dto.EndDate, storeId, promotionId);
                 promotion.Coupons = coupons;
                 _mapper.Map(dto, promotion);
-            }
 
-            if (promotion.PromotionType == PromotionType.BuyXGetY)
-            {
-                await CreateOrUpdatePromotionItemCondition(dto, promotion.Id);
+                if (promotion.PromotionType == PromotionType.BuyXGetY)
+                {
+                    await CreateOrUpdatePromotionItemCondition(dto, promotion.Id);
+                }
             }
 
             UpdateAuditFields(promotion, userId);
@@ -183,7 +183,7 @@ namespace FOCS.Application.Services
             if (promotion == null) return false;
 
             await ValidateUser(userId, promotion.StoreId);
-            ConditionCheck.CheckCondition(!promotion.IsActive, Errors.PromotionError.PromotionActive, Errors.FieldName.IsActive);
+            //ConditionCheck.CheckCondition(!promotion.IsActive, Errors.PromotionError.PromotionActive, Errors.FieldName.IsActive);
             promotion.IsDeleted = true;
             UpdateAuditFields(promotion, userId);
             await _promotionRepository.SaveChangesAsync();
@@ -212,11 +212,11 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(coupon.CountUsed < coupon.MaxUsage, Errors.PromotionError.CouponMaxUsed, Errors.FieldName.CouponMaxUsed);
 
             //Validate max use per user
-            if (!string.IsNullOrWhiteSpace(userId))
-            {
-                var couponUsageTime = await _couponUsageRepository.FindAsync(x => x.UserId == Guid.Parse(userId) && x.CouponId == coupon.Id);
-                ConditionCheck.CheckCondition(couponUsageTime.Count() <= coupon.MaxUsagePerUser, Errors.PromotionError.CouponMaxUsed, Errors.FieldName.CouponMaxUsed);
-            }
+            //if (!string.IsNullOrWhiteSpace(userId))
+            //{
+            //    var couponUsageTime = await _couponUsageRepository.FindAsync(x => x.UserId == Guid.Parse(userId) && x.CouponId == coupon.Id);
+            //    ConditionCheck.CheckCondition(couponUsageTime.Count() <= coupon.MaxUsagePerUser, Errors.PromotionError.CouponMaxUsed, Errors.FieldName.CouponMaxUsed);
+            //}
 
             var currentDate = DateTime.UtcNow;
             ConditionCheck.CheckCondition(currentDate >= coupon.StartDate && currentDate <= coupon.EndDate, Errors.PromotionError.InvalidPeriodDatetime, Errors.FieldName.EndDate);
@@ -249,11 +249,21 @@ namespace FOCS.Application.Services
                 .OrderByDescending(x => x.DiscountValue)
                 .FirstOrDefaultAsync();
 
-            decimal totalBeforeDiscount = discountResult.TotalPrice;
-            decimal fixedDiscountAmount = (decimal)promotionFixed?.DiscountValue!;
-            decimal percentDiscountAmount = promotionPercent != null
+            decimal fixedDiscountAmount = 0;
+            decimal percentDiscountAmount = 0;
+            var totalBeforeDiscount = discountResult.TotalPrice;
+
+            if (promotionFixed != null)
+            {
+                fixedDiscountAmount = (decimal)promotionFixed?.DiscountValue!;
+            }
+
+            if(promotionPercent != null)
+            {
+                percentDiscountAmount = promotionPercent != null
                 ? totalBeforeDiscount * ((decimal)promotionPercent.DiscountValue! / 100)
-                : 0;
+               : 0;
+            }
 
             if (fixedDiscountAmount == 0 && percentDiscountAmount == 0)
                 return discountResult;

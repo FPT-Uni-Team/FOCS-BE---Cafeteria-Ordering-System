@@ -48,9 +48,9 @@ namespace FOCS.Application.Services.ApplyStrategy
                 return result;
 
             var coupon = (await _couponRepository.FindAsync(x => x.Code == couponCode && x.StoreId == order.StoreId))?.FirstOrDefault();
-            var countUsedCoupon = await _couponUsageRepo.AsQueryable().CountAsync(x => x.CouponId == coupon.Id);
+            //var countUsedCoupon = await _couponUsageRepo.AsQueryable().CountAsync(x => x.CouponId == coupon.Id);
 
-            ConditionCheck.CheckCondition(coupon.MaxUsage < countUsedCoupon, Errors.Checkout.MaxUsedCoupon);
+            //ConditionCheck.CheckCondition(coupon.MaxUsage < countUsedCoupon, Errors.Checkout.MaxUsedCoupon);
 
             if (coupon == null)
                 return result;
@@ -62,13 +62,30 @@ namespace FOCS.Application.Services.ApplyStrategy
 
             foreach (var item in order.Items)
             {
-                var price = await _pricingService.GetPriceByProduct(item.MenuItemId, item.VariantId, order.StoreId);
-                double itemUnitPrice = price.ProductPrice + (price.VariantPrice ?? 0);
-                double itemTotalPrice = itemUnitPrice * item.Quantity;
+                if (item.Variants != null && item.Variants.Count > 0)
+                {
+                    foreach (var itemVariant in item.Variants)
+                    {
+                        var price = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, order.StoreId);
+                        double itemUnitPrice = price.ProductPrice + (price.VariantPrice ?? 0);
+                        double itemTotalPrice = itemUnitPrice * itemVariant.Quantity;
 
-                pricingDict[(item.MenuItemId, item.VariantId)] = itemUnitPrice;
-                totalOrderAmount += itemTotalPrice;
-                result.TotalPrice += (decimal)itemTotalPrice;
+                        pricingDict[(item.MenuItemId, itemVariant.VariantId)] = itemUnitPrice;
+                        totalOrderAmount += itemTotalPrice;
+                        result.TotalPrice += (decimal)itemTotalPrice;
+                    }
+                }
+                else
+                {
+                    var price = await _pricingService.GetPriceByProduct(item.MenuItemId, null, order.StoreId);
+                    double itemUnitPrice = price.ProductPrice + (price.VariantPrice ?? 0);
+                    double itemTotalPrice = itemUnitPrice * item.Quantity;
+
+                    pricingDict[(item.MenuItemId, null)] = itemUnitPrice;
+                    totalOrderAmount += itemTotalPrice;
+                    result.TotalPrice += (decimal)itemTotalPrice;
+                }
+
             }
 
             HashSet<Guid>? acceptedItems = coupon.AcceptForItems?.Select(Guid.Parse).ToHashSet();
@@ -106,23 +123,50 @@ namespace FOCS.Application.Services.ApplyStrategy
                         continue;
                 }
 
-                if (coupon.MinimumItemQuantity.HasValue && item.Quantity < coupon.MinimumItemQuantity)
-                    continue;
-
-                var key = (item.MenuItemId, item.VariantId);
-                if (!pricingDict.TryGetValue(key, out double unitPrice)) continue;
-
-                double itemDiscount = CalculateDiscount(coupon.DiscountType, coupon.Value, unitPrice) * item.Quantity;
-                totalDiscount += itemDiscount;
-
-                result.ItemDiscountDetails.Add(new DiscountItemDetail
+                if (item.Variants == null || item.Variants.Count <= 0)
                 {
-                    DiscountAmount = (decimal)itemDiscount,
-                    ItemCode = GenerateItemCode(item),
-                    ItemName = item.MenuItemId.ToString(),
-                    Quantity = item.Quantity,
-                    Source = $"Coupon_{coupon.DiscountType}"
-                });
+                    if (coupon.MinimumItemQuantity.HasValue && item.Quantity < coupon.MinimumItemQuantity)
+                        continue;
+
+                    var key = (item.MenuItemId, (Guid?)null);
+                    if (!pricingDict.TryGetValue(key, out double unitPrice)) continue;
+
+                    double itemDiscount = CalculateDiscount(coupon.DiscountType, coupon.Value, unitPrice) * item.Quantity;
+                    totalDiscount += itemDiscount;
+
+                    result.ItemDiscountDetails.Add(new DiscountItemDetail
+                    {
+                        DiscountAmount = (decimal)itemDiscount,
+                        ItemCode = GenerateItemCode(item),
+                        ItemName = item.MenuItemId.ToString(),
+                        Quantity = item.Quantity,
+                        Source = $"Coupon {coupon.DiscountType}"
+                    });
+
+                    continue;
+                }
+
+                foreach (var itemVariant in item.Variants)
+                {
+                    if (coupon.MinimumItemQuantity.HasValue && itemVariant.Quantity < coupon.MinimumItemQuantity)
+                        continue;
+
+                    var key = (item.MenuItemId, itemVariant.VariantId);
+                    if (!pricingDict.TryGetValue(key, out double unitPrice)) continue;
+
+                    double itemDiscount = CalculateDiscount(coupon.DiscountType, coupon.Value, unitPrice) * itemVariant.Quantity;
+                    totalDiscount += itemDiscount;
+
+                    result.ItemDiscountDetails.Add(new DiscountItemDetail
+                    {
+                        DiscountAmount = (decimal)itemDiscount,
+                        ItemCode = GenerateItemCode(item),
+                        ItemName = item.MenuItemId.ToString(),
+                        Quantity = itemVariant.Quantity,
+                        Source = $"Coupon {coupon.DiscountType}"
+                    });
+                }
+
             }
 
             result.TotalDiscount = (decimal)totalDiscount;
@@ -142,8 +186,8 @@ namespace FOCS.Application.Services.ApplyStrategy
 
         private static string GenerateItemCode(OrderItemDTO item)
         {
-            return item.VariantId != null
-                ? $"{item.MenuItemId}_{item.VariantId}"
+            return item.Variants != null
+                ? $"{item.MenuItemId}_{string.Join("_", item.Variants.Select(x => x.VariantId))}"
                 : $"{item.MenuItemId}";
         }
 

@@ -9,6 +9,9 @@ namespace FOCS.Common.Models.CartModels
 {
     public class CartItemRedisModel
     {
+        [JsonIgnore]
+        public Guid Id { get; set; }
+
         [JsonPropertyName("menu_item_id")]
         public Guid MenuItemId { get; set; }
 
@@ -20,6 +23,9 @@ namespace FOCS.Common.Models.CartModels
 
         [JsonPropertyName("note")]
         public string? Note { get; set; }
+
+        [JsonIgnore]
+        public DateTime? CreatedTime { get; set; }
     }
 
     public class CartVariantRedisModel
