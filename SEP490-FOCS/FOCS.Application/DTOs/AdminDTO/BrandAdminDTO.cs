@@ -6,6 +6,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
     public class BrandAdminDTO
     {
         [JsonPropertyName("id")]
+        [Required]
         public Guid? Id { get; set; }
         [JsonPropertyName("name")]
         public string Name { get; set; }

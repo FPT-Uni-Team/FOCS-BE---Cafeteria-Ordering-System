@@ -7,10 +7,13 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
     {
         [JsonPropertyName("id")]
         public Guid? Id { get; set; }
+        [Required]
         [JsonPropertyName("name")]
         public string Name { get; set; }
+        [Required]
         [JsonPropertyName("address")]
         public string Address { get; set; }
+        [Required]
         [JsonPropertyName("phone_number")]
         [StringLength(11, ErrorMessage = "Phone number must have 10 to 11 digits.", MinimumLength = 10)]
         [RegularExpression(@"^\d+$", ErrorMessage = "Phone number must be digits.")]

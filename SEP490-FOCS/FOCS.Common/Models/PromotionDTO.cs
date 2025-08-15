@@ -12,6 +12,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
         public Guid? Id { get; set; }
 
         [JsonPropertyName("title")]
+        [Required]
         public string Title { get; set; }
 
         [JsonPropertyName("description")]
@@ -92,6 +93,13 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
             ConditionCheck.CheckCondition(StartDate < EndDate,
                                                 Errors.PromotionError.StartDateAfterEndDate,
                                                 Errors.FieldName.EndDate);
+
+            if (PromotionType == PromotionType.Percentage)
+            {
+                ConditionCheck.CheckCondition(DiscountValue < 100,
+                                                    Errors.PromotionError.MaxPercentageDiscountValue,
+                                                    Errors.FieldName.DiscountValue);
+            }
 
             if (PromotionType == PromotionType.BuyXGetY)
             {
