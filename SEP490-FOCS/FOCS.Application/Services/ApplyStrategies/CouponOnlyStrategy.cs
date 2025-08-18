@@ -70,8 +70,8 @@ namespace FOCS.Application.Services.ApplyStrategy
                     {
                         var currentVariantPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, order.StoreId);
                         totalVariantPrice += (double)(currentVariantPrice.VariantPrice * itemVariant.Quantity);
+                        pricingDict[(item.MenuItemId, itemVariant.VariantId)] = totalVariantPrice + currentProductPrice.ProductPrice;
                     }
-
                     result.TotalPrice += (decimal)(currentProductPrice.ProductPrice + totalVariantPrice) * item.Quantity;
                 }
                 else
