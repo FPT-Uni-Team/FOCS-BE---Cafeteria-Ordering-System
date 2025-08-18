@@ -49,6 +49,8 @@ namespace FOCS.Order.Infrastucture.Entities
         //promotion
         public Guid? PromotionId {  get; set; }
         public Promotion? Promotion { get; set; }
+
+        public ICollection<CouponUsage> CouponUsages { get; set; }
     }
 
 }

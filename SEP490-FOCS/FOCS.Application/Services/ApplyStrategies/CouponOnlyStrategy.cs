@@ -64,16 +64,15 @@ namespace FOCS.Application.Services.ApplyStrategy
             {
                 if (item.Variants != null && item.Variants.Count > 0)
                 {
+                    double totalVariantPrice = 0;
+                    var currentProductPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, null, order.StoreId);
                     foreach (var itemVariant in item.Variants)
                     {
-                        var price = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, order.StoreId);
-                        double itemUnitPrice = price.ProductPrice + (price.VariantPrice ?? 0);
-                        double itemTotalPrice = itemUnitPrice * itemVariant.Quantity;
-
-                        pricingDict[(item.MenuItemId, itemVariant.VariantId)] = itemUnitPrice;
-                        totalOrderAmount += itemTotalPrice;
-                        result.TotalPrice += (decimal)itemTotalPrice;
+                        var currentVariantPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, order.StoreId);
+                        totalVariantPrice += (double)(currentVariantPrice.VariantPrice * itemVariant.Quantity);
                     }
+
+                    result.TotalPrice += (decimal)(currentProductPrice.ProductPrice + totalVariantPrice) * item.Quantity;
                 }
                 else
                 {

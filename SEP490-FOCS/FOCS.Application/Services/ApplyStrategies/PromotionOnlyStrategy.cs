@@ -54,25 +54,28 @@ namespace FOCS.Application.Services.ApplyStrategy
                     ItemDiscountDetails = new List<DiscountItemDetail>()
                 };
 
+                var allProducts = await _menuService.GetMenuItemByIds(order.Items.Select(x => x.MenuItemId).ToList() , order.StoreId);
+
                 foreach (var item in order.Items)
                 {
-                    foreach(var itemVariant in item.Variants)
+                    double totalPrice = 0;
+                    foreach (var itemVariant in item.Variants)
                     {
                         var pricing = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, order.StoreId);
-                        double itemPrice = (double)(pricing.ProductPrice) + (double)(pricing.VariantPrice ?? 0);
-                        double totalItemPrice = itemPrice * item.Quantity;
-
-                        resultNotApply.TotalPrice += (decimal)totalItemPrice;
-
-                        resultNotApply.ItemDiscountDetails.Add(new DiscountItemDetail
-                        {
-                            BuyItemCode = $"{item.MenuItemId}_{itemVariant.VariantId}",
-                            BuyItemName = $"{item.MenuItemId}",
-                            DiscountAmount = 0,
-                            Quantity = item.Quantity,
-                            Source = CouponConstants.PromotionOnly_NotEligible
-                        });
+                        double currentPrice = (double)(pricing.VariantPrice ?? 0);
+                        totalPrice += currentPrice * itemVariant.Quantity;
                     }
+
+                    resultNotApply.TotalPrice += (decimal)totalPrice * item.Quantity;
+
+                    resultNotApply.ItemDiscountDetails.Add(new DiscountItemDetail
+                    {
+                        BuyItemCode = $"{item.MenuItemId}",
+                        BuyItemName = $"{allProducts.FirstOrDefault(x => x.Id == item.MenuItemId).Name}",
+                        DiscountAmount = 0,
+                        Quantity = item.Quantity,
+                        Source = CouponConstants.PromotionOnly_NotEligible
+                    });
                 }
 
                 return resultNotApply;
@@ -93,29 +96,28 @@ namespace FOCS.Application.Services.ApplyStrategy
 
             foreach (var item in order.Items)
             {
-                if(item.Variants != null)
+                var currentProductPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, null, order.StoreId);
+                decimal totalVariantPrice = 0;
+
+                if (item.Variants != null && item.Variants.Any())
                 {
-                    double totalVariantPrice = 0;
-                    var currentProductPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, null, order.StoreId);
-                    foreach (var itemVariant in item.Variants)
+                    foreach (var variant in item.Variants)
                     {
-                        var currentVariantPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, order.StoreId);
-                        totalVariantPrice += (double)(currentVariantPrice.VariantPrice * itemVariant.Quantity);
+                        var variantPriceInfo = await _pricingService.GetPriceByProduct(item.MenuItemId, variant.VariantId, order.StoreId);
+                        totalVariantPrice += (decimal)(variantPriceInfo.VariantPrice * variant.Quantity);
                     }
 
-                    result.TotalPrice += (decimal)(currentProductPrice.ProductPrice + totalVariantPrice) * item.Quantity;
+                    result.TotalPrice += ((decimal)currentProductPrice.ProductPrice + totalVariantPrice) * item.Quantity;
                 }
                 else
                 {
-                    var pricing = await _pricingService.GetPriceByProduct(item.MenuItemId, null, order.StoreId);
-                    double itemPrice = (double)(pricing.ProductPrice) + (double)(pricing.VariantPrice ?? 0);
-                    double totalItemPrice = itemPrice * item.Quantity;
-
-                    result.TotalPrice += (decimal)totalItemPrice;
+                    decimal itemPrice = (decimal)(currentProductPrice.ProductPrice + (currentProductPrice.VariantPrice ?? 0));
+                    result.TotalPrice += itemPrice * item.Quantity;
                 }
+
             }
 
-            if(promotion.PromotionScope == PromotionScope.Item)
+            if (promotion.PromotionScope == PromotionScope.Item)
             {
                 foreach (var itemOrder in order.Items)
                 {
