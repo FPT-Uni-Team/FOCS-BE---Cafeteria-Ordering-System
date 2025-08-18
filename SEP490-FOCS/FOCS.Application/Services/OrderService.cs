@@ -140,28 +140,28 @@ namespace FOCS.Application.Services
                 var pricingDict = new Dictionary<(Guid MenuItemId, Guid? VariantId), double>();
                 foreach (var item in orderRequest.Items)
                 {
+                    var basePrice = await _pricingService.GetPriceByProduct(item.MenuItemId, null, orderRequest.StoreId);
+                    double totalVariantPrice = 0;
+
                     if (item.Variants != null && item.Variants.Count > 0)
                     {
-                        foreach (var itemVariant in item.Variants)
+                        foreach (var variant in item.Variants)
                         {
-                            var price = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, Guid.Parse(storeId));
-                            double itemUnitPrice = price.ProductPrice + (price.VariantPrice ?? 0);
-                            double itemTotalPrice = itemUnitPrice * itemVariant.Quantity;
+                            var variantPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, variant.VariantId, orderRequest.StoreId);
+                            double variantTotal = (double)(variantPrice.VariantPrice * variant.Quantity);
+                            totalVariantPrice += variantTotal;
 
-                            pricingDict[(item.MenuItemId, itemVariant.VariantId)] = itemUnitPrice;
-                            totalOrderAmount += itemTotalPrice;
-                            rs.TotalPrice += (decimal)itemTotalPrice;
+                            pricingDict[(item.MenuItemId, variant.VariantId)] = (double)basePrice.ProductPrice + (double)variantPrice.VariantPrice;
                         }
+
+                        rs.TotalPrice += (decimal)((double)basePrice.ProductPrice + totalVariantPrice) * item.Quantity;
                     }
                     else
                     {
-                        var price = await _pricingService.GetPriceByProduct(item.MenuItemId, null, Guid.Parse(storeId));
-                        double itemUnitPrice = price.ProductPrice + (price.VariantPrice ?? 0);
-                        double itemTotalPrice = itemUnitPrice * item.Quantity;
+                        double itemUnitPrice = (double)basePrice.ProductPrice + (double)(basePrice.VariantPrice ?? 0);
+                        rs.TotalPrice += (decimal)(itemUnitPrice * item.Quantity);
 
                         pricingDict[(item.MenuItemId, null)] = itemUnitPrice;
-                        totalOrderAmount += itemTotalPrice;
-                        rs.TotalPrice += (decimal)itemTotalPrice;
                     }
                 }
 
