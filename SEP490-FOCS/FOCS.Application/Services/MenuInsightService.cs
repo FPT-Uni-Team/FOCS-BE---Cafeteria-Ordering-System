@@ -64,7 +64,7 @@ namespace FOCS.Application.Services
             throw new NotImplementedException();
         }
 
-        public async Task<List<MenuItemInsightResponse>> GetProductOrderNearingWithCurrent(Guid userId, int topN = 1)
+        public async Task<List<MenuItemInsightResponse>> GetProductOrderNearingWithCurrentOfUser(Guid userId, int topN = 1)
         {
             var orders = await _orderRepository.AsQueryable().Include(x => x.OrderDetails)
                                                                 .ThenInclude(x => x.MenuItem)

@@ -425,7 +425,7 @@ namespace FOCS.Application.Services
                 {
                     foreach (var item in order.DiscountResult.ItemDiscountDetails)
                     {
-                        var itemCodes = item.ItemCode?.Split("_");
+                        var itemCodes = item.BuyItemCode?.Split("_");
                         if (itemCodes == null || itemCodes.Length == 0)
                             continue;
 

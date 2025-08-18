@@ -41,11 +41,17 @@ namespace FOCS.Common.Models
     }
     public class DiscountItemDetail
     {
-        [JsonPropertyName("item_code")]
-        public string ItemCode { get; set; } = string.Empty;
+        [JsonPropertyName("buy_item_code")]
+        public string BuyItemCode { get; set; } = string.Empty;
 
-        [JsonPropertyName("item_name")]
-        public string ItemName { get; set; } = string.Empty;
+        [JsonPropertyName("buy_item_name")]
+        public string BuyItemName { get; set; } = string.Empty;
+
+        [JsonPropertyName("get_item_code")]
+        public string? GetItemCode { get; set; } = string.Empty;
+
+        [JsonPropertyName("get_item_name")]
+        public string? getItemName { get; set; } = string.Empty;
 
         [JsonPropertyName("quantity")]
         public int Quantity { get; set; }

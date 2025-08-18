@@ -66,8 +66,8 @@ namespace FOCS.Application.Services.ApplyStrategy
 
                         resultNotApply.ItemDiscountDetails.Add(new DiscountItemDetail
                         {
-                            ItemCode = $"{item.MenuItemId}_{itemVariant.VariantId}",
-                            ItemName = $"{item.MenuItemId}",
+                            BuyItemCode = $"{item.MenuItemId}_{itemVariant.VariantId}",
+                            BuyItemName = $"{item.MenuItemId}",
                             DiscountAmount = 0,
                             Quantity = item.Quantity,
                             Source = CouponConstants.PromotionOnly_NotEligible
@@ -95,15 +95,17 @@ namespace FOCS.Application.Services.ApplyStrategy
             {
                 if(item.Variants != null)
                 {
+                    double totalVariantPrice = 0;
+                    var currentProductPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, null, order.StoreId);
                     foreach (var itemVariant in item.Variants)
                     {
-                        var pricingIncludeVariant = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, order.StoreId);
-                        double itemPriceIncludeVariant = (double)(pricingIncludeVariant.ProductPrice) + (double)(pricingIncludeVariant.VariantPrice ?? 0);
-                        double totalItemPriceIncludeVariant = itemPriceIncludeVariant * item.Quantity;
-
-                        result.TotalPrice += (decimal)totalItemPriceIncludeVariant;
+                        var currentVariantPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, order.StoreId);
+                        totalVariantPrice += (double)(currentVariantPrice.VariantPrice * itemVariant.Quantity);
                     }
-                } else
+
+                    result.TotalPrice += (decimal)(currentProductPrice.ProductPrice + totalVariantPrice) * item.Quantity;
+                }
+                else
                 {
                     var pricing = await _pricingService.GetPriceByProduct(item.MenuItemId, null, order.StoreId);
                     double itemPrice = (double)(pricing.ProductPrice) + (double)(pricing.VariantPrice ?? 0);
@@ -158,8 +160,8 @@ namespace FOCS.Application.Services.ApplyStrategy
                         result.ItemDiscountDetails.Add(new DiscountItemDetail
                         {
                             DiscountAmount = (decimal)itemDiscount,
-                            ItemCode = $"{itemOrder.MenuItemId}_{string.Join("_", itemOrder.Variants.Select(x => x.VariantId))}",
-                            ItemName = itemOrder.MenuItemId.ToString(),
+                            BuyItemCode = $"{itemOrder.MenuItemId}_{string.Join("_", itemOrder.Variants.Select(x => x.VariantId))}",
+                            BuyItemName = itemOrder.MenuItemId.ToString(),
                             Quantity = itemOrder.Quantity,
                             Source = $"Promotion_{promotion.PromotionType}_{promotion.Title}"
                         });
@@ -169,12 +171,20 @@ namespace FOCS.Application.Services.ApplyStrategy
 
             if(promotion.PromotionScope == PromotionScope.Order)
             {
-                totalDiscount = promotion.PromotionType switch
+                switch (promotion.PromotionType)
                 {
-                    PromotionType.Percentage => (double)result.TotalPrice * (double)(promotion.DiscountValue / 100),
-                    PromotionType.FixedAmount => (double)promotion.DiscountValue,
-                    _ => (double)promotion.DiscountValue
-                };
+                    case PromotionType.Percentage:
+                        totalDiscount = (double)result.TotalPrice * (double)(promotion.DiscountValue / 100);
+                        break;
+                    case PromotionType.FixedAmount:
+                        totalDiscount = (double)promotion.DiscountValue;
+                        break;
+                    case PromotionType.BuyXGetY:
+                        var buyXGetYDiscounts = await ApplyBuyXGetYDiscount(order, promotion);
+                        result.ItemDiscountDetails.AddRange(buyXGetYDiscounts);
+                        totalDiscount = buyXGetYDiscounts.Sum(d => (double)d.DiscountAmount);
+                        break;
+                }
             }
 
 
@@ -198,7 +208,7 @@ namespace FOCS.Application.Services.ApplyStrategy
             return Math.Min(itemPrice, (double)discountValue);
         }
 
-        private async Task<List<DiscountItemDetail>> ApplyBuyXGetYDiscount(ApplyDiscountOrderRequest order, Promotion promotion)
+        private async Task<List<DiscountItemDetail>> ApplyBuyXGetYDiscount(ApplyDiscountOrderRequest order, Promotion promotion, string? storeId = null)
         {
             var discountDetails = new List<DiscountItemDetail>();
 
@@ -219,15 +229,19 @@ namespace FOCS.Application.Services.ApplyStrategy
             var pricing = await _pricingService.GetPriceByProduct(getItemId, null, order.StoreId);
             var freeItemPrice = pricing.ProductPrice;
 
+            var productsFree = await _menuService.GetMenuItemByIds(new List<Guid> { buyItemId, getItemId}, promotion.StoreId);
+
             double totalDiscount = (double)freeItemPrice * getQuantity * applicableSets;
 
             discountDetails.Add(new DiscountItemDetail
             {
                 DiscountAmount = (decimal)totalDiscount,
-                ItemCode = getItemId.ToString(),
-                ItemName = getItemId.ToString(),
+                BuyItemCode = getItemId.ToString(),
+                BuyItemName = productsFree.Where(x => x.Id == buyItemId).FirstOrDefault().Name,
+                GetItemCode = getItemId.ToString(),
+                getItemName = productsFree.Where(x => x.Id == getItemId).FirstOrDefault().Name,
                 Quantity = getQuantity * applicableSets,
-                Source = $"Promotion Buy {buyQuantity} Get {getQuantity} - {promotion.Title}"
+                Source = $"Promotion Buy {buyQuantity} {productsFree.Where(x => x.Id == buyItemId).FirstOrDefault().Name} Get {getQuantity} {productsFree.Where(x => x.Id == getItemId).FirstOrDefault().Name} - {promotion.Title}"
             });
 
             return discountDetails;
