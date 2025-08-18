@@ -6,6 +6,7 @@ namespace FOCS.Common.Models
     public class CreateAdminBrandRequest
     {
         [JsonPropertyName("name")]
+        [Required]
         public string Name { get; set; }
 
         [JsonPropertyName("default_tax_rate")]
