@@ -102,8 +102,8 @@ namespace FOCS.Application.Services.ApplyStrategy
                     result.ItemDiscountDetails.Add(new DiscountItemDetail
                     {
                         DiscountAmount = 0,
-                        ItemCode = GenerateItemCode(item),
-                        ItemName = item.MenuItemId.ToString(),
+                        BuyItemCode = GenerateItemCode(item),
+                        BuyItemName = item.MenuItemId.ToString(),
                         Quantity = item.Quantity,
                         Source = CouponConstants.Coupon_MinimumOrderAmount.ToString()
                     });
@@ -137,8 +137,8 @@ namespace FOCS.Application.Services.ApplyStrategy
                     result.ItemDiscountDetails.Add(new DiscountItemDetail
                     {
                         DiscountAmount = (decimal)itemDiscount,
-                        ItemCode = GenerateItemCode(item),
-                        ItemName = item.MenuItemId.ToString(),
+                        BuyItemCode = GenerateItemCode(item),
+                        BuyItemName = item.MenuItemId.ToString(),
                         Quantity = item.Quantity,
                         Source = $"Coupon {coupon.DiscountType}"
                     });
@@ -160,8 +160,8 @@ namespace FOCS.Application.Services.ApplyStrategy
                     result.ItemDiscountDetails.Add(new DiscountItemDetail
                     {
                         DiscountAmount = (decimal)itemDiscount,
-                        ItemCode = GenerateItemCode(item),
-                        ItemName = item.MenuItemId.ToString(),
+                        BuyItemCode = GenerateItemCode(item),
+                        BuyItemName = item.MenuItemId.ToString(),
                         Quantity = itemVariant.Quantity,
                         Source = $"Coupon {coupon.DiscountType}"
                     });
