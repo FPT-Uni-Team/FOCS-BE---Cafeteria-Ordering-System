@@ -22,20 +22,31 @@ namespace FOCS.Application.Services
         private readonly IRepository<WorkshiftSchedule> _workshiftScheduleRepository;
         private readonly IRepository<Workshift> _workshiftRepository;
         private readonly IRepository<StaffWorkshiftRegistration> _staffWorkshiftRepository;
-
+        private readonly IRepository<Store> _storeRepository;
         private readonly IMapper _mapper;
 
-        public WorkshiftScheduleService(IRepository<WorkshiftSchedule> workshiftScheduleRepository, IRepository<Workshift> workshiftRepository, IRepository<StaffWorkshiftRegistration> staffWorkshiftRepository, IMapper mapper)
+        public WorkshiftScheduleService(IRepository<WorkshiftSchedule> workshiftScheduleRepository, 
+            IRepository<Workshift> workshiftRepository, 
+            IRepository<StaffWorkshiftRegistration> staffWorkshiftRepository, 
+            IRepository<Store> storeRepository,
+            IMapper mapper)
         {
             _workshiftRepository = workshiftRepository;
             _workshiftScheduleRepository = workshiftScheduleRepository;
             _staffWorkshiftRepository = staffWorkshiftRepository;
+            _storeRepository = storeRepository;
             _mapper = mapper;
         }
 
         public async Task<string> CreateAsync(WorkshiftResponse request, string storeId)
         {
-            var createWorkshift = await CreateScheduleAsync(Guid.Parse(storeId), request.WorkDate);
+            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid),
+                                                    Errors.Common.InvalidGuidFormat,
+                                                    Errors.FieldName.StoreId);
+            var store = await _storeRepository.GetByIdAsync(storeIdGuid);
+            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, Errors.FieldName.StoreId);
+
+            var createWorkshift = await CreateScheduleAsync(storeIdGuid, request.WorkDate);
 
             ConditionCheck.CheckCondition(createWorkshift != null, Errors.Common.NotFound);
 
