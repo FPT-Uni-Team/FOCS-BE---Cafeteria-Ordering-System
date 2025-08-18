@@ -212,11 +212,11 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(coupon.CountUsed < coupon.MaxUsage, Errors.PromotionError.CouponMaxUsed, Errors.FieldName.CouponMaxUsed);
 
             //Validate max use per user
-            if (!string.IsNullOrWhiteSpace(userId))
-            {
-                var couponUsageTime = await _couponUsageRepository.FindAsync(x => x.UserId == Guid.Parse(userId) && x.CouponId == coupon.Id);
-                ConditionCheck.CheckCondition(couponUsageTime.Count() <= coupon.MaxUsagePerUser, Errors.PromotionError.CouponMaxUsed, Errors.FieldName.CouponMaxUsed);
-            }
+            //if (!string.IsNullOrWhiteSpace(userId))
+            //{
+            //    var couponUsageTime = await _couponUsageRepository.FindAsync(x => x.UserId == Guid.Parse(userId) && x.CouponId == coupon.Id);
+            //    ConditionCheck.CheckCondition(couponUsageTime.Count() <= coupon.MaxUsagePerUser, Errors.PromotionError.CouponMaxUsed, Errors.FieldName.CouponMaxUsed);
+            //}
 
             var currentDate = DateTime.UtcNow;
             ConditionCheck.CheckCondition(currentDate >= coupon.StartDate && currentDate <= coupon.EndDate, Errors.PromotionError.InvalidPeriodDatetime, Errors.FieldName.EndDate);
