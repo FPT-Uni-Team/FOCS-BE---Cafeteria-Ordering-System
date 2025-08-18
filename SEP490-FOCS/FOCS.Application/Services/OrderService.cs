@@ -310,7 +310,7 @@ namespace FOCS.Application.Services
 
         public async Task MarkAsPaid(long orderCode, string storeId)
         {
-            var order = await _orderRepository.AsQueryable().Include(x => x.Table).FirstOrDefaultAsync(x => x.OrderCode == orderCode);
+            var order = await _orderRepository.AsQueryable().Include(x => x.Table).Include(x => x.Coupon).FirstOrDefaultAsync(x => x.OrderCode == orderCode);
 
             //update coupon, promotion usage
             var storeSetting = await _storeSettingService.GetStoreSettingAsync(Guid.Parse(storeId));
@@ -320,7 +320,7 @@ namespace FOCS.Application.Services
                 try
                 {
                     var currentCoupon = await _couponRepository.AsQueryable().Include(x => x.Promotion).FirstOrDefaultAsync(x => x.Code == orderCode.ToString());
-
+                    currentCoupon.CountUsed++;
                     var isAdded = await _couponUsageService.SaveCouponUsage(currentCoupon.Code, order.UserId, order.Id);
 
                     if (isAdded)
@@ -334,6 +334,14 @@ namespace FOCS.Application.Services
                 {
                     return;
                 }
+            } else
+            {
+                var currentCoupon = await _couponRepository.AsQueryable().FirstOrDefaultAsync(x => x.Code == order.Coupon.Code.ToString());
+                currentCoupon.CountUsed++;
+                var isAdded = await _couponUsageService.SaveCouponUsage(currentCoupon.Code, order.UserId, order.Id);
+
+                _couponRepository.Update(currentCoupon);
+                await _couponRepository.SaveChangesAsync();
             }
 
             order.PaymentStatus = PaymentStatus.Paid;
