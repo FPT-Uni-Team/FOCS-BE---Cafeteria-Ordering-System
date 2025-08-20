@@ -118,7 +118,7 @@ namespace FOCS.Application.Services
         {
             ConditionCheck.CheckCondition(promotionId == dto.Id, Errors.Common.NotFound, Errors.FieldName.Id);
             var promotion = await GetAvailablePromotionById(promotionId);
-            if (promotion == null) return false;
+            ConditionCheck.CheckCondition(promotion != null, Errors.Common.NotFound, Errors.FieldName.Id);
             await ValidateStoreExists(storeId);
             await ValidateUser(userId, promotion.StoreId);
             await ValidatePromotionUniqueness(dto, storeId);
@@ -305,12 +305,12 @@ namespace FOCS.Application.Services
             {
                 bool isEligible = promotion.AcceptForItems == null ||
                                   !promotion.AcceptForItems.Any() ||
-                                  promotion.AcceptForItems.Contains(Guid.Parse(item.ItemCode));
+                                  promotion.AcceptForItems.Contains(Guid.Parse(item.BuyItemCode));
 
                 if (!isEligible)
                     continue;
 
-                var parts = item.ItemCode.Split('_');
+                var parts = item.BuyItemCode.Split('_');
                 var menuItemId = Guid.Parse(parts[0]);
                 Guid? variantId = parts.Length > 1 ? Guid.Parse(parts[1]) : null;
 
