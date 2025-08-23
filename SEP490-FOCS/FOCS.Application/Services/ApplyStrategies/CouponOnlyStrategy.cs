@@ -78,7 +78,9 @@ namespace FOCS.Application.Services.ApplyStrategy
                 double itemTotal = ((double)basePrice.ProductPrice + totalVariantPrice) * item.Quantity;
                 result.TotalPrice += (decimal)itemTotal;
                 totalOrderAmount += itemTotal;
+
             }
+
 
             HashSet<Guid>? acceptedItems = coupon.AcceptForItems?.Select(Guid.Parse).ToHashSet();
 

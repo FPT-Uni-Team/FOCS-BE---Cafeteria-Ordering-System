@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FOCS.Realtime.Hubs", "FOCS.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FOCS.NotificationService", "FOCS.NotificationService\FOCS.NotificationService.csproj", "{73B4C66D-25A0-4A5F-9070-86297BA28DF1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FOCS.UnitTest", "FOCS.UnitTest\FOCS.UnitTest.csproj", "{2DEEBE8A-33C6-46B0-B17F-EC220BD2B6F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{73B4C66D-25A0-4A5F-9070-86297BA28DF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73B4C66D-25A0-4A5F-9070-86297BA28DF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73B4C66D-25A0-4A5F-9070-86297BA28DF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DEEBE8A-33C6-46B0-B17F-EC220BD2B6F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DEEBE8A-33C6-46B0-B17F-EC220BD2B6F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DEEBE8A-33C6-46B0-B17F-EC220BD2B6F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DEEBE8A-33C6-46B0-B17F-EC220BD2B6F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
