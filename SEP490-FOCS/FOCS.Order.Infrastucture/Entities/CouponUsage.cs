@@ -12,6 +12,8 @@ namespace FOCS.Order.Infrastucture.Entities
         public Guid Id { get; set; }
         public Guid CouponId { get; set; }
 
+        public Coupon Coupon { get; set; }
+
         public Guid? UserId { get; set; } // Nếu có đăng nhập
 
         public Guid OrderId { get; set; }

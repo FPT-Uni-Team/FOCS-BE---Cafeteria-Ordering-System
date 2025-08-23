@@ -63,6 +63,18 @@ namespace FOCS.Order.Infrastucture.Context
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<CouponUsage>()
+               .HasOne(cu => cu.Coupon)
+               .WithMany(c => c.CouponUsages)
+               .HasForeignKey(cu => cu.CouponId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StaffWorkshiftRegistration>()
+                .HasOne(swr => swr.Workshift)
+                .WithMany(w => w.StaffWorkshiftRegistrations)
+                .HasForeignKey(swr => swr.WorkshiftId)
+                .OnDelete(DeleteBehavior.Restrict); // hoặc DeleteBehavior.NoAction
+
             modelBuilder.Entity<MenuItem>()
                  .HasOne(mi => mi.Store)
                  .WithMany(s => s.MenuItems)

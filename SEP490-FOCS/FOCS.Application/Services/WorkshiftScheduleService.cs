@@ -1,19 +1,11 @@
 ﻿using AutoMapper;
-using CloudinaryDotNet;
 using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
-using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FOCS.Application.Services
 {
@@ -22,20 +14,31 @@ namespace FOCS.Application.Services
         private readonly IRepository<WorkshiftSchedule> _workshiftScheduleRepository;
         private readonly IRepository<Workshift> _workshiftRepository;
         private readonly IRepository<StaffWorkshiftRegistration> _staffWorkshiftRepository;
-
+        private readonly IRepository<Store> _storeRepository;
         private readonly IMapper _mapper;
 
-        public WorkshiftScheduleService(IRepository<WorkshiftSchedule> workshiftScheduleRepository, IRepository<Workshift> workshiftRepository, IRepository<StaffWorkshiftRegistration> staffWorkshiftRepository, IMapper mapper)
+        public WorkshiftScheduleService(IRepository<WorkshiftSchedule> workshiftScheduleRepository, 
+            IRepository<Workshift> workshiftRepository, 
+            IRepository<StaffWorkshiftRegistration> staffWorkshiftRepository, 
+            IRepository<Store> storeRepository,
+            IMapper mapper)
         {
             _workshiftRepository = workshiftRepository;
             _workshiftScheduleRepository = workshiftScheduleRepository;
             _staffWorkshiftRepository = staffWorkshiftRepository;
+            _storeRepository = storeRepository;
             _mapper = mapper;
         }
 
         public async Task<string> CreateAsync(WorkshiftResponse request, string storeId)
         {
-            var createWorkshift = await CreateScheduleAsync(Guid.Parse(storeId), request.WorkDate);
+            ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid),
+                                                    Errors.Common.InvalidGuidFormat,
+                                                    Errors.FieldName.StoreId);
+            var store = await _storeRepository.GetByIdAsync(storeIdGuid);
+            ConditionCheck.CheckCondition(store != null, Errors.Common.StoreNotFound, Errors.FieldName.StoreId);
+
+            var createWorkshift = await CreateScheduleAsync(storeIdGuid, request.WorkDate);
 
             ConditionCheck.CheckCondition(createWorkshift != null, Errors.Common.NotFound);
 
@@ -43,8 +46,11 @@ namespace FOCS.Application.Services
             {
                 var createCurrent = await AddWorkShiftToScheduleAsync(createWorkshift.Id, new CreateWorkShiftDto
                 {
-                    StaffId = item.StaffId,   
-                    Name = item.StaffName,
+                    Staffs = item.Staffs.Select(s => new StaffData
+                    {
+                        StaffId = s.StaffId,
+                        Name = s.Name
+                    }).ToList(),
                     StartTime = item.StartTime,
                     EndTime = item.EndTime
                 }, storeId);
@@ -80,6 +86,8 @@ namespace FOCS.Application.Services
                             s.StaffWorkshiftRegistrations.Any(r =>
                                 r.StaffName != null && r.StaffName.ToLower().Contains(searchValue)))),
 
+                    "work_date" => workshiftsQuery.Where(w => w.WorkDate.Date.Equals(DateTime.Parse(searchValue).Date)),
+
                     _ => workshiftsQuery
                 };
             }
@@ -103,10 +111,13 @@ namespace FOCS.Application.Services
                 {
                     StartTime = y.StartTime,
                     EndTime = y.EndTime,
-                    StaffName = y.StaffWorkshiftRegistrations
-                                    .Select(r => r.StaffName)
-                                    .Where(name => !string.IsNullOrEmpty(name))
-                                    .FirstOrDefault()
+                    Staffs = y.StaffWorkshiftRegistrations
+                                    .Select(r => new StaffData
+                                    {
+                                        StaffId = r.StaffId,
+                                        Name = r.StaffName
+                                    })
+                                    .Where(r => !string.IsNullOrEmpty(r.Name)).ToList()
                 }).ToList()
             }).ToList();
 
@@ -139,6 +150,7 @@ namespace FOCS.Application.Services
             };
 
             await _workshiftRepository.AddAsync(newWorkshift);
+            await _workshiftRepository.SaveChangesAsync();
 
             return new WorkshiftScheduleDto
             {
@@ -175,7 +187,13 @@ namespace FOCS.Application.Services
                 WorkDate = x.WorkDate,
                 WorkShifts = x.WorkshiftSchedules.Select(y => new CreateWorkShiftDto
                 {
-                    Name = y.Name,
+                    Staffs = y.StaffWorkshiftRegistrations
+                                    .Select(r => new StaffData
+                                    {
+                                        StaffId = r.StaffId,
+                                        Name = r.StaffName
+                                    })
+                                    .Where(r => !string.IsNullOrEmpty(r.Name)).ToList(),
                     StartTime = y.StartTime,
                     EndTime = y.EndTime,
                 }).ToList()
@@ -228,7 +246,7 @@ namespace FOCS.Application.Services
                 var newWorkshiftSchedule = new WorkshiftSchedule
                 {
                     Id = Guid.NewGuid(),
-                    Name = workShiftDto.Name,
+                    Name = workshiftId.ToString(),
                     StartTime = workShiftDto.StartTime,
                     EndTime = workShiftDto.EndTime,
                     WorkshiftId = workshiftId,
@@ -240,16 +258,21 @@ namespace FOCS.Application.Services
 
                 await _workshiftScheduleRepository.AddAsync(newWorkshiftSchedule);
 
-                var newStaffRegister = new StaffWorkshiftRegistration
+                foreach (var staffData in workShiftDto.Staffs)
                 {
-                    Id = Guid.NewGuid(),
-                    StaffId = (Guid)workShiftDto.StaffId,
-                    StaffName = workShiftDto.Name,
-                    Status = Common.Enums.WorkshiftStatus.Pending,
-                    WorkshiftScheduleId = newWorkshiftSchedule.Id
-                };
+                    var newStaffRegister = new StaffWorkshiftRegistration
+                    {
+                        Id = Guid.NewGuid(),
+                        StaffId = staffData.StaffId,
+                        StaffName = staffData.Name,
+                        WorkshiftScheduleId = newWorkshiftSchedule.Id,
+                        Status = Common.Enums.WorkshiftStatus.Pending,
+                        CreatedAt = DateTime.UtcNow,
+                        WorkshiftId = workshiftId
+                    };
+                    await _staffWorkshiftRepository.AddAsync(newStaffRegister);
+                }
 
-                await _staffWorkshiftRepository.AddAsync(newStaffRegister);
                 await _workshiftScheduleRepository.SaveChangesAsync();
 
                 return true;
@@ -300,10 +323,13 @@ namespace FOCS.Application.Services
                 {
                     StartTime = y.StartTime,
                     EndTime = y.EndTime,
-                    StaffName = y.StaffWorkshiftRegistrations
-                                   .Select(r => r.StaffName)
-                                   .Where(name => !string.IsNullOrEmpty(name))
-                                   .FirstOrDefault()
+                    Staffs = y.StaffWorkshiftRegistrations
+                                    .Select(r => new StaffData
+                                    {
+                                        StaffId = r.StaffId,
+                                        Name = r.StaffName
+                                    })
+                                    .Where(r => !string.IsNullOrEmpty(r.Name)).ToList(),
                 }).ToList()
             };
 
@@ -338,7 +364,12 @@ namespace FOCS.Application.Services
                     WorkDate = group.Key,
                     WorkShifts = group.Select(x => new CreateWorkShiftDto
                     {
-                        Name = x.WorkshiftSchedule.Name,
+                        Staffs = group.Select(r => new StaffData
+                                    {
+                                        StaffId = r.StaffId,
+                                        Name = r.StaffName
+                                    })
+                                    .Where(r => !string.IsNullOrEmpty(r.Name)).ToList(),
                         StartTime = x.WorkshiftSchedule.StartTime,
                         EndTime = x.WorkshiftSchedule.EndTime
                     }).ToList()
