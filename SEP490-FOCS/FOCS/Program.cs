@@ -135,6 +135,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IRepository<StaffWorkshiftRegistration>, Repository<StaffWorkshiftRegistration, OrderDbContext>>()
                 .AddScoped<IRepository<SystemConfiguration>, Repository<SystemConfiguration, OrderDbContext>>()
                 .AddScoped<ICouponUsageService, CouponUsageService>()
+                .AddScoped<IDashboardService, DashboardService>()
                 .AddSingleton<ICloudinaryService, CloudinaryService>()
                 .AddSingleton<IRedisCacheService, RedisCacheService>();
 
