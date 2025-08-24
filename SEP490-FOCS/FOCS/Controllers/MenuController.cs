@@ -43,9 +43,9 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("based-on-history")]
-        public async Task<List<MenuItemInsightResponse>> GetProductsBasedOnHistory()
+        public async Task<List<MenuItemInsightResponse>> GetProductsBasedOnHistory([FromHeader] string actorId)
         {
-            return await _menuInsightService.GetProductOrderNearingWithCurrentOfUser(Guid.Parse(UserId), 5);
+            return await _menuInsightService.GetProductOrderNearingWithCurrentOfUser(Guid.Parse(UserId ?? actorId), 5);
         }
 
         [HttpPost("{itemId}")]
