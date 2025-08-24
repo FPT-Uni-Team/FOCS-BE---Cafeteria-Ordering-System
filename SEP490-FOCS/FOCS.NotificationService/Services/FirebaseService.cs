@@ -1,11 +1,8 @@
-﻿using FirebaseAdmin.Messaging;
-using FirebaseAdmin;
+﻿using FirebaseAdmin;
+using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace FOCS.NotificationService.Services
 {
@@ -20,19 +17,32 @@ namespace FOCS.NotificationService.Services
 
             if (!File.Exists(path))
             {
-                logger.LogError("❌ firebase-service-account.json not found at: {Path}", path);
-                return;
+                throw new FileNotFoundException($"❌ firebase-service-account.json not found at: {path}");
             }
 
-            logger.LogInformation("✅ Found firebase-service-account.json at: {Path}", path);
-
-            _firebaseApp = FirebaseApp.Create(new AppOptions
+            try
             {
-                Credential = GoogleCredential.FromFile(path)
-            });
+                if (FirebaseApp.DefaultInstance == null)
+                {
+                    _firebaseApp = FirebaseApp.Create(new AppOptions
+                    {
+                        Credential = GoogleCredential.FromFile(path)
+                    });
+                    logger.LogInformation("✅ Firebase initialized successfully via FirebaseService.");
+                }
+                else
+                {
+                    _firebaseApp = FirebaseApp.DefaultInstance;
+                    logger.LogInformation("⚠ FirebaseApp already initialized, using existing instance.");
+                }
 
-            Messaging = FirebaseMessaging.GetMessaging(_firebaseApp);
-            logger.LogInformation("✅ Firebase initialized via FirebaseService.");
+                Messaging = FirebaseMessaging.GetMessaging(_firebaseApp);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "❌ Failed to initialize Firebase.");
+                throw; // fail fast
+            }
         }
     }
 }

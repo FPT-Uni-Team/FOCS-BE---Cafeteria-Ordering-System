@@ -26,7 +26,7 @@ namespace FOCS.Common.Models
     public class VariantWrapOrder
     {
         [JsonPropertyName("variant_id")]
-        public Guid? VariantId { get; set; }
+        public string? VariantId { get; set; }
 
         [JsonPropertyName("variant_name")]
         public string? VariantName { get; set; }

@@ -1,39 +1,40 @@
 ﻿using FOCS.Common.Models;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Web;
+using Twilio;
+using Twilio.Rest.Api.V2010.Account;
+
 namespace FOCS.Application.Services
 {
     public class SmsService
     {
-        private readonly EsmsSettings _settings;
-        private readonly HttpClient _httpClient;
+        private readonly TwilioSettings _settings;
 
-        public SmsService(IOptions<EsmsSettings> settings)
+        public SmsService(IOptions<TwilioSettings> settings)
         {
             _settings = settings.Value;
-            _httpClient = new HttpClient();
+
+            // Khởi tạo Twilio client
+            TwilioClient.Init(_settings.AccountSid, _settings.AuthToken);
         }
 
-        public async Task<string> SendSmsAsync(string phoneNumber, string message)
+        public async Task<string> SendSmsAsync(string toPhoneNumber, string message)
         {
-            var query = HttpUtility.ParseQueryString(string.Empty);
-            query["ApiKey"] = _settings.ApiKey;
-            query["SecretKey"] = _settings.SecretKey;
-            query["Phone"] = phoneNumber;
-            query["Content"] = message;
-            query["Brandname"] = _settings.BrandName;
-            query["SmsType"] = _settings.SmsType;
-            query["IsUnicode"] = _settings.IsUnicode;
+            try
+            {
+                var testPhone = "+84" + toPhoneNumber.Substring(1, 9);
+                var messageResponse = await MessageResource.CreateAsync(
+                    body: message,
+                    from: new Twilio.Types.PhoneNumber(_settings.FromPhoneNumber),
+                    to: new Twilio.Types.PhoneNumber("+84" + toPhoneNumber.Substring(1, 9))
+                );
 
-            var url = $"https://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_get?{query}";
-
-            var response = await _httpClient.GetStringAsync(url);
-            return response;
+                return $"SID: {messageResponse.Sid}, Status: {messageResponse.Status}";
+            }
+            catch (Exception ex)
+            {
+                return $"Error: {ex.Message}";
+            }
         }
     }
 }

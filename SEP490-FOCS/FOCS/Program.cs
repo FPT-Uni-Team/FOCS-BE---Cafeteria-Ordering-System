@@ -135,16 +135,18 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<IRepository<StaffWorkshiftRegistration>, Repository<StaffWorkshiftRegistration, OrderDbContext>>()
                 .AddScoped<IRepository<SystemConfiguration>, Repository<SystemConfiguration, OrderDbContext>>()
                 .AddScoped<ICouponUsageService, CouponUsageService>()
+                .AddScoped<IDashboardService, DashboardService>()
                 .AddSingleton<ICloudinaryService, CloudinaryService>()
                 .AddSingleton<IRedisCacheService, RedisCacheService>();
 
 builder.Services.AddSingleton<OtpService>();
-builder.Services.Configure<EsmsSettings>(builder.Configuration.GetSection("eSMS"));
+builder.Services.Configure<TwilioSettings>(builder.Configuration.GetSection("TwilioSettings"));
 builder.Services.AddSingleton<SmsService>();
 
 builder.Services.AddHostedService<OrderBatchingService>();
 builder.Services.AddHostedService<ScanToDeleteCartItem>();
 //builder.Services.AddHostedService<CartFlushBackgroundService>();
+builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 

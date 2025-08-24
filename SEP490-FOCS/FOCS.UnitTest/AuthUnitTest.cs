@@ -25,6 +25,7 @@ namespace FOCS.UnitTest
         private readonly Mock<IMapper> _mockMapper;
         private readonly Mock<IEmailService> _mockEmailService;
         private readonly Mock<ITokenService> _mockTokenService;
+        private readonly Mock<OtpService> _mockOtpService;   // 👈 thêm dòng này
         private readonly Mock<IRepository<UserRefreshToken>> _mockUserRefreshTokenRepository;
         private readonly Mock<IRepository<Store>> _mockStoreRepository;
         private readonly Mock<ILogger<AuthService>> _mockLogger;
@@ -36,7 +37,8 @@ namespace FOCS.UnitTest
         {
             // Setup UserManager mock
             var userStore = new Mock<IUserStore<User>>();
-            _mockUserManager = new Mock<UserManager<User>>(userStore.Object, null, null, null, null, null, null, null, null);
+            _mockUserManager = new Mock<UserManager<User>>(
+                userStore.Object, null, null, null, null, null, null, null, null);
 
             // Setup SignInManager mock
             var contextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
@@ -51,6 +53,7 @@ namespace FOCS.UnitTest
             _mockMapper = new Mock<IMapper>();
             _mockEmailService = new Mock<IEmailService>();
             _mockTokenService = new Mock<ITokenService>();
+            _mockOtpService = new Mock<OtpService>();  // 👈 tạo mock cho OtpService
             _mockUserRefreshTokenRepository = new Mock<IRepository<UserRefreshToken>>();
             _mockStoreRepository = new Mock<IRepository<Store>>();
             _mockLogger = new Mock<ILogger<AuthService>>();
@@ -58,7 +61,8 @@ namespace FOCS.UnitTest
             _mockMobileTokenDevice = new Mock<IRepository<MobileTokenDevice>>();
 
             // Setup configuration
-            _mockConfiguration.Setup(c => c["Jwt:Key"]).Returns("your-secret-key-here-must-be-long-enough-for-jwt-signing");
+            _mockConfiguration.Setup(c => c["Jwt:Key"])
+                .Returns("your-secret-key-here-must-be-long-enough-for-jwt-signing");
 
             _authService = new AuthService(
                 _mockUserManager.Object,
@@ -67,12 +71,14 @@ namespace FOCS.UnitTest
                 _mockMapper.Object,
                 _mockEmailService.Object,
                 _mockTokenService.Object,
+                _mockOtpService.Object,                       
                 _mockUserRefreshTokenRepository.Object,
                 _mockStoreRepository.Object,
                 _mockLogger.Object,
                 _mockUserStoreRepository.Object,
                 _mockMobileTokenDevice.Object);
         }
+
 
         #region Login Tests - CM-01
 

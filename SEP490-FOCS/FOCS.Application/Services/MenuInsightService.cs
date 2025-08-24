@@ -43,7 +43,7 @@ namespace FOCS.Application.Services
                                     .SelectMany(order => order.OrderDetails)
                                     .ToList();
 
-            return GroupProductInsignt(allOrderDetails, topN);
+            return GroupProductInsight(allOrderDetails, topN);
         }
 
         public async Task<List<MenuItemInsightResponse>> GetProductsBasedOnBestPromotionAsync(string storeId, int topN = 10)
@@ -76,37 +76,45 @@ namespace FOCS.Application.Services
 
             var allOrdersDetail = orders.SelectMany(x => x.OrderDetails).ToList();
 
-            return GroupProductInsignt(allOrdersDetail, topN);
+            return GroupProductInsight(allOrdersDetail, topN);
         }
 
         #region private method
-        public List<MenuItemInsightResponse> GroupProductInsignt(List<OrderDetail> orderDetails, int topN = 1)
+        public List<MenuItemInsightResponse> GroupProductInsight(List<OrderDetail> orderDetails, int topN = 1)
         {
-            var grouped = orderDetails.GroupBy(od => new { od.MenuItemId, od.VariantId })
-                                                    .Select(g => new {
-                                                        MenuItemId = g.Key.MenuItemId,
-                                                        VariantId = g.Key.VariantId,
-                                                        TotalQuantity = g.Sum(x => x.Quantity),
-                                                        MenuItem = g.First().MenuItem,
-                                                        Variant = g.First().Variant
-                                                    })
-                                                    .OrderByDescending(g => g.TotalQuantity)
-                                                    .Take(topN)
-                                                    .ToList();
+            if (orderDetails == null || orderDetails.Count == 0 || topN <= 0)
+                return new List<MenuItemInsightResponse>();
+
+            var grouped = orderDetails
+                .GroupBy(od => od.MenuItemId)
+                .Select(g =>
+                {
+                    var first = g.First(); // đại diện cho menu item
+                    return new
+                    {
+                        MenuItemId = g.Key,
+                        TotalQuantity = g.Sum(x => x.Quantity),
+                        MenuItem = first.MenuItem,
+                        Variants = g.SelectMany(x => x.Variants) // gom tất cả variants trong nhóm
+                    };
+                })
+                .OrderByDescending(g => g.TotalQuantity)
+                .Take(topN)
+                .ToList();
 
             return grouped.Select(g => new MenuItemInsightResponse
             {
                 MenuItemId = g.MenuItemId,
-                Name = g.MenuItem.Name,
-                Variants = new List<VariantInsightResponse>
-                {
-                    new VariantInsightResponse
+                Name = g.MenuItem?.Name ?? string.Empty,
+                Price = (decimal) g.MenuItem?.BasePrice,
+                Variants = g.Variants
+                    .GroupBy(v => v.Id) // tránh trùng variant
+                    .Select(vg => new VariantInsightResponse
                     {
-                        Variantid = g.VariantId,
-                        VariantName = g.Variant?.Name
-                    }
-                },
-                Image = g.MenuItem.Images.FirstOrDefault()?.Url ?? ""
+                        Variantid = vg.Key,
+                        VariantName = vg.First().Name
+                    }).ToList(),
+                Image = g.MenuItem?.Images?.FirstOrDefault()?.Url ?? string.Empty
             }).ToList();
         }
         #endregion

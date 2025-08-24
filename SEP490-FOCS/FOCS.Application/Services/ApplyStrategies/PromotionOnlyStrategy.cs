@@ -177,9 +177,11 @@ namespace FOCS.Application.Services.ApplyStrategy
                 {
                     case PromotionType.Percentage:
                         totalDiscount = (double)result.TotalPrice * (double)(promotion.DiscountValue / 100);
+                        result.TotalPrice -= (decimal)totalDiscount;
                         break;
                     case PromotionType.FixedAmount:
                         totalDiscount = (double)promotion.DiscountValue;
+                        result.TotalPrice -= (decimal)totalDiscount;
                         break;
                     case PromotionType.BuyXGetY:
                         var buyXGetYDiscounts = await ApplyBuyXGetYDiscount(order, promotion);

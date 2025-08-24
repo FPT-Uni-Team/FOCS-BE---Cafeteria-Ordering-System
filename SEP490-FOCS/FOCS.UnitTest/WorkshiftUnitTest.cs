@@ -67,8 +67,14 @@ namespace FOCS.UnitTest
 
             workshiftRequest.Shift.Add(new StaffWorkshiftResponse
             {
-                StaffId = Guid.Parse(staffId),
-                StaffName = staffName,
+                Staffs = new List<StaffData>
+                {
+                    new StaffData
+                    {
+                        StaffId = Guid.Parse(staffId),
+                        Name = staffName,
+                    }
+                },
                 StartTime = TimeSpan.Parse(startTime),
                 EndTime = TimeSpan.Parse(endTime)
             });
@@ -100,8 +106,14 @@ namespace FOCS.UnitTest
 
             workshiftRequest.Shift.Add(new StaffWorkshiftResponse
             {
-                StaffId = Guid.Parse(staffId),
-                StaffName = staffName,
+                Staffs = new List<StaffData>
+                {
+                    new StaffData
+                    {
+                        StaffId = Guid.Parse(staffId),
+                        Name = staffName,
+                    }
+                },
                 StartTime = TimeSpan.Parse(startTime),
                 EndTime = TimeSpan.Parse(endTime)
             });

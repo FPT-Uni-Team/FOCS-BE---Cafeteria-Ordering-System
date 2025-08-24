@@ -19,11 +19,11 @@ namespace FOCS.Application.Services
             _redisService = redisService;
         }
 
-        public async Task SendOtpAsync(string phoneNumber)
+        public async Task<object> SendOtpAsync(string phoneNumber)
         {
             var otp = new Random().Next(100000, 999999).ToString();
             await _redisService.SetAsync($"OTP:{phoneNumber}", otp, TimeSpan.FromMinutes(5));
-            await _esmsService.SendSmsAsync(phoneNumber, $"Mã OTP của bạn là: {otp}");
+            return await _esmsService.SendSmsAsync(phoneNumber, $"Mã OTP của bạn là: {otp}");
         }
 
         public async Task<bool> VerifyOtpAsync(string phoneNumber, string otp)

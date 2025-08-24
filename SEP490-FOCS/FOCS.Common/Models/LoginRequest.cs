@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace FOCS.Common.Models
@@ -11,8 +12,11 @@ namespace FOCS.Common.Models
     public class LoginRequest
     {
         [Required]
-        [EmailAddress]
-        public string Email { get; set; }
+        [Phone]
+        public string Phone { get; set; }
+
+        [JsonIgnore]
+        public string Email { get; set; } = string.Empty;
 
         [Required]
         [DataType(DataType.Password)]
