@@ -41,7 +41,7 @@ namespace FOCS.UnitTest
             );
         }
 
-        #region CreatePayment
+        #region CreatePayment CM-70
         [Theory]
         [InlineData("Bank name string", "Bank code string", "0287319826472", "Account name", true)]
         [InlineData(null, "Bank code string", "0287319826472", "Account name", false)]
@@ -78,7 +78,7 @@ namespace FOCS.UnitTest
         }
         #endregion
 
-        #region UpdateConfigPayment
+        #region UpdateConfigPayment CM-71
         [Theory]
         [InlineData("Client Id", "Api Id", "Check sum key", true)]
         [InlineData(null, "Api Id", "Check sum key", false)]
@@ -113,7 +113,7 @@ namespace FOCS.UnitTest
         }
         #endregion
 
-        #region GeneratePaymentLink
+        #region GeneratePaymentLink CM-72
         [Theory]
         [InlineData(1234, 22, "Description string", null, true)]
         [InlineData(null, 22, "Description string", null, false)]
