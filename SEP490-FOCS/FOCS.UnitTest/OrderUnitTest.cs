@@ -69,7 +69,7 @@ namespace FOCS.UnitTest
             );
         }
 
-        #region CreateOrder
+        #region CreateOrder CM-42
         [Theory]
         [InlineData("8172b0b1-8656-4841-ac2e-24034b9249ed", "2e959705-90be-46f6-8d77-64d6ed70e637", "String note", "Coupon code", PaymentType.CASH, OrderType.DineIn, true)]
         [InlineData("fb05206f-1188-432c-9e5c-4e7094d5b84d", "2e959705-90be-46f6-8d77-64d6ed70e637", "String note", "Coupon code", PaymentType.CASH, OrderType.DineIn, false)]
@@ -145,7 +145,7 @@ namespace FOCS.UnitTest
         }
         #endregion
 
-        #region GetAllOrders
+        #region GetAllOrders CM-43
         [Theory]
         [InlineData(1, 10, "comment", "search comment", "created_date", "desc", true)]
         [InlineData(5, 10, "comment", "search comment", "created_date", "desc", true)]
@@ -194,7 +194,7 @@ namespace FOCS.UnitTest
         }
         #endregion
 
-        #region GetOrderDetail
+        #region GetOrderDetail CM-44
         [Theory]
         [InlineData("550e8400-e29b-41d4-a716-446655440999", true)]
         [InlineData("550e8400-e29b-41d4-a716-446655440999", false)]
@@ -213,7 +213,7 @@ namespace FOCS.UnitTest
         }
         #endregion
 
-        #region ChangeStatusOrder
+        #region ChangeStatusOrder CM-45
         [Theory]
         [InlineData("8172b0b1-8656-4841-ac2e-24034b9249ed", OrderStatus.CartSaved, true)]
         [InlineData("fb05206f-1188-432c-9e5c-4e7094d5b84d", OrderStatus.CartSaved, false)]
@@ -265,7 +265,7 @@ namespace FOCS.UnitTest
         }
         #endregion
 
-        #region CancelOrder
+        #region CancelOrder CM-46
         [Theory]
         [InlineData("8172b0b1-8656-4841-ac2e-24034b9249ed", true)]
         [InlineData("fb05206f-1188-432c-9e5c-4e7094d5b84d", true)]
@@ -308,7 +308,7 @@ namespace FOCS.UnitTest
         }
         #endregion
 
-        #region DeleteOrder
+        #region DeleteOrder CM-47
         [Theory]
         [InlineData("8172b0b1-8656-4841-ac2e-24034b9249ed", true)]
         public async Task DeleteOrder_SimpleRun_ChecksIfServiceRuns(string orderIdStr, bool shouldSucceed)
@@ -352,7 +352,7 @@ namespace FOCS.UnitTest
         }
         #endregion
 
-        #region GetOrderDetailByCode
+        #region GetOrderDetailByCode CM-48
         [Theory]
         [InlineData(1000, true)]
         [InlineData(9999, true)]
@@ -396,7 +396,7 @@ namespace FOCS.UnitTest
         }
         #endregion
 
-        #region ApplyDiscountForOrder
+        #region ApplyDiscountForOrder CM-49
         [Theory]
         [InlineData("8172b0b1-8656-4841-ac2e-24034b9249ed", "2e959705-90be-46f6-8d77-64d6ed70e637", "String note", "Coupon code", 0, true, true)]
         [InlineData("fb05206f-1188-432c-9e5c-4e7094d5b84d", "2e959705-90be-46f6-8d77-64d6ed70e637", "String note", "Coupon code", 0, true, false)]
