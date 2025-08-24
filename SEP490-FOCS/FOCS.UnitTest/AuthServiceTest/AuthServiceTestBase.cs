@@ -56,11 +56,11 @@ namespace FOCS.UnitTest.AuthServiceTest
             _authService = new AuthService(
                 _userManagerMock.Object,
                 _signInManagerMock.Object,
-                //_optServiceMock.Object,
                 _configurationMock.Object,
                 _mapperMock.Object,
                 _emailServiceMock.Object,
                 _tokenServiceMock.Object,
+                _optServiceMock.Object,                       // 👈 thêm lại dòng này
                 _userRefreshTokenRepositoryMock.Object,
                 _storeRepositoryMock.Object,
                 _loggerMock.Object,

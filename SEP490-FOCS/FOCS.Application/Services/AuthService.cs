@@ -47,11 +47,11 @@ namespace FOCS.Application.Services
 
         public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, 
             //OtpService optService,
-            IConfiguration config, IMapper mapper, IEmailService emailService, ITokenService tokenService,
+            IConfiguration config, IMapper mapper, IEmailService emailService, ITokenService tokenService, OtpService optService,
             IRepository<UserRefreshToken> userRepo, IRepository<Store> storeRepository, ILogger<AuthService> logger, IRepository<UserStore> userStoreRepository, IRepository<MobileTokenDevice> mobileTokenDevice)
         {
             _userManager = userManager;
-            //_optService = optService;
+            _optService = optService;
             _signInManager = signInManager;
             _configuration = config;
             _mapper = mapper;
@@ -88,7 +88,8 @@ namespace FOCS.Application.Services
 
         public async Task<AuthResult> LoginAsync(LoginRequest request, string? storeId = null)
         {
-            var user = await _userManager.FindByEmailAsync(request.Email);
+            ConditionCheck.CheckCondition(request.Phone != null, Errors.Common.Empty);
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.PhoneNumber == request.Phone);
 
             if (user == null)
             {
@@ -108,26 +109,19 @@ namespace FOCS.Application.Services
                 };
             }
 
-            if (!user.EmailConfirmed)
+            if (!user.PhoneNumberConfirmed)
             {
-                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-                await _emailService.SendEmailConfirmationAsync(user.Email, token);
+                var res = await _optService.SendOtpAsync(user.PhoneNumber);
 
                 return new AuthResult
                 {
                     IsSuccess = false,
-                    Errors = new List<string>() { Errors.AuthError.NotVerifyAccount }
+                    Errors = new List<string>() { Errors.AuthError.NotVerifyAccount,  res.ToString()}
                 };
             }
 
-            if (!user.PhoneNumberConfirmed)
-            {
-                //await _optService.SendOtpAsync(user.PhoneNumber);
-            }
 
-
-            if(storeId == null || string.IsNullOrEmpty(storeId))
+            if (storeId == null || string.IsNullOrEmpty(storeId))
             {
                 return await GenerateAuthResult(user, null);
             }
@@ -214,10 +208,9 @@ namespace FOCS.Application.Services
         {
             var user = new User
             {
-                Email = request.Email,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                UserName = request.Email.Split("@")[0],
+                UserName = request.FirstName.ToLower().Trim() + request.LastName.ToLower().Trim(),
                 PhoneNumber = request.Phone
             };
 
@@ -244,10 +237,7 @@ namespace FOCS.Application.Services
                 await _userStoreRepository.SaveChangesAsync();
             }
 
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-            // Send confirmation email (external email service assumed)
-            await _emailService.SendEmailConfirmationAsync(user.Email, token);
+            await _optService.SendOtpAsync(user.PhoneNumber);
 
             return true;
         }
@@ -261,6 +251,30 @@ namespace FOCS.Application.Services
             var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
 
             return result.Succeeded;
+        }
+
+        public async Task<bool> VerifyPhoneNumberAsync(string phone, string otp)
+        {
+            var isValid = await _optService.VerifyOtpAsync(phone, otp);
+
+            if(!isValid)
+                return false;
+
+            try
+            {
+                var user = await _userManager.Users.FirstOrDefaultAsync(x => x.PhoneNumber == phone);
+
+                ConditionCheck.CheckCondition(user != null, Errors.Common.NotFound);
+
+                user.PhoneNumberConfirmed = true;
+
+                await _userManager.UpdateAsync(user);
+
+                return true;
+            } catch(Exception ex)
+            {
+                return false;
+            }
         }
 
         public async Task<bool> ChangePassword(ChangePasswordRequest request, string email)

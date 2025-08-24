@@ -14,5 +14,7 @@ namespace FOCS.Common.Interfaces
         Task<bool> ChangePassword(ChangePasswordRequest request, string email);
 
         Task<bool> CreateOrUpdateMobileToken(MobileTokenRequest request);
+
+        Task<bool> VerifyPhoneNumberAsync(string phone, string otp);
     }
 }

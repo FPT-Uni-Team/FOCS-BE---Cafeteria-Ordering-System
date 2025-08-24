@@ -84,6 +84,7 @@ namespace FOCS.Common.Exceptions
             public const string PasswordReuse = "New password cannot be the same as old password.";
             public const string InvalidRefreshToken = "Invalid refresh token";
             public const string NotVerifyAccount = "Account is not verify";
+            public const string NotVerifyPhone = "Phone is not verify";
             public const string UserUnauthor = "You don't have permission to access";
         }
 

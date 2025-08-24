@@ -58,7 +58,7 @@ namespace FOCS.Controllers
         [HttpPost("verify-otp")]
         public async Task<IActionResult> VerifyOTP([FromQuery] string phone, [FromQuery] string otp)
         {
-            await _smsService.VerifyOtpAsync(phone, otp);
+            await _authService.VerifyPhoneNumberAsync(phone, otp);
             return Ok();
         }
 

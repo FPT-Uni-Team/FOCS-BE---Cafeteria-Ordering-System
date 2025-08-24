@@ -199,7 +199,7 @@ namespace FOCS.Application.Services
 
             if (string.Equals(actionType, "Add", StringComparison.OrdinalIgnoreCase))
             {
-                var qrAddBytes = GenerateQrCodeForTable(tableId, 1); // Generate QR code bytes
+                var qrAddBytes = GenerateQrCodeForTable(storeId, tableId, 1); // Generate QR code bytes
                 var formFileAdd = CreateFormFileFromBytes(qrAddBytes, tableId.ToString(), "image/png");
 
                 var uploadResult = await _cloudinaryService.UploadQrCodeForTable(formFileAdd, storeId.ToString(), tableId.ToString());
@@ -215,7 +215,7 @@ namespace FOCS.Application.Services
 
             table!.QrVersion++;
 
-            var qrBytes = GenerateQrCodeForTable(tableId, table.QrVersion);
+            var qrBytes = GenerateQrCodeForTable(storeId, tableId, table.QrVersion);
             var formFile = CreateFormFileFromBytes(qrBytes, tableId.ToString(), "image/png");
 
             var uploadResultUpdate = await _cloudinaryService.UploadQrCodeForTable(formFile, storeId.ToString(), table.Id.ToString());
@@ -235,9 +235,9 @@ namespace FOCS.Application.Services
             return new InMemoryFormFile(fileBytes, fileName, contentType);
         }
 
-        public byte[] GenerateQrCodeForTable(Guid tableId, int qrVersion)
+        public byte[] GenerateQrCodeForTable(Guid storeId, Guid tableId, int qrVersion)
         {
-            var url = $"https://focs.site/order?tableCode={tableId}&v={qrVersion}";
+            var url = $"https://focs-site.vercel.app/vi/{storeId}/{tableId}/home-page";
 
             using var qrGenerator = new QRCodeGenerator();
             using var qrCodeData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
