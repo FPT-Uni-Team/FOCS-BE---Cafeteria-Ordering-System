@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FOCS.Application.Services.Interface;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Order.Infrastucture.Entities;
@@ -14,20 +15,29 @@ namespace FOCS.Controllers
     public class MenuController : FocsController
     {
         private readonly IMenuService _menuService;
+        private readonly IAdminMenuItemService _adminMenuService;
         private readonly IMenuInsightService _menuInsightService;
         private readonly IMapper _mapper;
 
-        public MenuController(IMenuService menuService, IMapper mapper, IMenuInsightService menuInsightService)
+        public MenuController(IMenuService menuService, IMapper mapper, IMenuInsightService menuInsightService, IAdminMenuItemService adminMenuItemService)
         {
             _menuService = menuService;
             _mapper = mapper;
             _menuInsightService = menuInsightService;
+            _adminMenuService = adminMenuItemService;
         }
 
         [HttpPost]
         public async Task<PagedResult<MenuItemDTO>> GetMenuItemByStore([FromBody] UrlQueryParameters urlQueryParameters, [FromHeader] Guid storeId)
         { 
             return await _menuService.GetMenuItemByStore(urlQueryParameters, storeId);
+        }
+
+        [HttpGet("{menuItemId}")]
+        public async Task<IActionResult> GetDetail(Guid menuItemId)
+        {
+            var item = await _adminMenuService.GetMenuItemDetail(menuItemId, StoreId);
+            return item == null ? NotFound() : Ok(item);
         }
 
         [HttpPost("ids")]
