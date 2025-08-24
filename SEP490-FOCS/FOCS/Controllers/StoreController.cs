@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
-    [Authorize(Roles = Roles.Admin)]
     [Route("api/admin")]
     [ApiController]
     public class StoreController : FocsController
@@ -19,6 +18,7 @@ namespace FOCS.Controllers
             _adminStoreService = storeService;
         }
 
+        [Authorize(Roles = Roles.Admin)]
         [HttpPost("store")]
         public async Task<IActionResult> CreateStore([FromBody] StoreAdminDTO dto)
         {
@@ -39,6 +39,7 @@ namespace FOCS.Controllers
             return Ok(created);
         }
 
+        [Authorize(Roles = Roles.Admin)]
         [HttpPost("stores")]
         public async Task<IActionResult> GetStores([FromBody] UrlQueryParameters query)
         {
@@ -46,6 +47,7 @@ namespace FOCS.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = Roles.Admin)]
         [HttpPut("store/{id}")]
         public async Task<IActionResult> UpdateStore(Guid id, [FromBody] StoreAdminDTO dto)
         {
@@ -56,6 +58,7 @@ namespace FOCS.Controllers
             return success ? Ok() : NotFound();
         }
 
+        [Authorize(Roles = Roles.Admin)]
         [HttpDelete("store/{id}")]
         public async Task<IActionResult> DeleteStore(Guid id)
         {
