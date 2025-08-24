@@ -20,11 +20,8 @@ namespace FOCS.Common.Models
         [JsonPropertyName("menu_item_name")]
         public string MenuItemName { get; set; }
 
-        [JsonPropertyName("variant_id")]
-        public Guid VariantId { get; set; }
-
-        [JsonPropertyName("variant_name")]
-        public string VariantName { get; set; }
+        [JsonPropertyName("variants")]
+        public List<OrderDetailVariantDTO> Variants { get; set; }
 
         [JsonPropertyName("quantity")]
         public int Quantity { get; set; }
@@ -37,5 +34,14 @@ namespace FOCS.Common.Models
 
         [JsonPropertyName("note")]
         public string Note { get; set; }
+    }
+
+    public class OrderDetailVariantDTO
+    {
+        [JsonPropertyName("variant_id")]
+        public Guid VariantId { get; set; }
+
+        [JsonPropertyName("variant_name")]
+        public string VariantName { get; set; }
     }
 }

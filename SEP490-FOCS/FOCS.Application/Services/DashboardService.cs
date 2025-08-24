@@ -87,11 +87,13 @@ namespace FOCS.Application.Services
 
             var revenue = await reportOrders
                 .SelectMany(x => x.OrderDetails)
-                .SumAsync(od => od.Quantity * od.UnitPrice);
+                .Select(od => od.Quantity * od.UnitPrice)
+                .DefaultIfEmpty(0)
+                .SumAsync();
 
             var itemSales = await reportOrders
                 .SelectMany(o => o.OrderDetails)
-                .GroupBy(od => new { od.MenuItemId, od.VariantId, od.MenuItem.Name })
+                .GroupBy(od => new { od.MenuItemId, od.MenuItem.Name })
                 .Select(g => new
                 {
                     ItemName = g.Key.Name,
@@ -100,7 +102,7 @@ namespace FOCS.Application.Services
                 .OrderByDescending(x => x.TotalQuantity)
                 .ToListAsync();
 
-            var bestSellingItem = itemSales.Take(5);
+            var bestSellingItems = itemSales.Take(5).ToList();
             var worstSellingItem = itemSales.LastOrDefault();
 
             return new OverviewDayResponse
@@ -108,13 +110,14 @@ namespace FOCS.Application.Services
                 TotalOrders = totalOrders,
                 ActiveTables = activeTables,
                 TotalRevenueToday = revenue,
-                BestSellingItem = bestSellingItem.Select(x => new BestSellingItemResponse
+                BestSellingItem = bestSellingItems.Select(x => new BestSellingItemResponse
                 {
                     ItemName = x.ItemName,
                     Quantity = x.TotalQuantity
                 }).ToList()
             };
         }
+
 
 
         public async Task<ProdOrderReportResponse> GetKitchenStatsAsync(string storeId, bool? today = null)

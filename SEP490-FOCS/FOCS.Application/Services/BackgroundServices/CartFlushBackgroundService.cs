@@ -84,27 +84,27 @@ namespace FOCS.Application.Services.BackgroundServices
                 }
                 else
                 {
-                    var newOrder = new Order.Infrastucture.Entities.Order
-                    {
-                        Id = Guid.NewGuid(),
-                        StoreId = storeId,
-                        TableId = tableId,
-                        UserId = actorGuid,
-                        OrderStatus = OrderStatus.CartSaved,
-                        CreatedAt = DateTime.UtcNow,
-                        OrderDetails = cartItems.SelectMany(ci =>
-                            ci.Variants.Select(x => x.VariantId).Select(variantId => new OrderDetail
-                            {
-                                Id = Guid.NewGuid(),
-                                MenuItemId = ci.MenuItemId,
-                                VariantId = variantId,
-                                Quantity = ci.Quantity,
-                                Note = ci.Note
-                            })
-                        ).ToList()
-                    };
+                    //var newOrder = new Order.Infrastucture.Entities.Order
+                    //{
+                    //    Id = Guid.NewGuid(),
+                    //    StoreId = storeId,
+                    //    TableId = tableId,
+                    //    UserId = actorGuid,
+                    //    OrderStatus = OrderStatus.CartSaved,
+                    //    CreatedAt = DateTime.UtcNow,
+                    //    OrderDetails = cartItems.SelectMany(ci =>
+                    //        ci.Variants.Select(x => x.VariantId).Select(variantId => new OrderDetail
+                    //        {
+                    //            Id = Guid.NewGuid(),
+                    //            MenuItemId = ci.MenuItemId,
+                    //            VariantId = variantId,
+                    //            Quantity = ci.Quantity,
+                    //            Note = ci.Note
+                    //        })
+                    //    ).ToList()
+                    //};
 
-                    await orderRepository.AddAsync(newOrder);
+                    //await orderRepository.AddAsync(newOrder);
                 }
 
                 _logger.LogInformation("Flushed cart {key} into DB at {time}", key, DateTime.UtcNow);
