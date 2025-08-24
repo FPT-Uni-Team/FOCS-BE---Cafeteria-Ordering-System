@@ -31,9 +31,9 @@ namespace FOCS.Controllers
 
         [HttpPost("history")]
         //[Authorize(Roles = Roles.User + "," + Roles.Staff)]
-        public async Task<PagedResult<OrderDTO>> GetOrders(UrlQueryParameters queryParameters)
+        public async Task<PagedResult<OrderDTO>> GetOrders(UrlQueryParameters queryParameters, [FromHeader] string actorId)
         {
-            return await _orderService.GetListOrders(queryParameters, StoreId, UserId);
+            return await _orderService.GetListOrders(queryParameters, StoreId, UserId ?? actorId);
         }
 
         [HttpPost]
