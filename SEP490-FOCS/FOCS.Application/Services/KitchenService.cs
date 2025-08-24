@@ -64,8 +64,8 @@ namespace FOCS.Application.Services
                         MenuItemName = group.First().MenuItemName,
                         Variants = group.Select(detail => new VariantWrapOrder
                         {
-                            VariantId = detail.VariantId,
-                            VariantName = detail.VariantName,
+                            VariantId = string.Join(",", detail.Variants.Select(x => x.VariantId)),
+                            VariantName = string.Join(" - ", detail.Variants.Select(x => x.VariantName)),
                             Note = detail.Note
                         }).ToList()
                     }).ToList();

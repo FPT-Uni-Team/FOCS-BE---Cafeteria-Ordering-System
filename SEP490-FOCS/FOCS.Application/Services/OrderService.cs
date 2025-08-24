@@ -180,8 +180,8 @@ namespace FOCS.Application.Services
 
         public async Task<PagedResult<OrderDTO>> GetListOrders(UrlQueryParameters queryParameters, string storeId, string userId)
         {
-            var ordersQuery = _orderRepository.AsQueryable().Where(x => x.StoreId == Guid.Parse(storeId) && x.UserId == Guid.Parse(userId) && !x.IsDeleted);
-
+            var ordersQuery = _orderRepository.AsQueryable().Include(x => x.OrderDetails).Where(x => x.StoreId == Guid.Parse(storeId) && x.UserId == Guid.Parse(userId) && !x.IsDeleted);
+            var test = ordersQuery.ToList();
             ordersQuery = ApplyFilters(ordersQuery, queryParameters);
             ordersQuery = ApplySearch(ordersQuery, queryParameters);
             ordersQuery = ApplySort(ordersQuery, queryParameters);
@@ -207,8 +207,9 @@ namespace FOCS.Application.Services
                 return new OrderDTO();
 
             var variantIds = orderByCode.OrderDetails
-                                  .Where(od => od.VariantId.HasValue)
-                                  .Select(od => od.VariantId.Value)
+                                  .Where(od => od.Variants != null)
+                                  .SelectMany(od => od.Variants)
+                                  .Select(x => x.Id)
                                   .Distinct()
                                   .ToList();
 
@@ -220,9 +221,13 @@ namespace FOCS.Application.Services
 
             foreach (var item in orderByCode.OrderDetails)
             {
-                if (variantDict.TryGetValue((Guid)item.VariantId, out var variant))
+                item.Variants = item.Variants ?? new List<MenuItemVariant>();
+                foreach(var itemVariant in item.Variants)
                 {
-                    item.Variant = variant;
+                    if (variantDict.TryGetValue((Guid)itemVariant.Id, out var variant))
+                    {
+                        item.Variants.Add(variant);
+                    }
                 }
             }
 
@@ -262,7 +267,7 @@ namespace FOCS.Application.Services
 
             var ordersPending = await _orderRepository.AsQueryable()
                                                       .Include(x => x.OrderDetails)
-                                                      .ThenInclude(x => x.Variant)
+                                                      .ThenInclude(x => x.Variants)
                                                       .Where(x => x.OrderStatus == OrderStatus.Pending
                                                               && !x.IsDeleted
                                                               && x.PaymentStatus == PaymentStatus.Paid
@@ -429,8 +434,10 @@ namespace FOCS.Application.Services
                 };
 
                 var ordersDetailCreate = new List<OrderDetail>();
-                if(order.DiscountResult.ItemDiscountDetails != null)
+
+                if (order.DiscountResult?.ItemDiscountDetails != null && order.DiscountResult.ItemDiscountDetails.Any())
                 {
+                    // Trường hợp có discount
                     foreach (var item in order.DiscountResult.ItemDiscountDetails)
                     {
                         var itemCodes = item.BuyItemCode?.Split("_");
@@ -462,20 +469,50 @@ namespace FOCS.Application.Services
 
                         double unitPrice = (double)(price.ProductPrice + totalVariantPrice);
 
+                        var variants = await _variantRepository.AsQueryable().Where(x => variantIds.Contains(x.Id)).ToListAsync();
+
                         ordersDetailCreate.AddRange(variantIds.Select(x => new OrderDetail
                         {
                             Id = Guid.NewGuid(),
                             Quantity = item.Quantity,
                             UnitPrice = unitPrice,
-                            TotalPrice = unitPrice - (double)item.DiscountAmount,
+                            TotalPrice = unitPrice - (double)item.DiscountAmount, // đã có discount
                             Note = "",
                             MenuItemId = productId,
-                            VariantId = x,
+                            Variants = variants,
                             OrderId = orderCreate.Id
                         }).ToList());
                     }
-
                 }
+                else
+                {
+                    foreach (var item in order.Items)
+                    {
+                        double price = 0;
+                        var currentProductPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, null, order.StoreId);
+                        double unitPrice = currentProductPrice.ProductPrice;
+                        foreach (var itemVariant in item.Variants)
+                        {
+                            var currentPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, order.StoreId);
+                            unitPrice += currentPrice.VariantPrice ?? 0;
+                        }
+
+                        var variants = await _variantRepository.AsQueryable().Where(x => item.Variants.Select(x => x.VariantId).Contains(x.Id)).ToListAsync();
+
+                        ordersDetailCreate.Add(new OrderDetail
+                        {
+                            Id = Guid.NewGuid(),
+                            Quantity = item.Quantity,
+                            UnitPrice = unitPrice,
+                            TotalPrice = unitPrice * item.Quantity,
+                            Note = item.Note ?? "",
+                            MenuItemId = item.MenuItemId,
+                            Variants = variants,
+                            OrderId = orderCreate.Id
+                        });
+                    }
+                }
+
 
                 if (order.DiscountResult.IsUsePoint.HasValue && order.DiscountResult.IsUsePoint == true)
                 {
