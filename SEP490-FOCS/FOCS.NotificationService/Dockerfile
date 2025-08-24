@@ -10,7 +10,7 @@ COPY . .
 
 # Publish NotificationService
 WORKDIR /src/FOCS.NotificationService
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet publish FOCS.NotificationService.csproj -c Release -o /app/publish
 
 # Final
 FROM base AS final
