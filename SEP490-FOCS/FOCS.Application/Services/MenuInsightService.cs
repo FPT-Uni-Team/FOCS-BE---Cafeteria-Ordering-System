@@ -98,6 +98,7 @@ namespace FOCS.Application.Services
             {
                 MenuItemId = g.MenuItemId,
                 Name = g.MenuItem.Name,
+                Price = (decimal?)g.MenuItem.BasePrice,
                 Variants = new List<VariantInsightResponse>
                 {
                     new VariantInsightResponse
