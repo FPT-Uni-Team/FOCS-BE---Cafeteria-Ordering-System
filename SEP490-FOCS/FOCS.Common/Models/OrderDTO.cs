@@ -49,6 +49,9 @@ namespace FOCS.Common.Models
         [JsonPropertyName("created_at")]
         public DateTime? CreatedAt { get; set; }
 
+        [JsonPropertyName("remaining_time")]
+        public TimeSpan? RemainingTime { get; set; } = TimeSpan.Zero;
+
         [JsonPropertyName("created_by")]
         public string? CreatedBy { get; set; }
 
