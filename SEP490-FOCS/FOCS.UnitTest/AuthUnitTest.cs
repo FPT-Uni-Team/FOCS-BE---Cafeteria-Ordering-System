@@ -71,7 +71,7 @@ namespace FOCS.UnitTest
                 _mockMapper.Object,
                 _mockEmailService.Object,
                 _mockTokenService.Object,
-                _mockOtpService.Object,                       
+                //_mockOtpService.Object,                       
                 _mockUserRefreshTokenRepository.Object,
                 _mockStoreRepository.Object,
                 _mockLogger.Object,
