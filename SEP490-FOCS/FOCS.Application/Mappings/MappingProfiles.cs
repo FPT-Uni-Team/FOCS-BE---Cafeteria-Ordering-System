@@ -4,6 +4,7 @@ using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.Order.Infrastucture.Entities;
+using OrderEnity = FOCS.Order.Infrastucture.Entities.Order;
 
 namespace FOCS.Application.Mappings
 {
@@ -88,9 +89,25 @@ namespace FOCS.Application.Mappings
             CreateMap<User, StaffProfileDTO>().ReverseMap();
 
             // Order mapping
-            CreateMap<OrderDTO, Order.Infrastucture.Entities.Order>().ReverseMap(); 
-            CreateMap<OrderDetailDTO, OrderDetail>().ReverseMap()
-                .ForMember(dest => dest.Variants, opt => opt.MapFrom(src => src.Variants));
+            // Order -> OrderDTO
+            CreateMap<OrderEnity, OrderDTO>()
+                .ForMember(dest => dest.OrderCode,
+                           opt => opt.MapFrom(src => src.OrderCode.ToString()))
+                .ForMember(dest => dest.CouponCode,
+                           opt => opt.MapFrom(src => src.Coupon != null ? src.Coupon.Code : null))
+                .ForMember(dest => dest.OrderDetails,
+                           opt => opt.MapFrom(src => src.OrderDetails));
+
+            // OrderDTO -> Order
+            CreateMap<OrderDTO, OrderEnity>()
+                 .ForMember(dest => dest.OrderCode,
+                            opt => opt.MapFrom(src =>
+                                !string.IsNullOrEmpty(src.OrderCode) ? Convert.ToInt64(src.OrderCode) : 0))
+                 .ForMember(dest => dest.Coupon,
+                            opt => opt.Ignore()) // load từ DB
+                 .ForMember(dest => dest.OrderDetails,
+                            opt => opt.MapFrom(src => src.OrderDetails));
+
 
             CreateMap<VariantOptionDTO, MenuItemVariant>().ReverseMap();
 
