@@ -19,6 +19,11 @@ services:
     volumes:
       - ./dataprotection-keys:/app/dataprotection-keys
     restart: always
+    
+  notification-service:
+    build: .
+    volumes:
+      - /root/firebase-adminsdk.json:/app/firebase-service-account.json:ro
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2019-latest
