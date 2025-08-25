@@ -194,9 +194,10 @@ namespace FOCS.Application.Services
             //create staff
             var staff = new User
             {
+                Email = request.Email,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                UserName = request.Phone,
+                UserName = request.Email.Split("@")[0],
                 PhoneNumber = request.Phone,
                 IsActive = true,
                 EmailConfirmed = true
