@@ -134,7 +134,6 @@ namespace FOCS.UnitTest.AuthServiceTest
         {
             return new RegisterRequest
             {
-                Email = email,
                 Password = "Password123!",
                 FirstName = "Test",
                 LastName = "User",

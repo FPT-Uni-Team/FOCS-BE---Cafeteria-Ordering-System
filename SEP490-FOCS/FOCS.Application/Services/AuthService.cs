@@ -212,6 +212,9 @@ namespace FOCS.Application.Services
 
         public async Task<bool> RegisterAsync(RegisterRequest request, Guid StoreId, string role)
         {
+            var existing = await _userManager.Users.AsQueryable().Where(u => u.PhoneNumber == request.Phone).FirstOrDefaultAsync();
+            ConditionCheck.CheckCondition(existing == null, Errors.AuthError.PhoneRegistered, Errors.FieldName.Phone);
+
             var user = new User
             {
                 Email = request.Email,
@@ -267,7 +270,7 @@ namespace FOCS.Application.Services
         {
             var isValid = await _optService.VerifyOtpAsync(phone, otp);
 
-            if(!isValid)
+            if (!isValid)
                 return false;
 
             try
@@ -281,7 +284,8 @@ namespace FOCS.Application.Services
                 await _userManager.UpdateAsync(user);
 
                 return true;
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return false;
             }

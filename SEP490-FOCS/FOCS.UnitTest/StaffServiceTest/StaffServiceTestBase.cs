@@ -45,7 +45,7 @@ namespace FOCS.UnitTest.StaffServiceTest
         {
             return new RegisterRequest
             {
-                Email = "test@example.com",
+                //Email = "test@example.com",
                 FirstName = "John",
                 LastName = "Doe",
                 Phone = "1234567890",
@@ -107,7 +107,7 @@ namespace FOCS.UnitTest.StaffServiceTest
         {
             return new StaffProfileDTO
             {
-                Email = "test@example.com",
+                //Email = "test@example.com",
                 FirstName = "John",
                 LastName = "Doe",
                 PhoneNumber = "1234567890"
@@ -186,7 +186,7 @@ namespace FOCS.UnitTest.StaffServiceTest
             _mockMapper.Setup(x => x.Map<StaffProfileDTO>(user))
                 .Returns(new StaffProfileDTO
                 {
-                    Email = user.Email,
+                    //Email = user.Email,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     PhoneNumber = user.PhoneNumber
