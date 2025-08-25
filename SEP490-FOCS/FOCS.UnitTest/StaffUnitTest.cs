@@ -64,7 +64,7 @@ namespace FOCS.UnitTest
             // Arrange
             var request = new RegisterRequest
             {
-                Email = email,
+                //Email = email,
                 Password = password,
                 ConfirmPassword = confirmPassword,
                 Phone = phone,
@@ -98,7 +98,7 @@ namespace FOCS.UnitTest
             // Arrange
             var request = new RegisterRequest
             {
-                Email = email,
+                //Email = email,
                 Password = password,
                 ConfirmPassword = confirmPassword,
                 Phone = phone,
@@ -147,7 +147,7 @@ namespace FOCS.UnitTest
             // Arrange
             var request = new RegisterRequest
             {
-                Email = email,
+                //Email = email,
                 Password = password,
                 ConfirmPassword = confirmPassword,
                 Phone = phone,
@@ -166,7 +166,7 @@ namespace FOCS.UnitTest
             var user = new User
             {
                 Id = Guid.NewGuid().ToString(),
-                Email = request.Email,
+                //Email = request.Email,
                 FirstName = request.FirstName,
                 LastName = request.LastName
             }; 
@@ -174,7 +174,7 @@ namespace FOCS.UnitTest
             var dto = new StaffProfileDTO
             {
                 Id = Guid.Parse(user.Id),
-                Email = email,
+                //Email = email,
                 PhoneNumber = phone,
                 FirstName = firstName,
                 LastName = lastName,
@@ -238,7 +238,7 @@ namespace FOCS.UnitTest
             var dto = new StaffProfileDTO
             {
                 Id = Guid.Parse(staffId),
-                Email = email,
+                //Email = email,
                 PhoneNumber = phone,
                 FirstName = firstName,
                 LastName = lastName
@@ -270,7 +270,7 @@ namespace FOCS.UnitTest
             var dto = new StaffProfileDTO
             {
                 Id = staffIdGuid,
-                Email = email,
+                //Email = email,
                 PhoneNumber = phone,
                 FirstName = firstName,
                 LastName = lastName
@@ -338,7 +338,7 @@ namespace FOCS.UnitTest
             var dto = new StaffProfileDTO
             {
                 Id = Guid.Parse(staffId),
-                Email = email,
+                //Email = email,
                 PhoneNumber = phone,
                 FirstName = firstName,
                 LastName = lastName
