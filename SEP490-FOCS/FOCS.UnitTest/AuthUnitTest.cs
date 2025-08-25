@@ -271,7 +271,7 @@ namespace FOCS.UnitTest
             // Arrange
             var request = new RegisterRequest
             {
-                Email = email,
+                //Email = email,
                 Password = password,
                 ConfirmPassword = confirmPassword,
                 Phone = phone,
@@ -300,7 +300,7 @@ namespace FOCS.UnitTest
             // Arrange
             var request = new RegisterRequest
             {
-                Email = email,
+                //Email = email,
                 Password = password,
                 ConfirmPassword = confirmPassword,
                 Phone = phone,
@@ -331,18 +331,17 @@ namespace FOCS.UnitTest
         }
 
         [Theory]
-        [InlineData("phuc@user.com", "phucpassword", "phucpassword", "0987654321", "Nguyen", "Phuc", "3fa85f64-5717-4562-b3fc-2c963f66afa6")]
-        [InlineData("phuc@user.com", "phucpassword", "phucpassword", null, "Nguyen", "Phuc", "3fa85f64-5717-4562-b3fc-2c963f66afa6")]
-        [InlineData("phuc@user.com", "phucpassword", "phucpassword", "0987654321", null, "Phuc", "3fa85f64-5717-4562-b3fc-2c963f66afa6")]
-        [InlineData("phuc@user.com", "phucpassword", "phucpassword", "0987654321", "Nguyen", null, "3fa85f64-5717-4562-b3fc-2c963f66afa6")]
+        [InlineData("phucpassword", "phucpassword", "0987654321", "Nguyen", "Phuc", "3fa85f64-5717-4562-b3fc-2c963f66afa6")]
+        [InlineData("phucpassword", "phucpassword", null, "Nguyen", "Phuc", "3fa85f64-5717-4562-b3fc-2c963f66afa6")]
+        [InlineData("phucpassword", "phucpassword", "0987654321", null, "Phuc", "3fa85f64-5717-4562-b3fc-2c963f66afa6")]
+        [InlineData("phucpassword", "phucpassword", "0987654321", "Nguyen", null, "3fa85f64-5717-4562-b3fc-2c963f66afa6")]
         public async Task RegisterAsync_WithValidInput_ShouldReturnTrue(
-            string email, string password, string confirmPassword, string phone,
+            string password, string confirmPassword, string phone,
             string firstName, string lastName, string storeIdStr)
         {
             // Arrange
             var request = new RegisterRequest
             {
-                Email = email,
                 Password = password,
                 ConfirmPassword = confirmPassword,
                 Phone = phone,
@@ -368,8 +367,8 @@ namespace FOCS.UnitTest
             // Setup email confirmation
             _mockUserManager.Setup(x => x.GenerateEmailConfirmationTokenAsync(It.IsAny<User>()))
                 .ReturnsAsync("email-token");
-            _mockEmailService.Setup(x => x.SendEmailConfirmationAsync(email, "email-token"))
-                .ReturnsAsync(true);
+            //_mockEmailService.Setup(x => x.SendEmailConfirmationAsync(email, "email-token"))
+            //    .ReturnsAsync(true);
 
             // Act
             var result = await _authService.RegisterAsync(request, storeId, Roles.User);

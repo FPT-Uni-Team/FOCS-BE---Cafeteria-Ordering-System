@@ -45,7 +45,7 @@ namespace FOCS.UnitTest.StaffServiceTest
         {
             return new RegisterRequest
             {
-                Email = "test@example.com",
+                //Email = "test@example.com",
                 FirstName = "John",
                 LastName = "Doe",
                 Phone = "1234567890",

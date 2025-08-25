@@ -28,7 +28,7 @@ namespace FOCS.UnitTest.StaffServiceTest
                 FirstName = "UpdatedFirstName",
                 LastName = "UpdatedLastName",
                 PhoneNumber = "9876543210",
-                Email = "updated@test.com" // This should be ignored
+                //Email = "updated@test.com" // This should be ignored
             };
 
             var staffUserStore = CreateTestUserStore(Guid.Parse(staffId), storeId);
