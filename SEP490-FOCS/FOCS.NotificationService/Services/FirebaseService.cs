@@ -13,8 +13,9 @@ namespace FOCS.NotificationService.Services
 
         public FirebaseService(IConfiguration config, ILogger<FirebaseService> logger)
         {
-            var path = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS") 
-                       ?? Path.Combine(Directory.GetCurrentDirectory(), "firebase-service-account.json");
+            var path = "/root/firebase-adminsdk.json";
+            // var path = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS") 
+            //            ?? Path.Combine(Directory.GetCurrentDirectory(), "firebase-service-account.json");
 
             if (!File.Exists(path))
             {
