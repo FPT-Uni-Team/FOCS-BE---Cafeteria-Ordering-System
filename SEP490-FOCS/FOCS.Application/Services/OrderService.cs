@@ -418,7 +418,7 @@ namespace FOCS.Application.Services
                     SubTotalAmout = (double)(order.DiscountResult.TotalPrice + order.DiscountResult.TotalDiscount),
                     TaxAmount = store.CustomTaxRate ?? 0,
                     DiscountAmount = (double)order.DiscountResult.TotalDiscount,
-                    TotalAmount = (double)((double)order.DiscountResult.TotalPrice + store.CustomTaxRate ?? 0),
+                    TotalAmount = (double)((double)order.DiscountResult.TotalPrice + (double)order.DiscountResult.TotalPrice * store.CustomTaxRate ?? 0),
                     CustomerNote = order.Note ?? "",
                     StoreId = order.StoreId,
                     CouponId = couponCurrent,
