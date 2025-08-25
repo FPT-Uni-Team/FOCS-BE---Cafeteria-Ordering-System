@@ -60,7 +60,7 @@ namespace FOCS.UnitTest.AuthServiceTest
                 _mapperMock.Object,
                 _emailServiceMock.Object,
                 _tokenServiceMock.Object,
-                _optServiceMock.Object,                       // 👈 thêm lại dòng này
+                //_optServiceMock.Object,                       // 👈 thêm lại dòng này
                 _userRefreshTokenRepositoryMock.Object,
                 _storeRepositoryMock.Object,
                 _loggerMock.Object,
@@ -134,7 +134,6 @@ namespace FOCS.UnitTest.AuthServiceTest
         {
             return new RegisterRequest
             {
-                Email = email,
                 Password = "Password123!",
                 FirstName = "Test",
                 LastName = "User",

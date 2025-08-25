@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CloudinaryDotNet.Core;
 using FOCS.Application.DTOs;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
@@ -63,7 +64,7 @@ namespace FOCS.Application.Services
         {
             var staff = await ValidatePermissionAsync(staffId, managerId, checkStaff: true);
 
-            dto.Email = staff.Email;
+            dto.PhoneNumber = staff.PhoneNumber;
             _mapper.Map(dto, staff);
             staff.UpdatedAt = DateTime.UtcNow;
             staff.UpdatedBy = staffId;
@@ -154,7 +155,7 @@ namespace FOCS.Application.Services
         {
             var manager = await ValidatePermissionAsync(managerId, adminId, checkAdmin: true);
 
-            dto.Email = manager.Email;
+            dto.PhoneNumber = manager.PhoneNumber;
             _mapper.Map(dto, manager);
             manager.UpdatedAt = DateTime.UtcNow;
             manager.UpdatedBy = managerId;
@@ -191,15 +192,20 @@ namespace FOCS.Application.Services
                 !managerStoreId.Equals(null) && managerStoreId.Select(x => x.StoreId).Contains(storeIdGuid),
                 Errors.AuthError.UserUnauthor);
 
+            var existing = await _userManager.Users.AsQueryable().Where(u => u.PhoneNumber == request.Phone).FirstOrDefaultAsync();
+            ConditionCheck.CheckCondition(existing == null, Errors.AuthError.PhoneRegistered, Errors.FieldName.Phone);
+
             //create staff
             var staff = new User
             {
+                Email = request.Email,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                UserName = request.Phone,
+                UserName = request.Email.Split("@")[0],
                 PhoneNumber = request.Phone,
                 IsActive = true,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                PhoneNumberConfirmed = true
             };
 
             var result = await _userManager.CreateAsync(staff, request.Password);
@@ -356,7 +362,7 @@ namespace FOCS.Application.Services
 
             return parameters.SearchBy.ToLowerInvariant() switch
             {
-                "email" => query.Where(p => p.Email.ToLower().Contains(searchValue)),
+                //"email" => query.Where(p => p.Email.ToLower().Contains(searchValue)),
                 "first_name" => query.Where(p => p.FirstName.ToLower().Contains(searchValue)),
                 "last_name" => query.Where(p => p.LastName.ToLower().Contains(searchValue)),
                 "phone" => query.Where(p => p.PhoneNumber.ToLower().Contains(searchValue)),
@@ -366,15 +372,15 @@ namespace FOCS.Application.Services
 
         private static IQueryable<StaffProfileDTO> ApplySort(IQueryable<StaffProfileDTO> query, UrlQueryParameters parameters)
         {
-            if (string.IsNullOrWhiteSpace(parameters.SortBy)) return query.OrderBy(p => p.Email);
+            if (string.IsNullOrWhiteSpace(parameters.SortBy)) return query.OrderBy(p => p.FirstName);
 
             var isDescending = string.Equals(parameters.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
 
             return parameters.SortBy.ToLowerInvariant() switch
             {
-                "email" => isDescending
-                    ? query.OrderByDescending(p => p.Email)
-                    : query.OrderBy(p => p.Email),
+                //"email" => isDescending
+                //    ? query.OrderByDescending(p => p.Email)
+                //    : query.OrderBy(p => p.Email),
                 "first_name" => isDescending
                     ? query.OrderByDescending(p => p.FirstName)
                     : query.OrderBy(p => p.FirstName),
@@ -387,7 +393,7 @@ namespace FOCS.Application.Services
                 "role" => isDescending
                     ? query.OrderByDescending(p => p.Roles)
                     : query.OrderBy(p => p.Roles),
-                _ => query.OrderBy(p => p.Email)
+                _ => query
             };
         }
         #endregion

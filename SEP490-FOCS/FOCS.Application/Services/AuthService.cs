@@ -45,13 +45,13 @@ namespace FOCS.Application.Services
 
         private readonly IRepository<UserStore> _userStoreRepository;
 
-        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, 
+        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager,
             //OtpService optService,
-            IConfiguration config, IMapper mapper, IEmailService emailService, ITokenService tokenService, OtpService optService,
+            IConfiguration config, IMapper mapper, IEmailService emailService, ITokenService tokenService,
             IRepository<UserRefreshToken> userRepo, IRepository<Store> storeRepository, ILogger<AuthService> logger, IRepository<UserStore> userStoreRepository, IRepository<MobileTokenDevice> mobileTokenDevice)
         {
             _userManager = userManager;
-            _optService = optService;
+            //_optService = optService;
             _signInManager = signInManager;
             _configuration = config;
             _mapper = mapper;
@@ -88,8 +88,7 @@ namespace FOCS.Application.Services
 
         public async Task<AuthResult> LoginAsync(LoginRequest request, string? storeId = null)
         {
-            ConditionCheck.CheckCondition(request.Phone != null, Errors.Common.Empty);
-            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.PhoneNumber == request.Phone);
+            var user = await _userManager.FindByEmailAsync(request.Email);
 
             if (user == null)
             {
@@ -109,15 +108,22 @@ namespace FOCS.Application.Services
                 };
             }
 
-            if (!user.PhoneNumberConfirmed)
+            if (!user.EmailConfirmed)
             {
-                var res = await _optService.SendOtpAsync(user.PhoneNumber);
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                await _emailService.SendEmailConfirmationAsync(user.Email, token);
 
                 return new AuthResult
                 {
                     IsSuccess = false,
-                    Errors = new List<string>() { Errors.AuthError.NotVerifyAccount,  res.ToString()}
+                    Errors = new List<string>() { Errors.AuthError.NotVerifyAccount }
                 };
+            }
+
+            if (!user.PhoneNumberConfirmed)
+            {
+                //await _optService.SendOtpAsync(user.PhoneNumber);
             }
 
 
@@ -206,11 +212,15 @@ namespace FOCS.Application.Services
 
         public async Task<bool> RegisterAsync(RegisterRequest request, Guid StoreId, string role)
         {
+            //var existing = await _userManager.Users.AsQueryable().Where(u => u.PhoneNumber == request.Phone).FirstOrDefaultAsync();
+            //ConditionCheck.CheckCondition(existing == null, Errors.AuthError.PhoneRegistered, Errors.FieldName.Phone);
+
             var user = new User
             {
+                Email = request.Email,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                UserName = request.FirstName.ToLower().Trim() + request.LastName.ToLower().Trim(),
+                UserName = request.Email.Split("@")[0],
                 PhoneNumber = request.Phone
             };
 
@@ -237,7 +247,10 @@ namespace FOCS.Application.Services
                 await _userStoreRepository.SaveChangesAsync();
             }
 
-            await _optService.SendOtpAsync(user.PhoneNumber);
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+            // Send confirmation email (external email service assumed)
+            await _emailService.SendEmailConfirmationAsync(user.Email, token);
 
             return true;
         }
@@ -257,7 +270,7 @@ namespace FOCS.Application.Services
         {
             var isValid = await _optService.VerifyOtpAsync(phone, otp);
 
-            if(!isValid)
+            if (!isValid)
                 return false;
 
             try
@@ -271,7 +284,8 @@ namespace FOCS.Application.Services
                 await _userManager.UpdateAsync(user);
 
                 return true;
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return false;
             }

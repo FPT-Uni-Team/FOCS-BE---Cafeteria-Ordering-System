@@ -11,12 +11,13 @@ namespace FOCS.Common.Models
 {
     public class LoginRequest
     {
-        [Required]
-        [Phone]
-        public string Phone { get; set; }
+        //[JsonIgnore]
+        //[Phone]
+        //public string Phone { get; set; }
 
-        [JsonIgnore]
-        public string Email { get; set; } = string.Empty;
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
 
         [Required]
         [DataType(DataType.Password)]
