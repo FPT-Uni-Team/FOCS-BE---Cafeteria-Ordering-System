@@ -23,6 +23,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("{promotionId}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetPromotionDetails(Guid promotionId)
         {
             var result = await _promotionService.GetPromotionAsync(promotionId, UserId);
@@ -30,6 +31,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("list")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetPromotions([FromBody] UrlQueryParameters query)
         {
             ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid),

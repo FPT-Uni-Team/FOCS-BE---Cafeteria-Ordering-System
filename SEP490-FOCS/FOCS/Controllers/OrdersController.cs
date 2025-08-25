@@ -61,6 +61,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPatch("change-status/{code}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<bool> ChangeStatusOrder(string code, ChangeOrderStatusRequest request)
         {
             return await _orderService.ChangeStatusOrder(code, request, StoreId);
@@ -73,6 +74,7 @@ namespace FOCS.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         public async Task<bool> DeleteOrderAsync(Guid orderId)
         {
             return await _orderService.DeleteOrderAsync(orderId, UserId, StoreId);

@@ -47,6 +47,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("list")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetList([FromBody] UrlQueryParameters query)
         {
             var result = await _menuService.GetAllMenuItemAsync(query, Guid.Parse(StoreId));
@@ -54,6 +55,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("{menuItemId}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetDetail(Guid menuItemId)
         {
             var item = await _menuService.GetMenuItemDetail(menuItemId, StoreId);
@@ -61,6 +63,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("bulk")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetByIds([FromBody] List<Guid> ids)
         {
             var items = await _menuService.GetListMenuItemDetail(ids, StoreId, UserId);
@@ -108,6 +111,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("{id}/variant-groups")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetVariantGroups(Guid id)
         {
             var result = await _menuItemsVariantGroupService.GetVariantGroupsWithVariants(id, Guid.Parse(StoreId));
@@ -137,6 +141,7 @@ namespace FOCS.Controllers
         #region IMAGE MANAGEMENT
 
         [HttpGet("{menuItemId}/images")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetImages(Guid menuItemId)
         {
             var images = await _menuManagementService.GetImagesOfProduct(menuItemId, StoreId);

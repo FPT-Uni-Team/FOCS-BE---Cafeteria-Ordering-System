@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
+    [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
     [Route("api/admin")]
     [ApiController]
     public class BrandController : FocsController
@@ -29,6 +30,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("brands")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetAllBrands([FromBody] UrlQueryParameters query)
         {
             var pagedResult = await _adminBrandService.GetAllBrandsAsync(query, UserId);
@@ -36,6 +38,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("brand/{id}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetBrandDetail(Guid id)
         {
             var brandDetail = await _adminBrandService.GetBrandDetailAsync(id, UserId);

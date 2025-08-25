@@ -1,13 +1,16 @@
 ﻿using FOCS.Application.Services.Interface;
+using FOCS.Common.Constants;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
 using FOCS.Common.Models.Dashboard;
 using FOCS.Order.Infrastucture.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
+    [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
     [Route("api")]
     [ApiController]
     public class DashboardController : FocsController

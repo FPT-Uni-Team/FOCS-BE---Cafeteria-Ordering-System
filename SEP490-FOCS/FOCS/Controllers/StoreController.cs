@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
+    [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
     [Route("api/admin")]
     [ApiController]
     public class StoreController : FocsController
