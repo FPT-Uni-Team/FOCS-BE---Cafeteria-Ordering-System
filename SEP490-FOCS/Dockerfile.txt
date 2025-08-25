@@ -15,6 +15,7 @@ COPY FOCS.Realtime.Hub/*.csproj ./FOCS.Realtime.Hub/
 COPY FOCS.NotificationService/*.csproj ./FOCS.NotificationService/
 COPY FOCS/*.csproj ./FOCS/
 COPY FOCS.UnitTest/*.csproj ./FOCS.UnitTest/
+COPY firebase-adminsdk.json /app/firebase-adminsdk.json
 
 RUN dotnet restore
 
