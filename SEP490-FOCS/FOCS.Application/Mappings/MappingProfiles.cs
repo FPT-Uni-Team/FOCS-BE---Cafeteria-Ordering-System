@@ -96,17 +96,46 @@ namespace FOCS.Application.Mappings
                 .ForMember(dest => dest.CouponCode,
                            opt => opt.MapFrom(src => src.Coupon != null ? src.Coupon.Code : null))
                 .ForMember(dest => dest.OrderDetails,
-                           opt => opt.MapFrom(src => src.OrderDetails));
+                           opt => opt.MapFrom(src => src.OrderDetails))
+                // ignore các navigation không có trong DTO
+                .ForSourceMember(src => src.Store, opt => opt.DoNotValidate())
+                .ForSourceMember(src => src.Table, opt => opt.DoNotValidate())
+                .ForSourceMember(src => src.OrderWrap, opt => opt.DoNotValidate());
 
             // OrderDTO -> Order
             CreateMap<OrderDTO, OrderEnity>()
-                 .ForMember(dest => dest.OrderCode,
-                            opt => opt.MapFrom(src =>
-                                !string.IsNullOrEmpty(src.OrderCode) ? Convert.ToInt64(src.OrderCode) : 0))
-                 .ForMember(dest => dest.Coupon,
-                            opt => opt.Ignore()) // load từ DB
-                 .ForMember(dest => dest.OrderDetails,
-                            opt => opt.MapFrom(src => src.OrderDetails));
+                .ForMember(dest => dest.OrderCode,
+                           opt => opt.MapFrom(src =>
+                               !string.IsNullOrEmpty(src.OrderCode) ? Convert.ToInt64(src.OrderCode) : 0))
+                .ForMember(dest => dest.Coupon, opt => opt.Ignore()) // sẽ lấy từ DB
+                .ForMember(dest => dest.Store, opt => opt.Ignore())
+                .ForMember(dest => dest.Table, opt => opt.Ignore())
+                .ForMember(dest => dest.OrderWrap, opt => opt.Ignore())
+                .ForMember(dest => dest.OrderDetails,
+                           opt => opt.MapFrom(src => src.OrderDetails));
+
+            // OrderDetail
+            CreateMap<OrderDetail, OrderDetailDTO>()
+                .ForMember(dest => dest.MenuItemName,
+                           opt => opt.MapFrom(src => src.MenuItem != null ? src.MenuItem.Name : string.Empty))
+                .ForMember(dest => dest.Variants,
+                           opt => opt.MapFrom(src => src.Variants));
+
+            CreateMap<OrderDetailDTO, OrderDetail>()
+                .ForMember(dest => dest.MenuItem, opt => opt.Ignore())
+                .ForMember(dest => dest.Variants, opt => opt.Ignore())
+                .ForMember(dest => dest.Order, opt => opt.Ignore());
+
+            // MenuItemVariant
+            CreateMap<MenuItemVariant, OrderDetailVariantDTO>()
+                .ForMember(dest => dest.VariantId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.VariantName, opt => opt.MapFrom(src => src.Name));
+
+            CreateMap<OrderDetailVariantDTO, MenuItemVariant>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.VariantId))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.VariantName));
+
+
 
 
             CreateMap<VariantOptionDTO, MenuItemVariant>().ReverseMap();

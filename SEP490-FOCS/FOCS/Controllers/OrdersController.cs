@@ -77,5 +77,12 @@ namespace FOCS.Controllers
         {
             return await _orderService.DeleteOrderAsync(orderId, UserId, StoreId);
         }
+
+        [HttpPost("pending-in-day")]
+        public async Task<IActionResult> GetPendingInDay()
+        {
+            var rs = await _orderService.GetPendingOrdersInDayAsync();
+            return Ok();
+        }
     }
 }
