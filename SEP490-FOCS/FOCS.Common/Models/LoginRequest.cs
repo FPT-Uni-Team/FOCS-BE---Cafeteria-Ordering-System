@@ -11,9 +11,9 @@ namespace FOCS.Common.Models
 {
     public class LoginRequest
     {
-        [JsonIgnore]
-        [Phone]
-        public string Phone { get; set; }
+        //[JsonIgnore]
+        //[Phone]
+        //public string Phone { get; set; }
 
         [Required]
         [EmailAddress]

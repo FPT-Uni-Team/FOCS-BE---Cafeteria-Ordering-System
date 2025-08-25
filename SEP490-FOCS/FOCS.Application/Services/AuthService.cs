@@ -212,8 +212,8 @@ namespace FOCS.Application.Services
 
         public async Task<bool> RegisterAsync(RegisterRequest request, Guid StoreId, string role)
         {
-            var existing = await _userManager.Users.AsQueryable().Where(u => u.PhoneNumber == request.Phone).FirstOrDefaultAsync();
-            ConditionCheck.CheckCondition(existing == null, Errors.AuthError.PhoneRegistered, Errors.FieldName.Phone);
+            //var existing = await _userManager.Users.AsQueryable().Where(u => u.PhoneNumber == request.Phone).FirstOrDefaultAsync();
+            //ConditionCheck.CheckCondition(existing == null, Errors.AuthError.PhoneRegistered, Errors.FieldName.Phone);
 
             var user = new User
             {
