@@ -45,7 +45,7 @@ namespace FOCS.Application.Services
 
         private readonly IRepository<UserStore> _userStoreRepository;
 
-        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, 
+        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager,
             //OtpService optService,
             IConfiguration config, IMapper mapper, IEmailService emailService, ITokenService tokenService, OtpService optService,
             IRepository<UserRefreshToken> userRepo, IRepository<Store> storeRepository, ILogger<AuthService> logger, IRepository<UserStore> userStoreRepository, IRepository<MobileTokenDevice> mobileTokenDevice)
@@ -116,7 +116,7 @@ namespace FOCS.Application.Services
                 return new AuthResult
                 {
                     IsSuccess = false,
-                    Errors = new List<string>() { Errors.AuthError.NotVerifyAccount,  res.ToString()}
+                    Errors = new List<string>() { Errors.AuthError.NotVerifyAccount, res.ToString() }
                 };
             }
 
@@ -206,11 +206,15 @@ namespace FOCS.Application.Services
 
         public async Task<bool> RegisterAsync(RegisterRequest request, Guid StoreId, string role)
         {
+            var existing = await _userManager.Users.AsQueryable().Where(u => u.PhoneNumber == request.Phone).FirstOrDefaultAsync();
+            ConditionCheck.CheckCondition(existing == null, Errors.AuthError.PhoneRegistered, Errors.FieldName.Phone);
+
             var user = new User
             {
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                UserName = request.FirstName.ToLower().Trim() + request.LastName.ToLower().Trim(),
+                UserName = request.FirstName.ToLower().Trim() + request.LastName.ToLower().Trim() + request.Phone,
+                Email = request.Phone + "@" + Guid.NewGuid(),
                 PhoneNumber = request.Phone
             };
 
@@ -257,7 +261,7 @@ namespace FOCS.Application.Services
         {
             var isValid = await _optService.VerifyOtpAsync(phone, otp);
 
-            if(!isValid)
+            if (!isValid)
                 return false;
 
             try
@@ -271,7 +275,8 @@ namespace FOCS.Application.Services
                 await _userManager.UpdateAsync(user);
 
                 return true;
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return false;
             }
