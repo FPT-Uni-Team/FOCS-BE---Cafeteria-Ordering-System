@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FOCS.Application.Services;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
@@ -17,14 +18,22 @@ namespace FOCS.Controllers
         private readonly IMenuService _menuService;
         private readonly IAdminMenuItemService _adminMenuService;
         private readonly IMenuInsightService _menuInsightService;
+        private readonly IMenuItemsVariantGroupService _menuItemsVariantGroupService;
+        private readonly IMenuItemCategoryService _menuItemCategoryService;
         private readonly IMapper _mapper;
 
-        public MenuController(IMenuService menuService, IMapper mapper, IMenuInsightService menuInsightService, IAdminMenuItemService adminMenuItemService)
+        public MenuController(IMenuService menuService, IMapper mapper, 
+            IMenuInsightService menuInsightService,
+            IAdminMenuItemService adminMenuItemService, 
+            IMenuItemCategoryService menuItemCategoryService, 
+            IMenuItemsVariantGroupService menuItemsVariantGroupService)
         {
             _menuService = menuService;
             _mapper = mapper;
             _menuInsightService = menuInsightService;
             _adminMenuService = adminMenuItemService;
+            _menuItemCategoryService = menuItemCategoryService;
+            _menuItemsVariantGroupService = menuItemsVariantGroupService;
         }
 
         [HttpPost]
@@ -38,6 +47,19 @@ namespace FOCS.Controllers
         {
             var item = await _adminMenuService.GetMenuItemDetail(menuItemId, StoreId);
             return item == null ? NotFound() : Ok(item);
+        }
+
+        [HttpGet("{id}/variant-groups")]
+        public async Task<IActionResult> GetVariantGroups(Guid id)
+        {
+            var result = await _menuItemsVariantGroupService.GetVariantGroupsWithVariants(id, Guid.Parse(StoreId));
+            return Ok(result);
+        }
+
+        [HttpPost("menu-item/{menuItemId}/categories")]
+        public async Task<List<MenuCategoryDTO>> ListCategoriesWithMenuItem(Guid menuItemId)
+        {
+            return await _menuItemCategoryService.ListCategoriesWithMenuItem(menuItemId, StoreId);
         }
 
         [HttpPost("ids")]
