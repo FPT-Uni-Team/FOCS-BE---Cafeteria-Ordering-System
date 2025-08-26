@@ -247,7 +247,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-var options = ConfigurationOptions.Parse("103.185.184.27:6379");
+var options = ConfigurationOptions.Parse("redis:6379");
 options.Password = "Hxs03122003";
 options.AbortOnConnectFail = false;
 options.ConnectRetry = 5;
