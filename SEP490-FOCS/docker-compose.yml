@@ -20,10 +20,14 @@ services:
       - ./dataprotection-keys:/app/dataprotection-keys
     restart: always
     
-  notification-service:
-    build: .
+  notificationservice:
+    build:
+      context: .
+      dockerfile: FOCS.NotificationService/Dockerfile
+    environment:
+      - FIREBASE_CREDENTIALS=/app/firebase-service-account.json
     volumes:
-      - /root/firebase-adminsdk.json:/app/firebase-service-account.json:ro
+      - /root/FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS.NotificationService/firebase-service-account.json:/app/firebase-service-account.json:ro
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2019-latest
