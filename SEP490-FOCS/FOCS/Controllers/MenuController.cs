@@ -60,7 +60,7 @@ namespace FOCS.Controllers
             return Ok(result);
         }
 
-        [HttpPost("menu-item/{menuItemId}/categories")]
+        [HttpPost("{menuItemId}/categories")]
         public async Task<List<MenuCategoryDTO>> ListCategoriesWithMenuItem(Guid menuItemId)
         {
             return await _menuItemCategoryService.ListCategoriesWithMenuItem(menuItemId, StoreId);
