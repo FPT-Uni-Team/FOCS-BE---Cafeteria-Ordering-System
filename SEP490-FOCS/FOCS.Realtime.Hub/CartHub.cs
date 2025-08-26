@@ -13,6 +13,7 @@ namespace FOCS.Realtime.Hubs
         {
             var storeId = Context.GetHttpContext()?.Request.Query["storeId"];
             var tableId = Context.GetHttpContext()?.Request.Query["tableId"];
+            
 
             if (!string.IsNullOrEmpty(storeId) && !string.IsNullOrEmpty(tableId))
             {
