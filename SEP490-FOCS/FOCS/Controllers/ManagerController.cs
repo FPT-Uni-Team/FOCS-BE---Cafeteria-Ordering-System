@@ -30,8 +30,10 @@ namespace FOCS.Controllers
 
         [HttpPost]
         public async Task<StaffProfileDTO> CreateManagerAsync(RegisterRequest dto)
+        [HttpPost("{storeId}")]
+        public async Task<StaffProfileDTO> CreateManagerAsync(RegisterRequest dto, string storeId)
         {
-            return await _staffService.CreateManagerAsync(dto, StoreId, UserId);
+            return await _staffService.CreateManagerAsync(dto, storeId, UserId);
         }
 
         [HttpGet("{managerId}")]

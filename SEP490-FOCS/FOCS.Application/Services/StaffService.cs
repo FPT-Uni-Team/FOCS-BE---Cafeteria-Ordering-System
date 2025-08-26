@@ -141,7 +141,7 @@ namespace FOCS.Application.Services
         public async Task<StaffProfileDTO> CreateManagerAsync(RegisterRequest request, string storeId, string managerId)
         {
             var manager = await CreateStaffWithoutRoleAsync(request, storeId, managerId);
-            await _userManager.AddToRoleAsync(manager, Roles.Staff);
+            await _userManager.AddToRoleAsync(manager, Roles.Manager);
             return _mapper.Map<StaffProfileDTO>(manager);
         }
 
