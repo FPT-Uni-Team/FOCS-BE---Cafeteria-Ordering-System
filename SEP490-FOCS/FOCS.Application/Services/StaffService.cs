@@ -145,6 +145,50 @@ namespace FOCS.Application.Services
             return _mapper.Map<StaffProfileDTO>(manager);
         }
 
+        public async Task<PagedResult<StaffProfileDTO>> GetManagerListByBrandAsync(UrlQueryParameters query, Guid brandId)
+        {
+            var stores = await _storeRepository.FindAsync(s => s.BrandId == brandId && !s.IsDeleted);
+
+            var userStores = new List<UserStore>();
+            foreach (var store in stores)
+            {
+                var userInStore = await _userStoreRepository.FindAsync(us => us.StoreId == store.Id &&
+                                                                           us.Status == Common.Enums.UserStoreStatus.Active);
+                userStores.AddRange(userInStore);
+            }
+
+            var userIds = userStores.Select(us => us.UserId.ToString()).ToList();
+
+            var allUsers = _userManager.Users.Where(u => u.IsActive && !u.IsDeleted && userIds.Contains(u.Id)).ToList();
+
+            var staff = new List<StaffProfileDTO>();
+
+            foreach (var user in allUsers)
+            {
+                var userRoles = await _userManager.GetRolesAsync(user);
+                if (userRoles.Any(role => Roles.Manager.Contains(role)))
+                {
+                    var dto = _mapper.Map<StaffProfileDTO>(user);
+                    dto.Roles = userRoles;
+                    staff.Add(dto);
+                }
+            }
+
+            var staffQuery = staff.AsQueryable();
+
+            staffQuery = ApplyFilters(staffQuery, query);
+            staffQuery = ApplySearch(staffQuery, query);
+            staffQuery = ApplySort(staffQuery, query);
+
+            var total = staffQuery.Count();
+            var items = staffQuery
+                .Skip((query.Page - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .ToList();
+
+            return new PagedResult<StaffProfileDTO>(items, total, query.Page, query.PageSize);
+        }
+
         public async Task<PagedResult<StaffProfileDTO>> GetManagerListAsync(UrlQueryParameters query, string storeId)
         {
             var roleToGet = new List<string> { Roles.Manager };

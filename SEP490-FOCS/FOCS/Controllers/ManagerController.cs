@@ -28,8 +28,12 @@ namespace FOCS.Controllers
             return await _staffService.GetManagerListAsync(query, StoreId);
         }
 
-        [HttpPost]
-        public async Task<StaffProfileDTO> CreateManagerAsync(RegisterRequest dto)
+        [HttpPost("list/{brandId}")]
+        public async Task<PagedResult<StaffProfileDTO>> GetManagerListByBrandAsync(UrlQueryParameters query, Guid brandId)
+        {
+            return await _staffService.GetManagerListByBrandAsync(query, brandId);
+        }
+
         [HttpPost("{storeId}")]
         public async Task<StaffProfileDTO> CreateManagerAsync(RegisterRequest dto, string storeId)
         {
