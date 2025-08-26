@@ -35,13 +35,14 @@ jobs:
 
       - name: Deploy - restart container
         run: |
-          docker compose -f docker-compose.yml down
-          docker compose -f docker-compose.yml up -d --build
+          docker stop sep490-focs_api || true
+          docker rm sep490-focs_api || true
+          docker build -t sep490-focs_api -f Dockerfile .
+          docker run -d -p 8080:5000 \
+            --name sep490-focs_api \
+            -e TwilioSettings__AccountSid=${{ secrets.TWILIO_ACCOUNT_SID }} \
+            -e TwilioSettings__AuthToken=${{ secrets.TWILIO_AUTH_TOKEN }} \
+            -e TwilioSettings__FromPhoneNumber=${{ secrets.TWILIO_FROM_NUMBER }} \
+            -e FIREBASE_CREDENTIAL="${{ secrets.FIREBASE_CREDENTIAL }}" \
+            sep490-focs_api
         working-directory: ./SEP490-FOCS
-        env:
-          TwilioSettings__AccountSid: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TwilioSettings__AuthToken: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          TwilioSettings__FromPhoneNumber: ${{ secrets.TWILIO_FROM_NUMBER }}
-          FIREBASE_CREDENTIAL: ${{ secrets.FIREBASE_CREDENTIAL }}
-
-          working-directory: ./SEP490-FOCS
