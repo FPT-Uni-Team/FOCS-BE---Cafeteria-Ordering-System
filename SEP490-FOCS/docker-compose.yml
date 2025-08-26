@@ -11,7 +11,7 @@ services:
       - redis
       - sqlserver
       - rabbitmq
-   environment:
+    environment:
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=SEP490FOCS;User Id=sa;Password=Hxs03122003@@;Encrypt=False;TrustServerCertificate=True;
       - Redis__ConnectionString=redis:6379
       - RabbitMQ__HostName=rabbitmq
@@ -20,7 +20,7 @@ services:
     volumes:
       - ./dataprotection-keys:/app/dataprotection-keys
     restart: always
-    
+
   notificationservice:
     build:
       context: .
