@@ -303,18 +303,20 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddMassTransit(x =>
 {
-     x.AddConsumer<NotifyConsumer>();
+    x.AddConsumer<NotifyConsumer>();
 
     x.UsingRabbitMq((ctx, cfg) =>
     {
-        cfg.Host("103.185.184.27", 5672, "/", h =>
+        var configuration = ctx.GetRequiredService<IConfiguration>();
+        var rabbitMqSection = configuration.GetSection("RabbitMq");
+
+        cfg.Host(rabbitMqSection["Host"], ushort.Parse(rabbitMqSection["Port"]), "/", h =>
         {
-            h.Username("guest");
-            h.Password("guest");
+            h.Username(rabbitMqSection["Username"]);
+            h.Password(rabbitMqSection["Password"]);
             h.Heartbeat(TimeSpan.FromSeconds(60));
         });
 
-        // Config receive endpoint
         cfg.ReceiveEndpoint("notify-consumer", e =>
         {
             e.ConfigureConsumer<NotifyConsumer>(ctx);
