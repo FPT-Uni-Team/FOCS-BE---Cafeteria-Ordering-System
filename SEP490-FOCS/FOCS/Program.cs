@@ -247,16 +247,20 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-var options = ConfigurationOptions.Parse("redis:6379");
-options.Password = "Hxs03122003";
-options.AbortOnConnectFail = false;
-options.ConnectRetry = 5;
-options.SyncTimeout = 10000;
+var options = new ConfigurationOptions
+{
+    EndPoints = { "redis:6379" },
+    Password = "Hxs03122003",
+    AbortOnConnectFail = false,
+    ConnectRetry = 5,
+    ConnectTimeout = 15000,    // tăng timeout
+    SyncTimeout = 15000
+};
 
 var redis = ConnectionMultiplexer.Connect(options);
 
 builder.Services.AddSignalR()
-    .AddStackExchangeRedis("103.185.184.27:6379,password=Hxs03122003,abortConnect=false,connectTimeout=10000");
+    .AddStackExchangeRedis("redis:6379,password=Hxs03122003,abortConnect=false,connectTimeout=15000");
 
 builder.Services.AddDataProtection()
     .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys")
