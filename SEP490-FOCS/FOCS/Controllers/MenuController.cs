@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Interfaces;
@@ -20,13 +21,15 @@ namespace FOCS.Controllers
         private readonly IMenuInsightService _menuInsightService;
         private readonly IMenuItemsVariantGroupService _menuItemsVariantGroupService;
         private readonly IMenuItemCategoryService _menuItemCategoryService;
+        private readonly ICouponService _couponService;
         private readonly IMapper _mapper;
 
         public MenuController(IMenuService menuService, IMapper mapper, 
             IMenuInsightService menuInsightService,
             IAdminMenuItemService adminMenuItemService, 
             IMenuItemCategoryService menuItemCategoryService, 
-            IMenuItemsVariantGroupService menuItemsVariantGroupService)
+            IMenuItemsVariantGroupService menuItemsVariantGroupService,
+            ICouponService couponService)
         {
             _menuService = menuService;
             _mapper = mapper;
@@ -34,6 +37,7 @@ namespace FOCS.Controllers
             _adminMenuService = adminMenuItemService;
             _menuItemCategoryService = menuItemCategoryService;
             _menuItemsVariantGroupService = menuItemsVariantGroupService;
+            _couponService = couponService;
         }
 
         [HttpPost]
@@ -60,6 +64,12 @@ namespace FOCS.Controllers
         public async Task<List<MenuCategoryDTO>> ListCategoriesWithMenuItem(Guid menuItemId)
         {
             return await _menuItemCategoryService.ListCategoriesWithMenuItem(menuItemId, StoreId);
+        }
+
+        [HttpPost("coupons")]
+        public async Task<PagedResult<CouponAdminDTO>> GetAvailableCouponsAsync([FromBody] UrlQueryParameters urlQueryParameters)
+        {
+            return await _couponService.GetOngoingCouponsAsync(urlQueryParameters, StoreId);
         }
 
         [HttpPost("ids")]
