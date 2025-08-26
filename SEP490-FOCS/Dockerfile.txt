@@ -14,7 +14,7 @@ COPY FOCS.Infrastructure.Identity/*.csproj ./FOCS.Infrastructure.Identity/
 COPY FOCS.Order.Infrastucture/*.csproj ./FOCS.Order.Infrastucture/
 COPY FOCS.Realtime.Hub/*.csproj ./FOCS.Realtime.Hub/
 COPY FOCS.NotificationService/*.csproj ./FOCS.NotificationService/
-COPY FOCS.UnitTest/*.csproj ./FOCS.UnitTest/
+COPY FOCS.UnitTest/FOCS.UnitTest.csproj ./FOCS.UnitTest/
 COPY FOCS/*.csproj ./FOCS/
 
 # Restore dependencies for API project
