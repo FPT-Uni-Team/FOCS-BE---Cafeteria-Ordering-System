@@ -126,5 +126,11 @@ namespace FOCS.Controllers
         {
             return await _authService.CreateOrUpdateMobileToken(request);
         }
+
+        [HttpGet("points")]
+        public async Task<int> GetUserPoints()
+        {
+            return await _authService.GetUserPointAsync(UserId);
+        }
     }
 }
