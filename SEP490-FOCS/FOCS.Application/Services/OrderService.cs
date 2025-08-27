@@ -284,37 +284,65 @@ namespace FOCS.Application.Services
 
             var ordersPending = await _orderRepository.AsQueryable()
                                                       .Include(x => x.OrderDetails)
-                                                      .ThenInclude(x => x.Variants)
                                                       .Where(x => x.OrderStatus == OrderStatus.Pending
                                                               && !x.IsDeleted
                                                               && x.PaymentStatus == PaymentStatus.Paid
                                                               && x.CreatedAt >= timeSince)
                                                       .ToListAsync();
 
+            if (!ordersPending.Any())
+                return new List<OrderDTO>();
+
+            var allVariantIds = ordersPending
+                .SelectMany(o => o.OrderDetails)
+                .Where(d => d.Variants != null)
+                .SelectMany(d => d.Variants)
+                .Distinct()
+                .ToList();
+
+            var variants = await _variantRepository.AsQueryable()
+                                                   .Where(x => allVariantIds.Contains(x.Id))
+                                                   .ToListAsync();
+
+            var variantDict = variants.ToDictionary(x => x.Id, x => x);
+
             var mappingOrders = _mapper.Map<List<OrderDTO>>(ordersPending);
 
-            if(ordersPending != null)
+            foreach (var od in mappingOrders)
             {
-                ordersPending.ForEach(x => x.OrderStatus = OrderStatus.Confirmed);
+                foreach (var detail in od.OrderDetails)
+                {
+                    var itemVariants = new List<OrderDetailVariantDTO>();
 
-                _orderRepository.UpdateRange(ordersPending);
-                await _orderRepository.SaveChangesAsync();
+                    if (detail.Variants != null)
+                    {
+                        foreach (var variantId in detail.Variants)
+                        {
+                            if (variantDict.TryGetValue(variantId.VariantId, out var foundVariant))
+                            {
+                                itemVariants.Add(new OrderDetailVariantDTO
+                                {
+                                    VariantId = foundVariant.Id,
+                                    VariantName = foundVariant.Name
+                                });
+                            }
+                        }
+                    }
+
+                    detail.Variants = itemVariants;
+                }
             }
+
+            ordersPending.ForEach(x => x.OrderStatus = OrderStatus.Confirmed);
+            _orderRepository.UpdateRange(ordersPending);
+            await _orderRepository.SaveChangesAsync();
 
             foreach (var dto in mappingOrders)
             {
-                var original = ordersPending.FirstOrDefault(x => x.Id == dto.Id);
-                if (original != null && original.OrderDetails.Any())
+                foreach (var detail in dto.OrderDetails)
                 {
-                    var firstMenuItemId = original.OrderDetails.First().MenuItemId;
-
-                    var menuItem = await _menuItemRepository.GetByIdAsync(firstMenuItemId);
-                    var menuItemName = menuItem?.Name;
-
-                    dto.OrderDetails.ForEach(detail =>
-                    {
-                        detail.MenuItemName = menuItemName;
-                    });
+                    var menuItem = await _menuItemRepository.GetByIdAsync(detail.MenuItemId);
+                    detail.MenuItemName = menuItem?.Name;
                 }
             }
 
