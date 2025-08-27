@@ -126,7 +126,6 @@ namespace FOCS.Application.Mappings
                                }).ToList()
                                : new List<OrderDetailVariantDTO>()));
 
-            // OrderDetailDTO -> OrderDetail
             CreateMap<OrderDetailDTO, OrderDetail>()
                 .ForMember(dest => dest.MenuItem, opt => opt.Ignore())
                 .ForMember(dest => dest.Order, opt => opt.Ignore())

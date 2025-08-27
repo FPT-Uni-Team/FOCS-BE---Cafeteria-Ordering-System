@@ -58,15 +58,16 @@ namespace FOCS.Application.Services.ApplyStrategy
 
                 foreach (var item in order.Items)
                 {
-                    double totalPrice = 0;
+                    var basePrice = await _pricingService.GetPriceByProduct(item.MenuItemId, null, order.StoreId);
+                    double totalVariantsPrice = 0;
                     foreach (var itemVariant in item.Variants)
                     {
                         var pricing = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, order.StoreId);
                         double currentPrice = (double)(pricing.VariantPrice ?? 0);
-                        totalPrice += currentPrice * itemVariant.Quantity;
+                        totalVariantsPrice += currentPrice * itemVariant.Quantity;
                     }
 
-                    resultNotApply.TotalPrice += (decimal)totalPrice * item.Quantity;
+                    resultNotApply.TotalPrice += (decimal)(basePrice.ProductPrice + totalVariantsPrice) * item.Quantity;
 
                     resultNotApply.ItemDiscountDetails.Add(new DiscountItemDetail
                     {
