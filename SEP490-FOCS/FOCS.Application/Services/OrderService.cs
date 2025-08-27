@@ -174,7 +174,7 @@ namespace FOCS.Application.Services
         public async Task<PagedResult<OrderDTO>> GetListOrders(UrlQueryParameters queryParameters, string storeId, string userId)
         {
             var ordersQuery = _orderRepository.AsQueryable()
-                .Include(x => x.OrderDetails)
+                .Include(x => x.OrderDetails).ThenInclude(x => x.MenuItem)
                 .Where(x => x.StoreId == Guid.Parse(storeId)
                          && x.UserId == Guid.Parse(userId)
                          && !x.IsDeleted);
