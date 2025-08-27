@@ -117,9 +117,7 @@ namespace FOCS.Application.Mappings
             // OrderDetail
             CreateMap<OrderDetail, OrderDetailDTO>()
                 .ForMember(dest => dest.MenuItemName,
-                           opt => opt.MapFrom(src => src.MenuItem != null ? src.MenuItem.Name : string.Empty))
-                .ForMember(dest => dest.Variants,
-                           opt => opt.MapFrom(src => src.Variants));
+                           opt => opt.MapFrom(src => src.MenuItem != null ? src.MenuItem.Name : string.Empty));
 
             CreateMap<OrderDetailDTO, OrderDetail>()
                 .ForMember(dest => dest.MenuItem, opt => opt.Ignore())
