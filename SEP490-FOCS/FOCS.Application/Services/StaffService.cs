@@ -64,7 +64,6 @@ namespace FOCS.Application.Services
         {
             var staff = await ValidatePermissionAsync(staffId, managerId, checkStaff: true);
 
-            dto.PhoneNumber = staff.PhoneNumber;
             _mapper.Map(dto, staff);
             staff.UpdatedAt = DateTime.UtcNow;
             staff.UpdatedBy = staffId;
@@ -199,7 +198,6 @@ namespace FOCS.Application.Services
         {
             var manager = await ValidatePermissionAsync(managerId, adminId, checkAdmin: true);
 
-            dto.PhoneNumber = manager.PhoneNumber;
             _mapper.Map(dto, manager);
             manager.UpdatedAt = DateTime.UtcNow;
             manager.UpdatedBy = managerId;
