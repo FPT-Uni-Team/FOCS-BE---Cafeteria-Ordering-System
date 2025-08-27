@@ -22,16 +22,18 @@ namespace FOCS.Application.Services
     {
         private readonly IRepository<OrderEntity> _orderRepository;
         private readonly IRepository<OrderDetail> _orderDetailRepository;
+        private readonly IOrderService _orderService;
 
         private readonly IMapper _mapper;
         private readonly ILogger<CashierService> _logger;
 
-        public CashierService(IRepository<OrderEntity> orderRepository, IRepository<OrderDetail> orderDetailRepository, IMapper mapper, ILogger<CashierService> logger)
+        public CashierService(IRepository<OrderEntity> orderRepository, IRepository<OrderDetail> orderDetailRepository, IMapper mapper, ILogger<CashierService> logger, IOrderService orderService)
         {
             _orderRepository = orderRepository;
             _orderDetailRepository = orderDetailRepository;
             _mapper = mapper;
             _logger = logger;
+            _orderService = orderService;
         }
 
         public async Task<PagedResult<OrderDTO>> GetOrders(UrlQueryParameters query, string storeId)
@@ -62,6 +64,11 @@ namespace FOCS.Application.Services
 
                 order!.PaymentStatus = updatePaymentStatus.PaymentStatus;
                 order.UpdatedAt = DateTime.UtcNow;
+
+                if (updatePaymentStatus.PaymentStatus == PaymentStatus.Paid)
+                {
+                    await _orderService.MarkAsPaid(order.OrderCode, order.StoreId.ToString());
+                }
 
                 _orderRepository.Update(order);
                 await _orderRepository.SaveChangesAsync();
