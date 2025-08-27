@@ -116,16 +116,16 @@ namespace FOCS.Application.Services
             return cartItems ?? new List<CartItemRedisModel> { };
         }
 
-        public async Task RemoveItemAsync(Guid tableId, string actorId, string storeId, Guid menuItemId, List<CartVariantRedisModel> variants, int quantity)
+        public async Task<bool> RemoveItemAsync(Guid tableId, string actorId, string storeId, Guid menuItemId, List<CartVariantRedisModel> variants, int quantity)
         {
             var key = GetCartKey(tableId, storeId);
             var cartItems = await _redisCacheService.GetAsync<List<CartItemRedisModel>>(key);
 
-            if (cartItems == null) return;
+            if (cartItems == null) return false;
 
             var itemToRemove = cartItems.FirstOrDefault(x => x.MenuItemId == menuItemId);
 
-            if (itemToRemove == null) return;
+            if (itemToRemove == null) return false;
 
             if (variants != null && variants.Any())
             {
@@ -166,6 +166,7 @@ namespace FOCS.Application.Services
 
             var group = SignalRGroups.CartUpdate(Guid.Parse(storeId), tableId);
             await _realtimeService.SendToGroupAsync<CartHub, List<CartItemRedisModel>>(group, SignalRGroups.ActionHub.UpdateCart, cartItems);
+            return true;
         }
 
 
