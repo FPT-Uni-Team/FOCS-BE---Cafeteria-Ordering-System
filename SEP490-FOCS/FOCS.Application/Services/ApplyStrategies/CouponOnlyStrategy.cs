@@ -48,7 +48,6 @@ namespace FOCS.Application.Services.ApplyStrategy
             double totalOrderAmount = 0;
             var pricingDict = new Dictionary<Guid, double>();
 
-            // Tính tổng giá tiền đơn hàng trước khi áp dụng coupon
             foreach (var item in order.Items)
             {
                 var basePrice = await _pricingService.GetPriceByProduct(item.MenuItemId, null, order.StoreId);
@@ -73,27 +72,34 @@ namespace FOCS.Application.Services.ApplyStrategy
 
             HashSet<Guid>? acceptedItems = coupon.AcceptForItems?.Select(Guid.Parse).ToHashSet();
 
-            //double totalDiscount = 0;
-            //foreach (var item in order.Items)
-            //{
-            //    if (acceptedItems != null && acceptedItems.Count > 0 && !acceptedItems.Contains(item.MenuItemId))
-            //        continue;
+            if (acceptedItems == null || acceptedItems?.Count == 0)
+            {
+                result.TotalDiscount = (decimal)CalculateDiscount(coupon.DiscountType, coupon.Value, (double)result.TotalPrice);
+                result.TotalPrice -= result.TotalDiscount;
+                return result;
+            }
 
-            //    if (!pricingDict.TryGetValue(item.MenuItemId, out double unitPrice)) continue;
-            //    double itemDiscount = CalculateDiscount(coupon.DiscountType, coupon.Value, unitPrice)  * item.Quantity;
-            //    totalDiscount += itemDiscount;
+            double totalDiscount = 0;
+            foreach (var item in order.Items)
+            {
+                if (!acceptedItems.Contains(item.MenuItemId))
+                    continue;
 
-            //    result.ItemDiscountDetails.Add(new DiscountItemDetail
-            //    {
-            //        DiscountAmount = (decimal)itemDiscount,
-            //        BuyItemCode = GenerateItemCode(item),
-            //        BuyItemName = item.MenuItemId.ToString(),
-            //        Quantity = item.Quantity,
-            //        Source = $"Coupon {coupon.DiscountType}"
-            //    });
-            //}
+                if (!pricingDict.TryGetValue(item.MenuItemId, out double unitPrice)) continue;
+                double itemDiscount = CalculateDiscount(coupon.DiscountType, coupon.Value, unitPrice)  * item.Quantity;
+                totalDiscount += itemDiscount;
 
-            result.TotalDiscount = (decimal)CalculateDiscount(coupon.DiscountType, coupon.Value, (double)result.TotalPrice);
+                result.ItemDiscountDetails.Add(new DiscountItemDetail
+                {
+                    DiscountAmount = (decimal)itemDiscount,
+                    BuyItemCode = GenerateItemCode(item),
+                    BuyItemName = item.MenuItemId.ToString(),
+                    Quantity = item.Quantity,
+                    Source = $"Coupon {coupon.DiscountType}"
+                });
+            }
+
+            result.TotalDiscount = (decimal)totalDiscount;
             result.TotalPrice -= result.TotalDiscount;
 
             return result;
