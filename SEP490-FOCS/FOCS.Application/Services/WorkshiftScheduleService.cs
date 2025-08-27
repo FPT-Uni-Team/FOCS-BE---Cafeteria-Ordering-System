@@ -318,6 +318,7 @@ namespace FOCS.Application.Services
 
             var rs = new WorkshiftResponse
             {
+                Id = workshiftsQuery.Id,
                 WorkDate = workshiftsQuery.WorkDate,
                 Shift = workshiftsQuery.WorkshiftSchedules.Select(y => new StaffWorkshiftResponse
                 {
