@@ -16,5 +16,6 @@ namespace FOCS.Common.Interfaces
         Task<bool> CreateOrUpdateMobileToken(MobileTokenRequest request);
 
         Task<bool> VerifyPhoneNumberAsync(string phone, string otp);
+        Task<int> GetUserPointAsync(string userId);
     }
 }

@@ -346,6 +346,12 @@ namespace FOCS.Application.Services
             }
         }
 
+        public async Task<int> GetUserPointAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            return user?.FOCSPoint ?? 0;
+        }
+
         #region private method
         private async Task<AuthResult> GenerateAuthResult(User user, Guid? storeId = null)
         {
