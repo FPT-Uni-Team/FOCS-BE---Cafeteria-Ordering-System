@@ -97,7 +97,9 @@ namespace FOCS.Application.Services
 
         public async Task<FeedbackDTO> GetFeedbackByIdAsync(Guid feedbackId, string storeId)
         {
-            var feedback = await _feedbackRepository.AsQueryable().FirstOrDefaultAsync(x => x.Id == feedbackId && x.StoreId == Guid.Parse(storeId));
+            var feedback = await _feedbackRepository.AsQueryable()
+                .Include(f => f.Order).ThenInclude(o => o.OrderDetails).ThenInclude(od => od.Variants)
+                .FirstOrDefaultAsync(x => x.Id == feedbackId && x.StoreId == Guid.Parse(storeId));
 
             ConditionCheck.CheckCondition(feedback != null, Errors.Common.NotFound);
 
