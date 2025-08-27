@@ -24,6 +24,8 @@ namespace FOCS.Application.Services
         {
             var tokenDevice = await _mobileTokenDevice.AsQueryable().FirstOrDefaultAsync(x => x.UserId == userId);
 
+            if (tokenDevice == null) return new MobileTokenRequest();
+
             return new MobileTokenRequest
             {
                 ActorId = tokenDevice.UserId,
