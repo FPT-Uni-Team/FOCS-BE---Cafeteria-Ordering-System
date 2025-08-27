@@ -49,6 +49,8 @@ namespace FOCS.Application.Services
 
         private readonly IPricingService _pricingService;
 
+        private readonly INotifyService _notifyService;
+
         private readonly IPromotionService _promotionService;
         private readonly DiscountContext _discountContext;
         private readonly IRepository<SystemConfiguration> _systemConfig;
@@ -82,8 +84,10 @@ namespace FOCS.Application.Services
                             IRepository<SystemConfiguration> systemConfig,
                             IPublishEndpoint publishEndpoint,
                             IMobileTokenSevice mobileTokenService,
-                            ICouponUsageService couponUsageService)
+                            ICouponUsageService couponUsageService,
+                            INotifyService notifyService)
         {
+            _notifyService = notifyService;
             _orderRepository = orderRepository;
             _realtimeService = realtimeService;
             _logger = logger;
@@ -350,6 +354,7 @@ namespace FOCS.Application.Services
             }
 
             order.PaymentStatus = PaymentStatus.Paid;
+            order.OrderStatus = OrderStatus.Confirmed;
 
             _orderRepository.Update(order);
             await _orderRepository.SaveChangesAsync();
@@ -362,6 +367,10 @@ namespace FOCS.Application.Services
                 storeId = order.StoreId.ToString(),
                 tableId = order.TableId.ToString()
             };
+
+            await _publishEndpoint.Publish(notifyEvent);
+
+            await _notifyService.AddNotifyAsync(order.StoreId.ToString(), Constants.ActionTitle.PaymentSuccess(order.Table.TableNumber));
 
             await _realtimeService.SendToGroupAsync<NotifyHub, NotifyEvent>(SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId), Constants.Method.NewNotify, notifyEvent);
         }
@@ -552,6 +561,8 @@ namespace FOCS.Application.Services
                 };
                 
                 await _publishEndpoint.Publish(notifyEventModel);
+
+                await _notifyService.AddNotifyAsync(order.StoreId.ToString(), Constants.ActionTitle.NewOrderAtTable(table.TableNumber));
 
                 var orderDataExchangeRealtime = order.Items
                         .SelectMany(item => item.Variants.Select(variant => new OrderRedisModel

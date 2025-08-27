@@ -359,7 +359,8 @@ namespace FOCS.Application.Services
             claims.AddRange(new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, user.FirstName + user.LastName)
             }.Concat(roles.Select(role => new Claim(ClaimTypes.Role, role))));
 
             if (storeId != Guid.Empty && storeId != null)

@@ -117,6 +117,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<ICashierService, CashierService>()
                 .AddScoped<IRepository<CartItem>, Repository<CartItem, OrderDbContext>>()
                 .AddScoped<IRepository<CouponUsage>, Repository<CouponUsage, OrderDbContext>>()
+                .AddScoped<INotifyService, NotifyService>()
                 .AddScoped<IRepository<Coupon>, Repository<Coupon, OrderDbContext>>()
                 .AddScoped<IRepository<PaymentAccount>, Repository<PaymentAccount, OrderDbContext>>()
                 .AddScoped<IRepository<Promotion>, Repository<Promotion, OrderDbContext>>()
@@ -328,6 +329,9 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
+var multiplexer = ConnectionMultiplexer.Connect(options);
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
 
 builder.Services.AddAuthentication();
 
