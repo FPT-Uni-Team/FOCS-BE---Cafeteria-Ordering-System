@@ -35,5 +35,8 @@ namespace FOCS.Common.Models
 
         [JsonPropertyName("created_at")]
         public DateTime CreatedAt { get; set; }
+
+        [JsonPropertyName("order")]
+        public OrderDTO Order { get; set; }
     }
 }
