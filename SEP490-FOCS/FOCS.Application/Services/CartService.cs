@@ -123,52 +123,53 @@ namespace FOCS.Application.Services
 
             if (cartItems == null) return false;
 
-            var itemToRemove = cartItems.FirstOrDefault(x => x.MenuItemId == menuItemId);
+            var item = cartItems.FirstOrDefault(x =>
+                x.MenuItemId == menuItemId &&
+                ((x.Variants == null && (variants == null || !variants.Any())) ||
+                 (x.Variants != null && variants != null &&
+                  x.Variants.OrderBy(v => v.VariantId).SequenceEqual(
+                      variants.OrderBy(v => v.VariantId),
+                      new CartVariantComparer()
+                  ))
+                )
+            );
 
-            if (itemToRemove == null) return false;
+            if (item == null) return false;
 
-            if (variants != null && variants.Any())
+            if (item.Quantity <= quantity)
             {
-                foreach (var variant in variants)
-                {
-                    var currentVariant = itemToRemove.Variants?.FirstOrDefault(x => x.VariantId == variant.VariantId);
-                    if (currentVariant != null)
-                    {
-                        if (currentVariant.Quantity <= quantity)
-                        {
-                            itemToRemove.Variants.Remove(currentVariant);
-                        }
-                        else
-                        {
-                            currentVariant.Quantity -= variant.Quantity;
-                        }
-                    }
-                }
-
-                if ((itemToRemove.Variants == null || !itemToRemove.Variants.Any()) && itemToRemove.Quantity <= 1)
-                {
-                    cartItems.Remove(itemToRemove);
-                }
+                cartItems.Remove(item);
             }
             else
             {
-                if (itemToRemove.Quantity <= quantity)
-                {
-                    cartItems.Remove(itemToRemove);
-                }
-                else
-                {
-                    itemToRemove.Quantity -= quantity;
-                }
+                item.Quantity -= quantity;
             }
 
             await _redisCacheService.SetAsync(key, cartItems, _cacheExpiry);
 
             var group = SignalRGroups.CartUpdate(Guid.Parse(storeId), tableId);
-            await _realtimeService.SendToGroupAsync<CartHub, List<CartItemRedisModel>>(group, SignalRGroups.ActionHub.UpdateCart, cartItems);
+            await _realtimeService.SendToGroupAsync<CartHub, List<CartItemRedisModel>>(
+                group,
+                SignalRGroups.ActionHub.UpdateCart,
+                cartItems
+            );
+
             return true;
         }
 
+        public class CartVariantComparer : IEqualityComparer<CartVariantRedisModel>
+        {
+            public bool Equals(CartVariantRedisModel? x, CartVariantRedisModel? y)
+            {
+                if (x == null || y == null) return false;
+                return x.VariantId == y.VariantId && x.Quantity == y.Quantity;
+            }
+
+            public int GetHashCode(CartVariantRedisModel obj)
+            {
+                return HashCode.Combine(obj.VariantId, obj.Quantity);
+            }
+        }
 
         public async Task<Guid> RemoveItemAsync(string id, Dictionary<string, List<CartItemRedisModel>> allCartItems)
         {
