@@ -249,7 +249,7 @@ builder.Services.AddAuthentication(options =>
 
 var options = new ConfigurationOptions
 {
-    EndPoints = { "redis:6379" },
+    EndPoints = { "103.185.184.27:6379" },
     Password = "Hxs03122003",
     AbortOnConnectFail = false,
     ConnectRetry = 5,
@@ -260,7 +260,7 @@ var options = new ConfigurationOptions
 var redis = ConnectionMultiplexer.Connect(options);
 
 builder.Services.AddSignalR()
-    .AddStackExchangeRedis("redis:6379,password=Hxs03122003,abortConnect=false,connectTimeout=15000");
+    .AddStackExchangeRedis("103.185.184.27:6379,password=Hxs03122003,abortConnect=false,connectTimeout=15000");
 
 builder.Services.AddDataProtection()
     .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys")
