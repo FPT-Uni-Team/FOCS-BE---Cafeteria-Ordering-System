@@ -1,21 +1,10 @@
 ﻿using FOCS.Application.Services.Interface;
-using FOCS.Common.Constants;
 using FOCS.Common.Enums;
-using FOCS.Common.Exceptions;
 using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
-using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Order.Infrastucture.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FOCS.Application.Services.ApplyStrategy
 {
@@ -51,10 +40,13 @@ namespace FOCS.Application.Services.ApplyStrategy
             if (coupon == null)
                 return result;
 
+            if (coupon.MinimumItemQuantity.HasValue && order.Items.Sum(i => i.Quantity) < coupon.MinimumItemQuantity.Value)
+                return result;
+
             result.AppliedCouponCode = coupon.Code;
 
             double totalOrderAmount = 0;
-            var pricingDict = new Dictionary<(Guid MenuItemId, Guid? VariantId), double>();
+            var pricingDict = new Dictionary<Guid, double>();
 
             foreach (var item in order.Items)
             {
@@ -66,94 +58,45 @@ namespace FOCS.Application.Services.ApplyStrategy
                     foreach (var variant in item.Variants)
                     {
                         var variantPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, variant.VariantId, order.StoreId);
-                        pricingDict[(item.MenuItemId, variant.VariantId)] = (double)basePrice.ProductPrice + (double)variantPrice.VariantPrice;
                         totalVariantPrice += (double)variantPrice.VariantPrice * variant.Quantity;
                     }
                 }
-                else
-                {
-                    pricingDict[(item.MenuItemId, null)] = (double)basePrice.ProductPrice;
-                }
 
-                double itemTotal = ((double)basePrice.ProductPrice + totalVariantPrice) * item.Quantity;
-                result.TotalPrice += (decimal)itemTotal;
-                totalOrderAmount += itemTotal;
-
+                pricingDict[item.MenuItemId] = ((double)basePrice.ProductPrice + totalVariantPrice) * item.Quantity;
+                result.TotalPrice += (decimal)pricingDict[item.MenuItemId];
+                totalOrderAmount += pricingDict[item.MenuItemId];
             }
 
+            if (coupon.MinimumOrderAmount.HasValue && (double)result.TotalPrice < coupon.MinimumOrderAmount.Value)
+                return result;
 
             HashSet<Guid>? acceptedItems = coupon.AcceptForItems?.Select(Guid.Parse).ToHashSet();
 
-            if (coupon.MinimumOrderAmount.HasValue && !coupon.MinimumItemQuantity.HasValue && totalOrderAmount >= coupon.MinimumOrderAmount.Value)
+            if (acceptedItems == null || acceptedItems?.Count == 0)
             {
-                double discountAmount = CalculateDiscount(coupon.DiscountType, coupon.Value, totalOrderAmount);
-                result.TotalDiscount = (decimal)discountAmount;
+                result.TotalDiscount = (decimal)CalculateDiscount(coupon.DiscountType, coupon.Value, (double)result.TotalPrice);
                 result.TotalPrice -= result.TotalDiscount;
-
-                foreach (var item in order.Items)
-                {
-                    result.ItemDiscountDetails.Add(new DiscountItemDetail
-                    {
-                        DiscountAmount = 0,
-                        BuyItemCode = GenerateItemCode(item),
-                        BuyItemName = item.MenuItemId.ToString(),
-                        Quantity = item.Quantity,
-                        Source = CouponConstants.Coupon_MinimumOrderAmount.ToString()
-                    });
-                }
-
                 return result;
             }
 
             double totalDiscount = 0;
             foreach (var item in order.Items)
             {
-                if (acceptedItems != null && acceptedItems.Count > 0 && !acceptedItems.Contains(item.MenuItemId))
+                if (!acceptedItems.Contains(item.MenuItemId))
                     continue;
 
-                if (item.Variants == null || item.Variants.Count == 0)
+                if (!pricingDict.TryGetValue(item.MenuItemId, out double unitPrice)) continue;
+                double itemDiscount = CalculateDiscount(coupon.DiscountType, coupon.Value, unitPrice)  * item.Quantity;
+                totalDiscount += itemDiscount;
+
+                result.ItemDiscountDetails.Add(new DiscountItemDetail
                 {
-                    if (coupon.MinimumItemQuantity.HasValue && item.Quantity < coupon.MinimumItemQuantity.Value)
-                        continue;
-
-                    var key = (item.MenuItemId, (Guid?)null);
-                    if (!pricingDict.TryGetValue(key, out double unitPrice)) continue;
-
-                    double itemDiscount = CalculateDiscount(coupon.DiscountType, coupon.Value, unitPrice) * item.Quantity;
-                    totalDiscount += itemDiscount;
-
-                    result.ItemDiscountDetails.Add(new DiscountItemDetail
-                    {
-                        DiscountAmount = (decimal)itemDiscount,
-                        BuyItemCode = GenerateItemCode(item),
-                        BuyItemName = item.MenuItemId.ToString(),
-                        Quantity = item.Quantity,
-                        Source = $"Coupon {coupon.DiscountType}"
-                    });
-
-                    continue;
-                }
-
-                foreach (var itemVariant in item.Variants)
-                {
-                    if (coupon.MinimumItemQuantity.HasValue && itemVariant.Quantity < coupon.MinimumItemQuantity.Value)
-                        continue;
-
-                    var key = (item.MenuItemId, itemVariant.VariantId);
-                    if (!pricingDict.TryGetValue(key, out double unitPrice)) continue;
-
-                    double itemDiscount = CalculateDiscount(coupon.DiscountType, coupon.Value, unitPrice) * itemVariant.Quantity * item.Quantity;
-                    totalDiscount += itemDiscount;
-
-                    result.ItemDiscountDetails.Add(new DiscountItemDetail
-                    {
-                        DiscountAmount = (decimal)itemDiscount,
-                        BuyItemCode = GenerateItemCode(item),
-                        BuyItemName = item.MenuItemId.ToString(),
-                        Quantity = itemVariant.Quantity * item.Quantity,
-                        Source = $"Coupon {coupon.DiscountType}"
-                    });
-                }
+                    DiscountAmount = (decimal)itemDiscount,
+                    BuyItemCode = GenerateItemCode(item),
+                    BuyItemName = item.MenuItemId.ToString(),
+                    Quantity = item.Quantity,
+                    Source = $"Coupon {coupon.DiscountType}"
+                });
             }
 
             result.TotalDiscount = (decimal)totalDiscount;
