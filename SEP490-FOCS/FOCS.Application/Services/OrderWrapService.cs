@@ -51,82 +51,104 @@ namespace FOCS.Application.Services
         {
             try
             {
-                var orderWrap = await _orderWrapRepo.AsQueryable().Include(x => x.Orders).ThenInclude(x => x.Table).FirstOrDefaultAsync(x => x.Id == dto.OrderWrapId);
+                var orderWrap = await _orderWrapRepo.AsQueryable()
+                    .Include(x => x.Orders)
+                        .ThenInclude(x => x.Table)
+                    .FirstOrDefaultAsync(x => x.Id == dto.OrderWrapId);
 
                 if (orderWrap == null) return false;
 
                 orderWrap.OrderWrapStatus = dto.Status;
-                await _orderWrapRepo.SaveChangesAsync(); 
+                await _orderWrapRepo.SaveChangesAsync();
+
+                var orders = orderWrap.Orders.ToList();
 
                 if (dto.Status == Common.Enums.OrderWrapStatus.Completed)
                 {
-                    // split order -> sync success process to user order
-                    var orders = orderWrap.Orders.ToList();
-
-                    orders.ForEach(x => x.OrderStatus = Common.Enums.OrderStatus.Completed);
-
+                    foreach (var order in orders)
+                    {
+                        order.OrderStatus = Common.Enums.OrderStatus.Completed;
+                    }
                     _orderRepo.UpdateRange(orders);
                     await _orderRepo.SaveChangesAsync();
 
                     foreach (var order in orders)
                     {
+                        if (order.UserId == null) continue;
+
                         var currentToken = await _mobileTokenService.GetMobileToken((Guid)order.UserId);
 
-                        var notifyEventForUser = new NotifyEvent
+                        if (currentToken != null)
                         {
-                            Title = "Your order is complete",
-                            Message = "Your order is complete, Please check with staff",
-                            storeId = order.StoreId.ToString(),
-                            tableId = order.TableId.ToString(),
-                            TargetGroups = new string[] { SignalRGroups.User(order.StoreId, (Guid)order.TableId, (Guid)order.UserId) },
-                            MobileTokens = new string[] { currentToken.Token }
-                        };
+                            var notifyEventForUser = new NotifyEvent
+                            {
+                                Title = "Your order is complete",
+                                Message = "Your order is complete, Please check with staff",
+                                storeId = order.StoreId.ToString(),
+                                tableId = order.TableId?.ToString(),
+                                TargetGroups = new[] { SignalRGroups.User(order.StoreId, (Guid)order.TableId, (Guid)order.UserId) },
+                                MobileTokens = new[] { currentToken.Token }
+                            };
 
-                        var notifyEventForStaff = new NotifyEvent
+                            await _publishEndpoint.Publish(notifyEventForUser);
+                        }
+
+                        if (order.Table != null)
                         {
-                            Title = $"Order in table {order.Table.TableNumber} is complete",
-                            Message = $"Order in table {order.Table.TableNumber} is complete, Please check with user",
-                            storeId = order.StoreId.ToString(),
-                            tableId = order.TableId.ToString(),
-                            TargetGroups = new string[] { SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId) }
-                        };
+                            var notifyEventForStaff = new NotifyEvent
+                            {
+                                Title = $"Order in table {order.Table.TableNumber} is complete",
+                                Message = $"Order in table {order.Table.TableNumber} is complete, Please check with user",
+                                storeId = order.StoreId.ToString(),
+                                tableId = order.TableId?.ToString(),
+                                TargetGroups = new[] { SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId) }
+                            };
 
-                        await _publishEndpoint.Publish(notifyEventForStaff);
-                        await _publishEndpoint.Publish(notifyEventForUser);
+                            await _publishEndpoint.Publish(notifyEventForStaff);
+                        }
                     }
                 }
                 else if (dto.Status == Common.Enums.OrderWrapStatus.Processing)
                 {
-                    var orders = orderWrap.Orders.ToList();
-
-                    orders.ForEach(x => x.OrderStatus = Common.Enums.OrderStatus.Confirmed);
-
+                    foreach (var order in orders)
+                    {
+                        order.OrderStatus = Common.Enums.OrderStatus.Confirmed;
+                    }
                     _orderRepo.UpdateRange(orders);
                     await _orderRepo.SaveChangesAsync();
 
                     foreach (var order in orders)
                     {
+                        if (order.UserId == null) continue;
+
                         var currentToken = await _mobileTokenService.GetMobileToken((Guid)order.UserId);
 
-                        var notifyEventForUser = new NotifyEvent
+                        if (currentToken != null)
                         {
-                            Title = "Your order is processing",
-                            Message = "Your order is processing, Please wait a minute",
-                            storeId = order.StoreId.ToString(),
-                            tableId = order.TableId.ToString(),
-                            TargetGroups = new string[] { SignalRGroups.User(order.StoreId, (Guid)order.TableId, (Guid)order.UserId) },
-                            MobileTokens = new string[] { currentToken.Token }
-                        };
+                            var notifyEventForUser = new NotifyEvent
+                            {
+                                Title = "Your order is processing",
+                                Message = "Your order is processing, Please wait a minute",
+                                storeId = order.StoreId.ToString(),
+                                tableId = order.TableId?.ToString(),
+                                TargetGroups = new[] { SignalRGroups.User(order.StoreId, (Guid)order.TableId, (Guid)order.UserId) },
+                                MobileTokens = new[] { currentToken.Token }
+                            };
 
-                        await _publishEndpoint.Publish(notifyEventForUser);
+                            await _publishEndpoint.Publish(notifyEventForUser);
+                        }
                     }
                 }
+
                 return true;
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
+                Console.WriteLine($"[ChangeStatusProductionOrder] Error: {ex}");
                 return false;
             }
         }
+
 
         public async Task<PagedResult<OrderWrapResponse>> GetListOrderWraps(UrlQueryParameters query, string storeId)
         {
