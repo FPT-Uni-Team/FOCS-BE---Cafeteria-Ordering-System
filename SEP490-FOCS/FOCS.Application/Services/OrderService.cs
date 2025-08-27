@@ -17,16 +17,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using static FOCS.Common.Exceptions.Errors;
-using static MassTransit.ValidationResultExtensions;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-using static Org.BouncyCastle.Asn1.Cmp.Challenge;
 
 namespace FOCS.Application.Services
 {
@@ -173,8 +163,12 @@ namespace FOCS.Application.Services
 
             ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.NotFound);
             ConditionCheck.CheckCondition(!storeSettings!.DiscountStrategy.Equals(null), Errors.StoreSetting.DiscountStrategyNotConfig);
-
-            return await _discountContext.CalculateDiscountAsync(orderRequest, orderRequest.CouponCode, storeSettings.DiscountStrategy, userId);
+            var discountResult = await _discountContext.CalculateDiscountAsync(orderRequest, orderRequest.CouponCode, storeSettings.DiscountStrategy, userId);
+            var store = await _storeRepository.GetByIdAsync(orderRequest.StoreId);
+            var taxRate = (decimal)(store?.CustomTaxRate ?? 0);
+            discountResult.TaxAmount = Math.Round(discountResult.TotalPrice * taxRate);
+            discountResult.TotalPrice += discountResult.TaxAmount;
+            return discountResult;
         }
 
         public async Task<PagedResult<OrderDTO>> GetListOrders(UrlQueryParameters queryParameters, string storeId, string userId)
