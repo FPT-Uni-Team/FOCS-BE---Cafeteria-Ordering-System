@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Routing;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,8 @@ namespace FOCS.Realtime.Hubs
             public static string NewOrderAtTable(int tableId) => $"Bàn {tableId} vừa tạo đơn mới";
 
             public const string PushStaff = "Push";
+
+            public static string ReceiveNotify(string tableNumber) => $"Bàn {tableNumber} muốn gặp nhân viên";
         }
     }
 }

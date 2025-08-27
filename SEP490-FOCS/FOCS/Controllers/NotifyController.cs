@@ -1,4 +1,5 @@
-﻿using FOCS.Common.Constants;
+﻿using FOCS.Application.Services.Interface;
+using FOCS.Common.Constants;
 using FOCS.Common.Interfaces;
 using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.NotificationService.Models;
@@ -15,12 +16,14 @@ namespace FOCS.Controllers
     public class NotifyController : ControllerBase
     {
         private readonly IPublishEndpoint _publishEndpoint;
+        private readonly IStaffService _staffService;
         private readonly IMobileTokenSevice _mobileTokenService;
 
-        public NotifyController(IPublishEndpoint publishEndpoint, IMobileTokenSevice mobileTokenService)
+        public NotifyController(IPublishEndpoint publishEndpoint, IStaffService staffService, IMobileTokenSevice mobileTokenService)
         {
             _publishEndpoint = publishEndpoint;
             _mobileTokenService = mobileTokenService;
+            _staffService = staffService;
 
         }
 
@@ -38,6 +41,23 @@ namespace FOCS.Controllers
                 storeId = storeId,
                 tableId = null
             };
+
+            var staffIds = (await _staffService.GetStaffListAsync(new Common.Models.UrlQueryParameters { Page = 1, PageSize = 15 }, storeId)).Items.Select(x => x.Id);
+
+            foreach(var staffId in staffIds)
+            {
+                var currentDeviceToken = await _mobileTokenService.GetMobileToken((Guid)staffId);
+
+                var notifyEventModelStaff = staffIds.Select(x => new NotifyEvent
+                {
+                    Title = Constants.ActionTitle.ReceiveNotify("1"),
+                    Message = Constants.ActionTitle.PushStaff,
+                    TargetGroups = new[] { SignalRGroups.Staff(Guid.Parse(storeId)) },
+                    MobileTokens = new[] { currentDeviceToken.Token },
+                    storeId = storeId,
+                    tableId = null
+                });
+            }
 
             await _publishEndpoint.Publish(notifyEventModel);
         }
