@@ -37,7 +37,7 @@ namespace FOCS.Controllers
             return await _customerService.BlockCustomerAsync(StoreId, customerId, UserId);
         }
 
-        [HttpPatch("{customerId}/block")]
+        [HttpPatch("{customerId}/unblock")]
         public async Task<bool> UnblockCustomer(string customerId)
         {
             return await _customerService.UnblockCustomerAsync(StoreId, customerId, UserId);
