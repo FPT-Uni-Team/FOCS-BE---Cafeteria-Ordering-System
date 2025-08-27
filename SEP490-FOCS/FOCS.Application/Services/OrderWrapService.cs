@@ -55,6 +55,9 @@ namespace FOCS.Application.Services
 
                 if (orderWrap == null) return false;
 
+                orderWrap.OrderWrapStatus = dto.Status;
+                await _orderWrapRepo.SaveChangesAsync(); 
+
                 if (dto.Status == Common.Enums.OrderWrapStatus.Completed)
                 {
                     // split order -> sync success process to user order
