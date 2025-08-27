@@ -39,7 +39,7 @@ jobs:
           docker rm sep490-focs_api || true
           docker build -t sep490-focs_api -f Dockerfile .
           docker run -d -p 8081:5000 \
-          -name sep490-focs_api \
+          --name sep490-focs_api \
           -e ASPNETCORE_URLS=http://+:5000 \
           -e TwilioSettings__AccountSid=${{ secrets.TWILIO_ACCOUNT_SID }} \
           -e TwilioSettings__AuthToken=${{ secrets.TWILIO_AUTH_TOKEN }} \
