@@ -324,7 +324,7 @@ namespace FOCS.Application.Services
 
             var ordersPending = await _orderRepository.AsQueryable()
                                                       .Include(x => x.OrderDetails)
-                                                      .Where(x => x.OrderStatus == OrderStatus.Pending
+                                                      .Where(x => x.OrderStatus == OrderStatus.Confirmed
                                                               && !x.IsDeleted
                                                               && x.PaymentStatus == PaymentStatus.Paid
                                                               && x.CreatedAt >= timeSince)
