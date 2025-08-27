@@ -20,10 +20,10 @@ namespace FOCS.Application.Services
             _configuration = configuration;
         }
 
-        public async Task<bool> SendEmailConfirmationAsync(string email, string accToken)
+        public async Task<bool> SendEmailConfirmationAsync(string email, string accToken, string storeId, string tableId)
         {
             var baseApiUrl = _configuration["applicationProductUrl:BaseApiUrl"] ?? "http://localhost:5257";
-            var confirmationLink = $"{baseApiUrl}/api/me/confirm-email?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(accToken)}";
+            var confirmationLink = $"{baseApiUrl}/api/me/confirm-email?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(accToken)}&storeId={Uri.EscapeDataString(storeId)}&tableId={Uri.EscapeDataString(tableId)}";
             var subject = "Confirm your FOCS account";
             var body = $@"
                 <p>Hello,</p>
@@ -52,10 +52,10 @@ namespace FOCS.Application.Services
             return true;
         }
 
-        public async Task<bool> SendPasswordResetLinkAsync(string email, string resetToken)
+        public async Task<bool> SendPasswordResetLinkAsync(string email, string resetToken, string storeId, string tableId)
         {
             var baseWebUrl = _configuration["applicationProductUrl:BaseStoreFrontUrl"] ?? "http://localhost:5257";
-            var callbackUrl = $"{baseWebUrl}/reset-password?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(resetToken)}";
+            var callbackUrl = $"{baseWebUrl}/{storeId}/{tableId}/reset-password?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(resetToken)}";
             var subject = "FOCS - Reset Your Password";
             var body = $@"
                 <p>Hello,</p>
