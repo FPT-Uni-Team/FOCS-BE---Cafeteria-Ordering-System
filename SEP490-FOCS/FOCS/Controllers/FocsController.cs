@@ -18,6 +18,8 @@ namespace FOCS.Controllers
 
         protected string StoreId => HttpContext.Request.Headers["StoreId"].ToString();
 
+        protected string TableId => HttpContext.Request.Headers["TableId"].ToString();
+
         protected string AccessToken =>
             HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
 
