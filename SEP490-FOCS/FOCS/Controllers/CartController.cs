@@ -37,9 +37,9 @@ namespace FOCS.Controllers
         }
 
         [HttpDelete("table/{tableId}/cart/{actorId}")]
-        public async Task RemoveItemCartAsync(Guid tableId, string actorId, [FromBody] RemoveItemCartRequest request)
+        public async Task<bool> RemoveItemCartAsync(Guid tableId, string actorId, [FromBody] RemoveItemCartRequest request)
         {
-            await _cartService.RemoveItemAsync(tableId, actorId, StoreId, request.MenuItemId, request.Variants, request.Quantity);
+            return await _cartService.RemoveItemAsync(tableId, actorId, StoreId, request.MenuItemId, request.Variants, request.Quantity);
         }
 
     }
