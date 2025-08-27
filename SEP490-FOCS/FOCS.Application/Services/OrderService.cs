@@ -111,11 +111,11 @@ namespace FOCS.Application.Services
 
             Table? table = null;
 
-            if (order.OrderType == OrderType.DineIn)
-            {
+            //if (order.OrderType == OrderType.DineIn)
+            //{
                 table = await _tableRepository.AsQueryable().FirstOrDefaultAsync(x => x.Id == order.TableId && x.StoreId == order.StoreId);
                 ConditionCheck.CheckCondition(table != null, Errors.OrderError.TableNotFound);
-            }
+            //}
 
             // Validate menu items
             await ValidateMenuItemsAsync(order.Items);
@@ -481,6 +481,8 @@ namespace FOCS.Application.Services
             _orderRepository.Update(order);
             await _orderRepository.SaveChangesAsync();
 
+            _logger.LogInformation("SAVE order success - trigger success");
+
             var notifyEvent = new NotifyEvent
             {
                 Title = Constants.ActionTitle.PaymentSuccess(order.Table.TableNumber),
@@ -688,20 +690,21 @@ namespace FOCS.Application.Services
 
                 var tokenDeviceMobile = await _mobileTokenService.GetMobileToken(Guid.Parse(userId));
 
-                //send notify to casher
-                var notifyEventModel = new NotifyEvent
+                if(tokenDeviceMobile.Token != null)
                 {
-                    Title = Constants.ActionTitle.NewOrderd,
-                    Message = Constants.ActionTitle.NewOrderAtTable(table.TableNumber),
-                    TargetGroups = new[] { SignalRGroups.Cashier(store.Id, table.Id) },
-                    MobileTokens = new[] { tokenDeviceMobile.Token },
-                    storeId = store.Id.ToString(),
-                    tableId = table.Id.ToString()
-                };
-
-                await _publishEndpoint.Publish(notifyEventModel);
-
-                await _notifyService.AddNotifyAsync(order.StoreId.ToString(), Constants.ActionTitle.NewOrderAtTable(table.TableNumber));
+                    //send notify to casher
+                    var notifyEventModel = new NotifyEvent
+                    {
+                        Title = Constants.ActionTitle.NewOrderd,
+                        Message = Constants.ActionTitle.NewOrderAtTable(table.TableNumber),
+                        TargetGroups = new[] { SignalRGroups.Cashier(store.Id, table.Id) },
+                        MobileTokens = new[] { tokenDeviceMobile.Token },
+                        storeId = store.Id.ToString(),
+                        tableId = table.Id.ToString()
+                    };
+                    await _publishEndpoint.Publish(notifyEventModel);
+                    await _notifyService.AddNotifyAsync(order.StoreId.ToString(), Constants.ActionTitle.NewOrderAtTable(table.TableNumber));
+                }
 
                 var orderDataExchangeRealtime = order.Items
                         .SelectMany(item => item.Variants.Select(variant => new OrderRedisModel
