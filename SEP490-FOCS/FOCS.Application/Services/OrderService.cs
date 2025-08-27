@@ -367,7 +367,7 @@ namespace FOCS.Application.Services
                 }
             }
 
-            ordersPending.ForEach(x => x.OrderStatus = OrderStatus.Confirmed);
+            ordersPending.ForEach(x => x.OrderStatus = OrderStatus.Ready);
             _orderRepository.UpdateRange(ordersPending);
             await _orderRepository.SaveChangesAsync();
 

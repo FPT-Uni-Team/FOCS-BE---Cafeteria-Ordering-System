@@ -45,6 +45,8 @@ namespace FOCS.Application.Services
                 .GroupBy(o => o.StoreId)    
                 .ToDictionary(g => g.Key, g => g.ToList());
 
+            if (!mapOrderWithStore.Any()) return;
+
             Random random = new Random();
 
             foreach (var item in mapOrderWithStore)
@@ -80,6 +82,9 @@ namespace FOCS.Application.Services
                     StoreId = currentStoreId,
                     Orders = orders
                 };
+
+                if (!currentOrders.Any(o => o.OrderDetails?.Any() == true))
+                    continue;
 
                 await _orderWrapRepository.AddAsync(orderWrapModel);
                 await _orderWrapRepository.SaveChangesAsync();
