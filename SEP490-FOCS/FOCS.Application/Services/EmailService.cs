@@ -39,7 +39,7 @@ namespace FOCS.Application.Services
 
         public async Task<bool> SendPasswordResetAsync(ResetPasswordRequest resetPasswordRequest)
         {
-            var subject = "TipTrip - Your New Password";
+            var subject = "FOCS - Your New Password";
             var body = $@"
                 <p>Hello,</p>
                 <p>Your password has been reset. Here is your new password:</p>
