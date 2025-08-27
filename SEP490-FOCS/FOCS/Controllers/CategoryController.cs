@@ -8,7 +8,6 @@ using Org.BouncyCastle.Bcpg.OpenPgp;
 
 namespace FOCS.Controllers
 {
-    [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
     [Route("api/[controller]")]
     [ApiController]
     public class CategoryController : FocsController
@@ -21,38 +20,40 @@ namespace FOCS.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         public async Task<MenuCategoryDTO> Create(CreateCategoryRequest request)
         {   
             return await _categoryService.CreateCategoryAsync(request, StoreId);
         }
 
         [HttpPost("disable/{id}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         public async Task<bool> Disable(Guid id)
         { 
             return await _categoryService.DisableCategory(id, StoreId);
         }
 
         [HttpPost("enable/{id}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         public async Task<bool> Enable(Guid id)
         {
             return await _categoryService.EnableCategory(id, StoreId);
         }
 
         [HttpPatch("{id}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         public async Task<MenuCategoryDTO> Update(Guid id, UpdateCategoryRequest updateCategoryRequest)
         {
             return await _categoryService.UpdateCategoryAsync(updateCategoryRequest, id, StoreId);
         }
 
         [HttpPost("categories")]
-        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<PagedResult<MenuCategoryDTO>> ListCategories([FromBody] UrlQueryParameters urlQueryParameters)
         {
             return await _categoryService.ListCategoriesAsync(urlQueryParameters, StoreId);
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetById(Guid id)
         {
             var cate = await _categoryService.GetById(id, Guid.Parse(StoreId));
