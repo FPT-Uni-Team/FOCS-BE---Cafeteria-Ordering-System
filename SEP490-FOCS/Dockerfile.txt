@@ -19,9 +19,6 @@ COPY FOCS/*.csproj ./FOCS/
 # copy cả thư mục FOCS.NotificationService vào container
 COPY FOCS.NotificationService /app/FOCS.NotificationService
 
-# hoặc chỉ copy file firebase
-COPY FOCS.NotificationService/firebase-adminsdk.json /app/firebase-adminsdk.json
-
 # Restore dependencies for API project
 RUN dotnet restore ./FOCS/FOCS.csproj
 
