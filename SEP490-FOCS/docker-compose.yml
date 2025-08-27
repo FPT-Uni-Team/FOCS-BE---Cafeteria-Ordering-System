@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:5000"
+      - "8081:5000"
     depends_on: 
       - redis
       - sqlserver
@@ -15,10 +15,15 @@ services:
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=SEP490FOCS;User Id=sa;Password=Hxs03122003@@;Encrypt=False;TrustServerCertificate=True;
       - Redis__ConnectionString=redis:6379
       - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://0.0.0.0:5000
     volumes:
       - ./dataprotection-keys:/app/dataprotection-keys
+    networks:
+      - backend
     restart: always
 
   notificationservice:
@@ -27,8 +32,15 @@ services:
       dockerfile: FOCS.NotificationService/Dockerfile
     environment:
       - FIREBASE_CREDENTIALS=/app/firebase-service-account.json
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
     volumes:
       - /root/FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS.NotificationService/firebase-service-account.json:/app/firebase-service-account.json:ro
+    networks:
+      - backend
+    restart: always
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2019-latest
@@ -38,6 +50,8 @@ services:
     environment:
       SA_PASSWORD: "Hxs03122003@@"
       ACCEPT_EULA: "Y"
+    networks:
+      - backend
     restart: always
 
   redis: 
@@ -45,6 +59,8 @@ services:
     container_name: redis
     ports: 
       - "6379:6379"
+    networks:
+      - backend
     restart: always
 
   rabbitmq:
@@ -53,4 +69,10 @@ services:
     ports:
       - "5672:5672"  
       - "15672:15672" 
+    networks:
+      - backend
     restart: always
+
+networks:
+  backend:
+    driver: bridge
