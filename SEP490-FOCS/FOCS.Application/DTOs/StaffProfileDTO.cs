@@ -15,6 +15,10 @@ namespace FOCS.Application.DTOs
         [JsonPropertyName("id")]
         public Guid? Id { get; set; }
 
+        [EmailAddress]
+        [Required]
+        public string? Email { get; set; }
+
         [JsonPropertyName("phone_number")]
         [StringLength(11, ErrorMessage = "Phone number must be 10 to 11 digits.", MinimumLength = 10)]
         [RegularExpression(@"^\d+$", ErrorMessage = "Phone number must be 10 to 11 digits.")]
