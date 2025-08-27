@@ -65,7 +65,8 @@ namespace FOCS.UnitTest
                 _sysConfigMock.Object,
                 _publishEndpointMock.Object,
                 _mobileTokenMock.Object,
-                _couponUsageMock.Object
+                _couponUsageMock.Object,
+                null
             );
         }
 

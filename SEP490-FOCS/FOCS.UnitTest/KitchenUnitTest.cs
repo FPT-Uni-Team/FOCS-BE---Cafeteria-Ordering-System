@@ -19,6 +19,7 @@ namespace FOCS.UnitTest
 {
     public class KitchenUnitTest
     {
+        private readonly Mock<IRepository<MenuItemVariant>> _menuItemVariantRepoMock = new();
         private readonly Mock<IRepository<OrderWrap>> _orderWrapRepoMock = new();
         private readonly Mock<IRepository<OrderEntity>> _orderRepoMock = new();
         private readonly Mock<IPublishEndpoint> _publishEndpointMock = new();
@@ -31,6 +32,7 @@ namespace FOCS.UnitTest
         public KitchenUnitTest()
         {
             _orderWrapService = new OrderWrapService(
+                _menuItemVariantRepoMock.Object,
                 _orderWrapRepoMock.Object,
                 _mapperMock.Object,
                 _mobileTokenServiceMock.Object,
