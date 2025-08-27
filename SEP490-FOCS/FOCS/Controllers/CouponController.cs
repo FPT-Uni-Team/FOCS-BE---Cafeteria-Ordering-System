@@ -49,6 +49,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("coupons/{storeId}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetAllCoupons([FromBody] UrlQueryParameters query, Guid storeId)
         {
             var pagedResult = await _adminCouponService.GetAllCouponsAsync(query, storeId, UserId);
@@ -56,6 +57,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("coupons/available/{promotionId?}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetAvailableCoupons([FromBody] UrlQueryParameters query, Guid? promotionId)
         {
 
@@ -67,6 +69,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("coupon/{id}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetCoupon(Guid id)
         {
             var coupon = await _adminCouponService.GetCouponByIdAsync(id, UserId);
@@ -77,6 +80,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("coupons/by-ids")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetCouponsByListId([FromBody] List<Guid> couponIds)
         {
             if (couponIds == null || !couponIds.Any())
@@ -109,6 +113,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("coupon/{id}/track-usage")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> TrackCouponUsage(Guid id)
         {
             var result = await _adminCouponService.TrackCouponUsageAsync(id);
