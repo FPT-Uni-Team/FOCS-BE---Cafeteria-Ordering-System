@@ -95,7 +95,6 @@ namespace FOCS.Application.Services
                         MenuItemId = g.Key,
                         TotalQuantity = g.Sum(x => x.Quantity),
                         MenuItem = first.MenuItem,
-                        Variants = g.SelectMany(x => x.Variants) // gom tất cả variants trong nhóm
                     };
                 })
                 .OrderByDescending(g => g.TotalQuantity)
@@ -107,13 +106,6 @@ namespace FOCS.Application.Services
                 MenuItemId = g.MenuItemId,
                 Name = g.MenuItem?.Name ?? string.Empty,
                 Price = (decimal) g.MenuItem?.BasePrice,
-                Variants = g.Variants
-                    .GroupBy(v => v.Id) // tránh trùng variant
-                    .Select(vg => new VariantInsightResponse
-                    {
-                        Variantid = vg.Key,
-                        VariantName = vg.First().Name
-                    }).ToList(),
                 Image = g.MenuItem?.Images?.FirstOrDefault()?.Url ?? string.Empty
             }).ToList();
         }
