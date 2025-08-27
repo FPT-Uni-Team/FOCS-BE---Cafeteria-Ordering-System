@@ -38,7 +38,9 @@ namespace FOCS.Application.Services
 
         public async Task<PagedResult<OrderDTO>> GetOrders(UrlQueryParameters query, string storeId)
         {
-            var orderQueries = _orderRepository.AsQueryable().Where(x => x.StoreId == Guid.Parse(storeId));
+            var orderQueries = _orderRepository.AsQueryable()
+                                                    .OrderBy(x => x.CreatedAt)
+                                                    .Where(x => x.StoreId == Guid.Parse(storeId));
 
             orderQueries = ApplyFilters(orderQueries, query);
             orderQueries = ApplySearch(orderQueries, query);

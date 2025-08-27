@@ -137,6 +137,7 @@ namespace FOCS.Application.Services
             var items = await ordersWrapQuery
                 .Skip((query.Page - 1) * query.PageSize)
                 .Take(query.PageSize)
+                .OrderBy(x => x.CreatedAt)
             .ToListAsync();
 
             var rs = ordersWrapQuery.Select(x => new OrderWrapResponse
