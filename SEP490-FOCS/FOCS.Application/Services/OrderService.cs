@@ -1,6 +1,4 @@
 ﻿using AutoMapper;
-using Azure.Core;
-using FOCS.Application.DTOs.AdminServiceDTO;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
 using FOCS.Common.Enums;
@@ -14,14 +12,10 @@ using FOCS.Infrastructure.Identity.Identity.Model;
 using FOCS.NotificationService.Models;
 using FOCS.Order.Infrastucture.Entities;
 using FOCS.Realtime.Hubs;
-using MailKit;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.Extensions.Logging;
-using Org.BouncyCastle.Crypto.Modes.Gcm;
-using Org.BouncyCastle.Utilities.Collections;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -67,17 +61,17 @@ namespace FOCS.Application.Services
 
         private readonly UserManager<User> _userManager;
 
-        public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository, 
-                            ILogger<OrderService> logger, 
-                            IRepository<OrderDetail> orderDetailRepository, 
-                            IPricingService pricingService, 
-                            IRepository<Coupon> couponRepository, 
-                            DiscountContext discountContext, 
-                            IStoreSettingService storeSettingService, 
-                            IRepository<Table> tableRepo, 
-                            IRepository<Store> storeRepository, 
-                            IRepository<MenuItem> menuRepository, 
-                            IRepository<MenuItemVariant> variantRepository, 
+        public OrderService(IRepository<FOCS.Order.Infrastucture.Entities.Order> orderRepository,
+                            ILogger<OrderService> logger,
+                            IRepository<OrderDetail> orderDetailRepository,
+                            IPricingService pricingService,
+                            IRepository<Coupon> couponRepository,
+                            DiscountContext discountContext,
+                            IStoreSettingService storeSettingService,
+                            IRepository<Table> tableRepo,
+                            IRepository<Store> storeRepository,
+                            IRepository<MenuItem> menuRepository,
+                            IRepository<MenuItemVariant> variantRepository,
                             IPromotionService promotionService,
                             IMapper mapper,
                             IRealtimeService realtimeService,
@@ -117,7 +111,7 @@ namespace FOCS.Application.Services
 
             Table? table = null;
 
-            if(order.OrderType == OrderType.DineIn)
+            if (order.OrderType == OrderType.DineIn)
             {
                 table = await _tableRepository.AsQueryable().FirstOrDefaultAsync(x => x.Id == order.TableId && x.StoreId == order.StoreId);
                 ConditionCheck.CheckCondition(table != null, Errors.OrderError.TableNotFound);
@@ -126,7 +120,7 @@ namespace FOCS.Application.Services
             // Validate menu items
             await ValidateMenuItemsAsync(order.Items);
 
-            var storeSettings = await _storeSettingService.GetStoreSettingAsync(order.StoreId, userId); 
+            var storeSettings = await _storeSettingService.GetStoreSettingAsync(order.StoreId, userId);
             ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.StoreNotFound);
 
             //save order and order detail
@@ -137,7 +131,7 @@ namespace FOCS.Application.Services
 
         public async Task<DiscountResultDTO> ApplyDiscountForOrder(ApplyDiscountOrderRequest orderRequest, string userId, string storeId)
         {
-            if(orderRequest.CouponCode == null)
+            if (orderRequest.CouponCode == null)
             {
                 var rs = new DiscountResultDTO();
 
@@ -261,7 +255,7 @@ namespace FOCS.Application.Services
 
                 order.OrderStatus = request.OrderStatus;
 
-                if(order.OrderStatus == OrderStatus.Confirmed)
+                if (order.OrderStatus == OrderStatus.Confirmed)
                 {
                     order.PaymentStatus = PaymentStatus.Paid;
                 }
@@ -272,7 +266,8 @@ namespace FOCS.Application.Services
                 await _orderRepository.SaveChangesAsync();
 
                 return true;
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return false;
             }
@@ -293,7 +288,7 @@ namespace FOCS.Application.Services
 
             var mappingOrders = _mapper.Map<List<OrderDTO>>(ordersPending);
 
-            if(ordersPending != null)
+            if (ordersPending != null)
             {
                 ordersPending.ForEach(x => x.OrderStatus = OrderStatus.Confirmed);
 
@@ -337,7 +332,7 @@ namespace FOCS.Application.Services
             //update coupon, promotion usage
             var storeSetting = await _storeSettingService.GetStoreSettingAsync(Guid.Parse(storeId));
 
-            if(storeSetting.DiscountStrategy == DiscountStrategy.CouponThenPromotion)
+            if (storeSetting.DiscountStrategy == DiscountStrategy.CouponThenPromotion)
             {
                 try
                 {
@@ -352,11 +347,13 @@ namespace FOCS.Application.Services
 
                     _couponRepository.Update(currentCoupon);
                     await _couponRepository.SaveChangesAsync();
-                } catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
                     return;
                 }
-            } else
+            }
+            else
             {
                 var currentCoupon = await _couponRepository.AsQueryable().FirstOrDefaultAsync(x => x.Code == order.Coupon.Code.ToString());
                 currentCoupon.CountUsed++;
@@ -420,8 +417,8 @@ namespace FOCS.Application.Services
                                                                     .ToListAsync();
 
                     var currnetRemainingTimeOrder = variantGroupItems
-                            .SelectMany(listLevel2 => listLevel2) 
-                            .SelectMany(listLevel3 => listLevel3) 
+                            .SelectMany(listLevel2 => listLevel2)
+                            .SelectMany(listLevel3 => listLevel3)
                             .Where(item => item.IsActive && item.IsAvailable)
                             .Sum(item => item.PrepPerTime * item.QuantityPerTime);
 
@@ -429,6 +426,8 @@ namespace FOCS.Application.Services
                         .Where(x => x.PaymentStatus == PaymentStatus.Paid && x.OrderStatus == OrderStatus.Confirmed)
                         .SumAsync(x => (int?)x.RemainingTime.Value.Minutes ?? 0)) + currnetRemainingTimeOrder;
                 }
+
+                var totalAmount = (double)((double)order.DiscountResult.TotalPrice + (double)order.DiscountResult.TotalPrice * store.CustomTaxRate ?? 0);
 
                 var orderCreate = new Order.Infrastucture.Entities.Order
                 {
@@ -438,9 +437,9 @@ namespace FOCS.Application.Services
                     OrderStatus = OrderStatus.Pending,
                     OrderType = order.OrderType,
                     SubTotalAmout = (double)(order.DiscountResult.TotalPrice + order.DiscountResult.TotalDiscount),
-                    TaxAmount = store.CustomTaxRate ?? 0,
+                    TaxAmount = (double)(store.CustomTaxRate == null ? 0 : (totalAmount * store.CustomTaxRate)),
                     DiscountAmount = (double)order.DiscountResult.TotalDiscount,
-                    TotalAmount = (double)((double)order.DiscountResult.TotalPrice + (double)order.DiscountResult.TotalPrice * store.CustomTaxRate ?? 0),
+                    TotalAmount = totalAmount,
                     CustomerNote = order.Note ?? "",
                     StoreId = order.StoreId,
                     CouponId = couponCurrent,
@@ -583,11 +582,11 @@ namespace FOCS.Application.Services
                     Title = Constants.ActionTitle.NewOrderd,
                     Message = Constants.ActionTitle.NewOrderAtTable(table.TableNumber),
                     TargetGroups = new[] { SignalRGroups.Cashier(store.Id, table.Id) },
-                    MobileTokens = new[] { tokenDeviceMobile.Token }, 
+                    MobileTokens = new[] { tokenDeviceMobile.Token },
                     storeId = store.Id.ToString(),
                     tableId = table.Id.ToString()
                 };
-                
+
                 await _publishEndpoint.Publish(notifyEventModel);
 
                 await _notifyService.AddNotifyAsync(order.StoreId.ToString(), Constants.ActionTitle.NewOrderAtTable(table.TableNumber));
@@ -625,7 +624,7 @@ namespace FOCS.Application.Services
 
                 var orderDetails = _orderDetailRepository.AsQueryable().Where(x => x.OrderId == order.Id).ToList();
 
-                if(orderDetails.Any() && orderDetails != null)
+                if (orderDetails.Any() && orderDetails != null)
                 {
                     _orderDetailRepository.RemoveRange(orderDetails);
                 }
@@ -634,7 +633,8 @@ namespace FOCS.Application.Services
                 await _orderRepository.SaveChangesAsync();
 
                 return true;
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return false;
@@ -657,7 +657,8 @@ namespace FOCS.Application.Services
                 await _orderRepository.SaveChangesAsync();
 
                 return true;
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return false;
@@ -679,7 +680,7 @@ namespace FOCS.Application.Services
             foreach (var item in items)
             {
                 ConditionCheck.CheckCondition(existingMenuItems.Any(x => x.Id == item.MenuItemId), Errors.OrderError.MenuItemNotFound);
-                if(item.Variants != null)
+                if (item.Variants != null)
                 {
                     foreach (var itemVariant in item.Variants)
                     {
