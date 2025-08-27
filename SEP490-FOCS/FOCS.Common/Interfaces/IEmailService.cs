@@ -11,9 +11,9 @@ namespace FOCS.Common.Interfaces
     {
         Task<bool> SendPasswordResetAsync(ResetPasswordRequest resetPasswordRequest);
 
-        Task<bool> SendPasswordResetLinkAsync(string email, string callbackUrl);
+        Task<bool> SendPasswordResetLinkAsync(string email, string callbackUrl, string storeId, string tableId);
 
-        Task<bool> SendEmailConfirmationAsync(string email, string accToken);
+        Task<bool> SendEmailConfirmationAsync(string email, string accToken, string storeId, string tableId);
 
     }
 }
