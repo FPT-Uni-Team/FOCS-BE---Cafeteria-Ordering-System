@@ -29,6 +29,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using static FOCS.Common.Exceptions.Errors;
 using static MassTransit.ValidationResultExtensions;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static Org.BouncyCastle.Asn1.Cmp.Challenge;
@@ -211,11 +212,10 @@ namespace FOCS.Application.Services
                 return new OrderDTO();
 
             var variantIds = orderByCode.OrderDetails
-                                  .Where(od => od.Variants != null)
-                                  .SelectMany(od => od.Variants)
-                                  .Select(x => x.Id)
-                                  .Distinct()
-                                  .ToList();
+                                        .Where(od => od.Variants != null)
+                                        .SelectMany(od => od.Variants)
+                                        .Distinct()
+                                        .ToList();
 
             var variants = await _variantRepository.AsQueryable()
                                                    .Where(x => variantIds.Contains(x.Id))
@@ -223,20 +223,33 @@ namespace FOCS.Application.Services
 
             var variantDict = variants.ToDictionary(x => x.Id);
 
-            foreach (var item in orderByCode.OrderDetails)
+            var rs = _mapper.Map<OrderDTO>(orderByCode);
+
+            foreach (var od in rs.OrderDetails)
             {
-                item.Variants = item.Variants ?? new List<MenuItemVariant>();
-                foreach(var itemVariant in item.Variants)
+                var itemVariants = new List<OrderDetailVariantDTO>();
+
+                if (od.Variants != null)
                 {
-                    if (variantDict.TryGetValue((Guid)itemVariant.Id, out var variant))
+                    foreach (var variantId in od.Variants)
                     {
-                        item.Variants.Add(variant);
+                        if (variantDict.TryGetValue(variantId.VariantId, out var variant))
+                        {
+                            itemVariants.Add(new OrderDetailVariantDTO
+                            {
+                                VariantId = variant.Id,
+                                VariantName = variant.Name
+                            });
+                        }
                     }
                 }
+
+                od.Variants = itemVariants;
             }
 
-            return _mapper.Map<OrderDTO>(orderByCode);
+            return rs;
         }
+
 
         public async Task<bool> ChangeStatusOrder(string code, ChangeOrderStatusRequest request, string storeId)
         {
@@ -446,7 +459,6 @@ namespace FOCS.Application.Services
 
                 if (order.DiscountResult?.ItemDiscountDetails != null && order.DiscountResult.ItemDiscountDetails.Any())
                 {
-                    // Trường hợp có discount
                     foreach (var item in order.DiscountResult.ItemDiscountDetails)
                     {
                         var itemCodes = item.BuyItemCode?.Split("_");
@@ -485,10 +497,10 @@ namespace FOCS.Application.Services
                             Id = Guid.NewGuid(),
                             Quantity = item.Quantity,
                             UnitPrice = unitPrice,
-                            TotalPrice = unitPrice - (double)item.DiscountAmount, // đã có discount
-                            Note = "",
+                            TotalPrice = unitPrice - (double)item.DiscountAmount, 
+                            Note = order.Note ?? "",
                             MenuItemId = productId,
-                            Variants = variants,
+                            Variants = variants.Select(x => x.Id).Distinct().ToList(),
                             OrderId = orderCreate.Id
                         }).ToList());
                     }
@@ -500,25 +512,41 @@ namespace FOCS.Application.Services
                         double price = 0;
                         var currentProductPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, null, order.StoreId);
                         double unitPrice = currentProductPrice.ProductPrice;
-                        foreach (var itemVariant in item.Variants)
+                        if(item.Variants != null)
                         {
-                            var currentPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, order.StoreId);
-                            unitPrice += currentPrice.VariantPrice ?? 0;
+                            foreach (var itemVariant in item.Variants)
+                            {
+                                var currentPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, itemVariant.VariantId, order.StoreId);
+                                unitPrice += currentPrice.VariantPrice ?? 0;
+                            }
+
+                            var variants = await _variantRepository.AsQueryable().Where(x => item.Variants.Select(x => x.VariantId).Contains(x.Id)).ToListAsync();
+
+                            ordersDetailCreate.Add(new OrderDetail
+                            {
+                                Id = Guid.NewGuid(),
+                                Quantity = item.Quantity,
+                                UnitPrice = unitPrice,
+                                TotalPrice = unitPrice * item.Quantity,
+                                Note = item.Note ?? "",
+                                MenuItemId = item.MenuItemId,
+                                Variants = variants.Select(x => x.Id).Distinct().ToList(),
+                                OrderId = orderCreate.Id
+                            });
+                        } else
+                        {
+                            ordersDetailCreate.Add(new OrderDetail
+                            {
+                                Id = Guid.NewGuid(),
+                                Quantity = item.Quantity,
+                                UnitPrice = unitPrice,
+                                TotalPrice = unitPrice * item.Quantity,
+                                Note = item.Note ?? "",
+                                MenuItemId = item.MenuItemId,
+                                Variants = new List<Guid>(),
+                                OrderId = orderCreate.Id
+                            });
                         }
-
-                        var variants = await _variantRepository.AsQueryable().Where(x => item.Variants.Select(x => x.VariantId).Contains(x.Id)).ToListAsync();
-
-                        ordersDetailCreate.Add(new OrderDetail
-                        {
-                            Id = Guid.NewGuid(),
-                            Quantity = item.Quantity,
-                            UnitPrice = unitPrice,
-                            TotalPrice = unitPrice * item.Quantity,
-                            Note = item.Note ?? "",
-                            MenuItemId = item.MenuItemId,
-                            Variants = variants,
-                            OrderId = orderCreate.Id
-                        });
                     }
                 }
 

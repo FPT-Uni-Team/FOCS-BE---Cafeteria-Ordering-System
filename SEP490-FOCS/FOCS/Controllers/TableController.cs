@@ -43,7 +43,7 @@ namespace FOCS.Controllers
         [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetTable(Guid id)
         {
-            var table = await _tableService.GetTableByIdAsync(id, UserId);
+            var table = await _tableService.GetTableByIdAsync(id, StoreId);
 
             if (table == null)
                 return NotFound();
@@ -57,6 +57,7 @@ namespace FOCS.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            dto.StoreId = Guid.Parse(StoreId);
             var updated = await _tableService.UpdateTableAsync(id, dto, UserId);
             if (!updated)
                 return NotFound();

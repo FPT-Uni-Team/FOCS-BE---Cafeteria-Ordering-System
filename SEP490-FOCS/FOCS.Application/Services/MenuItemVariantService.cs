@@ -149,7 +149,7 @@ namespace FOCS.Application.Services
                 var isExist = await _menuItemVariantRepository.AsQueryable().AnyAsync(x => x.Name == request.Name && x.Id != Id);
                 ConditionCheck.CheckCondition(!isExist, Errors.Common.IsExist);
 
-                _mapper.Map(request, isExist);
+                _mapper.Map(request, variant);
 
                 variant!.Id = Id;
                 variant!.CreatedBy = storeId.ToString();

@@ -99,7 +99,7 @@ namespace FOCS.UnitTest.OrderServiceTest
             {
                 Id = Guid.NewGuid(),
                 MenuItemId = Guid.NewGuid(),
-                Variants = new List<MenuItemVariant>(),
+                Variants = new List<Guid>(),
                 Quantity = 3
             };
 
@@ -142,7 +142,7 @@ namespace FOCS.UnitTest.OrderServiceTest
             Assert.Single(captured.OrderDetails);
             var firstDetail = captured.OrderDetails.First();
             Assert.NotNull(firstDetail.Variants);
-            Assert.Equal(variantId, firstDetail.Variants.FirstOrDefault().Id);
+            Assert.Equal(variantId, firstDetail.Variants.FirstOrDefault());
         }
 
         [Fact]
@@ -150,8 +150,8 @@ namespace FOCS.UnitTest.OrderServiceTest
         {
             // Arrange
             long code = 3333L;
-            var v1 = new List<MenuItemVariant>();
-            var v2 = new List<MenuItemVariant>();
+            var v1 = new List<Guid>();
+            var v2 = new List<Guid>();
             var detail1 = new OrderDetail { Id = Guid.NewGuid(), MenuItemId = Guid.NewGuid(), Variants = v1, Quantity = 1 };
             var detail2 = new OrderDetail { Id = Guid.NewGuid(), MenuItemId = Guid.NewGuid(), Variants = v2, Quantity = 2 };
 
@@ -171,8 +171,8 @@ namespace FOCS.UnitTest.OrderServiceTest
 
             var variants = new[]
             {
-                new MenuItemVariant { Id = v1.FirstOrDefault().Id, Price = 1 },
-                new MenuItemVariant { Id = v2.FirstOrDefault().Id, Price = 2 }
+                new MenuItemVariant { Id = v1.FirstOrDefault(), Price = 1 },
+                new MenuItemVariant { Id = v2.FirstOrDefault(), Price = 2 }
             };
             var variantsMock = variants.AsQueryable().BuildMockDbSet();
             _mockVariantRepository.Setup(r => r.AsQueryable()).Returns(variantsMock.Object);
@@ -211,7 +211,7 @@ namespace FOCS.UnitTest.OrderServiceTest
             {
                 Id = Guid.NewGuid(),
                 MenuItemId = menuItemId,
-                Variants = new List<MenuItemVariant>(),
+                Variants = new List<Guid>(),
                 Quantity = 5,
                 MenuItem = fakeMenuItem
             };
