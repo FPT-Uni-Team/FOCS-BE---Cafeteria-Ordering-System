@@ -86,7 +86,9 @@ namespace FOCS.Application.Services
                                                   .Where(c => c.Id == dto.PromotionId && !c.IsDeleted).FirstOrDefaultAsync();
 
                 ConditionCheck.CheckCondition(existingPromotion != null, AdminCouponConstants.CheckPromotion, AdminCouponConstants.FieldPromotionId);
-                ConditionCheck.CheckCondition(dto.StartDate > existingPromotion.StartDate || dto.EndDate < existingPromotion.EndDate, AdminCouponConstants.PromotionOutOfDate, AdminCouponConstants.FieldPromotionId);
+                ConditionCheck.CheckCondition(!(dto.StartDate < existingPromotion.StartDate || 
+                                                dto.EndDate > existingPromotion.EndDate), 
+                                                AdminCouponConstants.PromotionOutOfDate, AdminCouponConstants.FieldPromotionId);
             }
 
             // Map DTO to entity
