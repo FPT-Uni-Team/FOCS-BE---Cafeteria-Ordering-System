@@ -33,30 +33,37 @@ namespace FOCS.Application.Services
 
         public async Task<TableDTO> CreateTableAsync(TableDTO dto, string storeId, string? userId = null)
         {
-            // Check userId
-            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(storeId), TableConstants.UserIdEmpty);
+            try
+            {
+                // Check userId
+                ConditionCheck.CheckCondition(!string.IsNullOrEmpty(storeId), TableConstants.UserIdEmpty);
 
-            bool exists = await _tableRepository
-                                    .AsQueryable()
-                                    .AnyAsync(t => t.TableNumber == dto.TableNumber && t.StoreId == dto.StoreId && !t.IsDeleted);
-            // Unique table number
-            ConditionCheck.CheckCondition(!exists, TableConstants.UniqueTableNumber);
+                bool exists = await _tableRepository
+                                        .AsQueryable()
+                                        .AnyAsync(t => t.TableNumber == dto.TableNumber && t.StoreId == dto.StoreId && !t.IsDeleted);
+                // Unique table number
+                ConditionCheck.CheckCondition(!exists, TableConstants.UniqueTableNumber);
 
-            var tableId = Guid.NewGuid();
+                var tableId = Guid.NewGuid();
 
-            var qrImage = await GenerateQrCodeForTableAsync("Add", tableId, userId, Guid.Parse(storeId));
+                var qrImage = await GenerateQrCodeForTableAsync("Add", tableId, userId, Guid.Parse(storeId));
 
-            var table = _mapper.Map<Table>(dto);
-            table.Id = tableId;
-            table.QrCode = qrImage;
-            table.IsDeleted = false;    
-            table.CreatedAt = DateTime.UtcNow;  
-            table.CreatedBy = storeId;
+                var table = _mapper.Map<Table>(dto);
+                table.Id = tableId;
+                table.QrCode = qrImage;
+                table.IsDeleted = false;
+                table.CreatedAt = DateTime.UtcNow;
+                table.CreatedBy = storeId;
+                table.StoreId = Guid.Parse(storeId);
 
-            await _tableRepository.AddAsync(table);
-            await _tableRepository.SaveChangesAsync();
+                await _tableRepository.AddAsync(table);
+                await _tableRepository.SaveChangesAsync();
 
-            return _mapper.Map<TableDTO>(table);
+                return _mapper.Map<TableDTO>(table);
+            } catch(Exception ex)
+            {
+                return new TableDTO();
+            }
         }
 
         public async Task<PagedResult<TableDTO>> GetAllTablesAsync(UrlQueryParameters query, string userId, Guid storeId)
