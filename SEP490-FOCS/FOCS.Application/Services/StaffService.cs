@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CloudinaryDotNet.Core;
 using FOCS.Application.DTOs;
 using FOCS.Application.Services.Interface;
 using FOCS.Common.Constants;
@@ -63,7 +64,6 @@ namespace FOCS.Application.Services
         {
             var staff = await ValidatePermissionAsync(staffId, managerId, checkStaff: true);
 
-            dto.Email = staff.Email;
             _mapper.Map(dto, staff);
             staff.UpdatedAt = DateTime.UtcNow;
             staff.UpdatedBy = staffId;
@@ -140,8 +140,52 @@ namespace FOCS.Application.Services
         public async Task<StaffProfileDTO> CreateManagerAsync(RegisterRequest request, string storeId, string managerId)
         {
             var manager = await CreateStaffWithoutRoleAsync(request, storeId, managerId);
-            await _userManager.AddToRoleAsync(manager, Roles.Staff);
+            await _userManager.AddToRoleAsync(manager, Roles.Manager);
             return _mapper.Map<StaffProfileDTO>(manager);
+        }
+
+        public async Task<PagedResult<StaffProfileDTO>> GetManagerListByBrandAsync(UrlQueryParameters query, Guid brandId)
+        {
+            var stores = await _storeRepository.FindAsync(s => s.BrandId == brandId && !s.IsDeleted);
+
+            var userStores = new List<UserStore>();
+            foreach (var store in stores)
+            {
+                var userInStore = await _userStoreRepository.FindAsync(us => us.StoreId == store.Id &&
+                                                                           us.Status == Common.Enums.UserStoreStatus.Active);
+                userStores.AddRange(userInStore);
+            }
+
+            var userIds = userStores.Select(us => us.UserId.ToString()).ToList();
+
+            var allUsers = _userManager.Users.Where(u => u.IsActive && !u.IsDeleted && userIds.Contains(u.Id)).ToList();
+
+            var staff = new List<StaffProfileDTO>();
+
+            foreach (var user in allUsers)
+            {
+                var userRoles = await _userManager.GetRolesAsync(user);
+                if (userRoles.Any(role => Roles.Manager.Contains(role)))
+                {
+                    var dto = _mapper.Map<StaffProfileDTO>(user);
+                    dto.Roles = userRoles;
+                    staff.Add(dto);
+                }
+            }
+
+            var staffQuery = staff.AsQueryable();
+
+            staffQuery = ApplyFilters(staffQuery, query);
+            staffQuery = ApplySearch(staffQuery, query);
+            staffQuery = ApplySort(staffQuery, query);
+
+            var total = staffQuery.Count();
+            var items = staffQuery
+                .Skip((query.Page - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .ToList();
+
+            return new PagedResult<StaffProfileDTO>(items, total, query.Page, query.PageSize);
         }
 
         public async Task<PagedResult<StaffProfileDTO>> GetManagerListAsync(UrlQueryParameters query, string storeId)
@@ -154,7 +198,6 @@ namespace FOCS.Application.Services
         {
             var manager = await ValidatePermissionAsync(managerId, adminId, checkAdmin: true);
 
-            dto.Email = manager.Email;
             _mapper.Map(dto, manager);
             manager.UpdatedAt = DateTime.UtcNow;
             manager.UpdatedBy = managerId;
@@ -191,15 +234,20 @@ namespace FOCS.Application.Services
                 !managerStoreId.Equals(null) && managerStoreId.Select(x => x.StoreId).Contains(storeIdGuid),
                 Errors.AuthError.UserUnauthor);
 
+            var existing = await _userManager.Users.AsQueryable().Where(u => u.PhoneNumber == request.Phone).FirstOrDefaultAsync();
+            ConditionCheck.CheckCondition(existing == null, Errors.AuthError.PhoneRegistered, Errors.FieldName.Phone);
+
             //create staff
             var staff = new User
             {
+                Email = request.Email,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                UserName = request.Phone,
+                UserName = request.Email.Split("@")[0],
                 PhoneNumber = request.Phone,
                 IsActive = true,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                PhoneNumberConfirmed = true
             };
 
             var result = await _userManager.CreateAsync(staff, request.Password);
@@ -356,7 +404,7 @@ namespace FOCS.Application.Services
 
             return parameters.SearchBy.ToLowerInvariant() switch
             {
-                "email" => query.Where(p => p.Email.ToLower().Contains(searchValue)),
+                //"email" => query.Where(p => p.Email.ToLower().Contains(searchValue)),
                 "first_name" => query.Where(p => p.FirstName.ToLower().Contains(searchValue)),
                 "last_name" => query.Where(p => p.LastName.ToLower().Contains(searchValue)),
                 "phone" => query.Where(p => p.PhoneNumber.ToLower().Contains(searchValue)),
@@ -366,15 +414,15 @@ namespace FOCS.Application.Services
 
         private static IQueryable<StaffProfileDTO> ApplySort(IQueryable<StaffProfileDTO> query, UrlQueryParameters parameters)
         {
-            if (string.IsNullOrWhiteSpace(parameters.SortBy)) return query.OrderBy(p => p.Email);
+            if (string.IsNullOrWhiteSpace(parameters.SortBy)) return query.OrderBy(p => p.FirstName);
 
             var isDescending = string.Equals(parameters.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
 
             return parameters.SortBy.ToLowerInvariant() switch
             {
-                "email" => isDescending
-                    ? query.OrderByDescending(p => p.Email)
-                    : query.OrderBy(p => p.Email),
+                //"email" => isDescending
+                //    ? query.OrderByDescending(p => p.Email)
+                //    : query.OrderBy(p => p.Email),
                 "first_name" => isDescending
                     ? query.OrderByDescending(p => p.FirstName)
                     : query.OrderBy(p => p.FirstName),
@@ -387,7 +435,7 @@ namespace FOCS.Application.Services
                 "role" => isDescending
                     ? query.OrderByDescending(p => p.Roles)
                     : query.OrderBy(p => p.Roles),
-                _ => query.OrderBy(p => p.Email)
+                _ => query
             };
         }
         #endregion

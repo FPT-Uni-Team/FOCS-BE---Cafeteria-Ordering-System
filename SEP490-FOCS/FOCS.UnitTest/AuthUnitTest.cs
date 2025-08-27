@@ -71,7 +71,7 @@ namespace FOCS.UnitTest
                 _mockMapper.Object,
                 _mockEmailService.Object,
                 _mockTokenService.Object,
-                _mockOtpService.Object,                       
+                //_mockOtpService.Object,                       
                 _mockUserRefreshTokenRepository.Object,
                 _mockStoreRepository.Object,
                 _mockLogger.Object,
@@ -161,7 +161,7 @@ namespace FOCS.UnitTest
                 {
                     _mockUserManager.Setup(x => x.GenerateEmailConfirmationTokenAsync(user))
                         .ReturnsAsync("email-token");
-                    _mockEmailService.Setup(x => x.SendEmailConfirmationAsync(user.Email, "email-token"))
+                    _mockEmailService.Setup(x => x.SendEmailConfirmationAsync(user.Email, string.Empty, string.Empty, "email-token"))
                         .ReturnsAsync(true);
                 }
             }
@@ -271,7 +271,7 @@ namespace FOCS.UnitTest
             // Arrange
             var request = new RegisterRequest
             {
-                Email = email,
+                //Email = email,
                 Password = password,
                 ConfirmPassword = confirmPassword,
                 Phone = phone,
@@ -322,11 +322,11 @@ namespace FOCS.UnitTest
             // Act & Assert
             if (!validStoreId && !string.IsNullOrEmpty(storeId))
             {
-                await Assert.ThrowsAsync<FormatException>(() => _authService.RegisterAsync(request, Guid.Parse(storeId), Roles.User));
+                await Assert.ThrowsAsync<FormatException>(() => _authService.RegisterAsync(request, Guid.Parse(storeId), string.Empty, Roles.User));
             }
             else
             {
-                await Assert.ThrowsAsync<Exception>(() => _authService.RegisterAsync(request, parsedStoreId, Roles.User));
+                await Assert.ThrowsAsync<Exception>(() => _authService.RegisterAsync(request, parsedStoreId, string.Empty, Roles.User));
             }
         }
 
@@ -368,11 +368,11 @@ namespace FOCS.UnitTest
             // Setup email confirmation
             _mockUserManager.Setup(x => x.GenerateEmailConfirmationTokenAsync(It.IsAny<User>()))
                 .ReturnsAsync("email-token");
-            _mockEmailService.Setup(x => x.SendEmailConfirmationAsync(email, "email-token"))
+            _mockEmailService.Setup(x => x.SendEmailConfirmationAsync(email, string.Empty, string.Empty, "email-token"))
                 .ReturnsAsync(true);
 
             // Act
-            var result = await _authService.RegisterAsync(request, storeId, Roles.User);
+            var result = await _authService.RegisterAsync(request, storeId, string.Empty, Roles.User);
 
             // Assert
             Assert.True(result);

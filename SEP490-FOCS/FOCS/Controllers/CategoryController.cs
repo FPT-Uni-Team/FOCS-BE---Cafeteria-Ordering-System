@@ -20,24 +20,28 @@ namespace FOCS.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         public async Task<MenuCategoryDTO> Create(CreateCategoryRequest request)
         {   
             return await _categoryService.CreateCategoryAsync(request, StoreId);
         }
 
         [HttpPost("disable/{id}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         public async Task<bool> Disable(Guid id)
         { 
             return await _categoryService.DisableCategory(id, StoreId);
         }
 
         [HttpPost("enable/{id}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         public async Task<bool> Enable(Guid id)
         {
             return await _categoryService.EnableCategory(id, StoreId);
         }
 
         [HttpPatch("{id}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         public async Task<MenuCategoryDTO> Update(Guid id, UpdateCategoryRequest updateCategoryRequest)
         {
             return await _categoryService.UpdateCategoryAsync(updateCategoryRequest, id, StoreId);

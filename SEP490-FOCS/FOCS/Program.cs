@@ -117,6 +117,7 @@ builder.Services.AddScoped<IEmailHelper, EmailHelper>()
                 .AddScoped<ICashierService, CashierService>()
                 .AddScoped<IRepository<CartItem>, Repository<CartItem, OrderDbContext>>()
                 .AddScoped<IRepository<CouponUsage>, Repository<CouponUsage, OrderDbContext>>()
+                .AddScoped<INotifyService, NotifyService>()
                 .AddScoped<IRepository<Coupon>, Repository<Coupon, OrderDbContext>>()
                 .AddScoped<IRepository<PaymentAccount>, Repository<PaymentAccount, OrderDbContext>>()
                 .AddScoped<IRepository<Promotion>, Repository<Promotion, OrderDbContext>>()
@@ -247,16 +248,20 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-var options = ConfigurationOptions.Parse("103.185.184.27:6379");
-options.Password = "Hxs03122003";
-options.AbortOnConnectFail = false;
-options.ConnectRetry = 5;
-options.SyncTimeout = 10000;
+var options = new ConfigurationOptions
+{
+    EndPoints = { "103.185.184.27:6379" },
+    Password = "Hxs03122003",
+    AbortOnConnectFail = false,
+    ConnectRetry = 5,
+    ConnectTimeout = 15000,    // tăng timeout
+    SyncTimeout = 15000
+};
 
 var redis = ConnectionMultiplexer.Connect(options);
 
 builder.Services.AddSignalR()
-    .AddStackExchangeRedis("103.185.184.27:6379,password=Hxs03122003,abortConnect=false,connectTimeout=10000");
+    .AddStackExchangeRedis("103.185.184.27:6379,password=Hxs03122003,abortConnect=false,connectTimeout=15000");
 
 builder.Services.AddDataProtection()
     .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys")
@@ -303,18 +308,20 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddMassTransit(x =>
 {
-     x.AddConsumer<NotifyConsumer>();
+    x.AddConsumer<NotifyConsumer>();
 
     x.UsingRabbitMq((ctx, cfg) =>
     {
-        cfg.Host("103.185.184.27", 5672, "/", h =>
+        var configuration = ctx.GetRequiredService<IConfiguration>();
+        var rabbitMqSection = configuration.GetSection("RabbitMq");
+
+        cfg.Host(rabbitMqSection["Host"], ushort.Parse(rabbitMqSection["Port"]), "/", h =>
         {
-            h.Username("guest");
-            h.Password("guest");
+            h.Username(rabbitMqSection["Username"]);
+            h.Password(rabbitMqSection["Password"]);
             h.Heartbeat(TimeSpan.FromSeconds(60));
         });
 
-        // Config receive endpoint
         cfg.ReceiveEndpoint("notify-consumer", e =>
         {
             e.ConfigureConsumer<NotifyConsumer>(ctx);
@@ -322,6 +329,9 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
+var multiplexer = ConnectionMultiplexer.Connect(options);
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
 
 builder.Services.AddAuthentication();
 

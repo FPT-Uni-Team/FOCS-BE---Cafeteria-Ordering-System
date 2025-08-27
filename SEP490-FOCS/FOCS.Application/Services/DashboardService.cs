@@ -85,11 +85,13 @@ namespace FOCS.Application.Services
 
             var activeTables = await reportOrders.CountAsync(x => x.OrderType == Common.Enums.OrderType.DineIn);
 
+            //var revenue = await reportOrders
+            //    .SelectMany(x => x.OrderDetails, (order, od) => new { od.Quantity, od.UnitPrice })
+            //    .SumAsync(od => (double)(od.Quantity * od.UnitPrice));
+
             var revenue = await reportOrders
-                .SelectMany(x => x.OrderDetails)
-                .Select(od => od.Quantity * od.UnitPrice)
-                .DefaultIfEmpty(0)
-                .SumAsync();
+                            .Select(x => x.TotalAmount)
+                            .SumAsync();
 
             var itemSales = await reportOrders
                 .SelectMany(o => o.OrderDetails)

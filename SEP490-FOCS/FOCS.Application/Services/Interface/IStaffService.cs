@@ -16,6 +16,7 @@ namespace FOCS.Application.Services.Interface
         Task<bool> AddStaffRoleAsync(string role, string staffId, string managerId);
         Task<bool> RemoveStaffRoleAsync(string role, string staffId, string managerId);
         Task<StaffProfileDTO> CreateManagerAsync(RegisterRequest request, string StoreId, string managerId);
+        Task<PagedResult<StaffProfileDTO>> GetManagerListByBrandAsync(UrlQueryParameters query, Guid brandId);
         Task<PagedResult<StaffProfileDTO>> GetManagerListAsync(UrlQueryParameters query, string storeId);
         Task<StaffProfileDTO> UpdateManagerProfileAsync(StaffProfileDTO dto, string staffId, string managerId);
         Task<bool> DeleteManagerAsync(string staffId, string managerId);

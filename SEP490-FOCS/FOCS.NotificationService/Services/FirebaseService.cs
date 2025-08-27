@@ -1,4 +1,4 @@
-﻿using FirebaseAdmin;
+using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Configuration;
@@ -13,11 +13,14 @@ namespace FOCS.NotificationService.Services
 
         public FirebaseService(IConfiguration config, ILogger<FirebaseService> logger)
         {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "firebase-service-account.json");
+            var path = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS") 
+                           ?? Path.Combine(AppContext.BaseDirectory, "firebase-adminsdk.json");
+            // var path = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS") 
+            //            ?? Path.Combine(Directory.GetCurrentDirectory(), "firebase-service-account.json");
 
             if (!File.Exists(path))
             {
-                throw new FileNotFoundException($"❌ firebase-service-account.json not found at: {path}");
+                throw new FileNotFoundException($"❌ firebase credential file not found at: {path}");
             }
 
             try
@@ -41,7 +44,7 @@ namespace FOCS.NotificationService.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "❌ Failed to initialize Firebase.");
-                throw; // fail fast
+                throw; 
             }
         }
     }

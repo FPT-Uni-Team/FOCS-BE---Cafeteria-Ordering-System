@@ -14,6 +14,7 @@ namespace FOCS.Common.Exceptions
             public const string Id = "id";
             public const string Title = "title";
             public const string Email = "email";
+            public const string Phone = "phone";
             public const string StoreId = "store_id";
             public const string BrandId = "brand_id";
             public const string UserId = "user_id";
@@ -85,6 +86,7 @@ namespace FOCS.Common.Exceptions
             public const string InvalidRefreshToken = "Invalid refresh token";
             public const string NotVerifyAccount = "Account is not verify";
             public const string NotVerifyPhone = "Phone is not verify";
+            public const string PhoneRegistered = "Your phone number has been registered in the system";
             public const string UserUnauthor = "You don't have permission to access";
         }
 

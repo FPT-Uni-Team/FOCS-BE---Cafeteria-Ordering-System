@@ -26,20 +26,20 @@ namespace FOCS.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync(LoginRequest loginRequest)
         {
-            return (await _authService.LoginAsync(loginRequest, StoreId)).IsSuccess == true ? Ok(await _authService.LoginAsync(loginRequest, StoreId)) : BadRequest(await _authService.LoginAsync(loginRequest, StoreId));
+            return (await _authService.LoginAsync(loginRequest, StoreId, TableId)).IsSuccess == true ? Ok(await _authService.LoginAsync(loginRequest, StoreId, TableId)) : BadRequest(await _authService.LoginAsync(loginRequest, StoreId, TableId));
         }
 
         [HttpPost("register")]
         public async Task<bool> RegisterAsUserAsync(RegisterRequest registerRequest)
         {
             ConditionCheck.CheckCondition(Guid.TryParse(StoreId, out Guid storeIdGuid), Errors.Common.InvalidGuidFormat);
-            return await _authService.RegisterAsync(registerRequest, storeIdGuid, Roles.User);
+            return await _authService.RegisterAsync(registerRequest, storeIdGuid, TableId, Roles.User);
         }
 
         [HttpPost("admin/register")]
         public async Task<bool> RegisterAsAdminAsync(RegisterRequest registerRequest)
         {
-            return await _authService.RegisterAsync(registerRequest, Guid.Empty, Roles.Admin);
+            return await _authService.RegisterAsync(registerRequest, Guid.Empty, string.Empty, Roles.Admin);
         }
 
         [HttpPost("logout")]
@@ -68,7 +68,7 @@ namespace FOCS.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _authService.ForgotPasswordAsync(request.Email);
+            var result = await _authService.ForgotPasswordAsync(request.Email, StoreId, TableId);
 
             if (!result)
                 return NotFound(new { message = "User not found with the provided email." });
@@ -87,12 +87,16 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail(string email, string token)
+        public async Task<IActionResult> ConfirmEmail(string email, string token, string? storeId = null, string? tableId = null)
         {
             var result = await _authService.ConfirmEmailAsync(email, token);
             if (result)
             {
-                return Redirect(_configuration["applicationProductUrl:BaseStoreFrontUrl"] + "/vi/sign-in");
+                if(string.IsNullOrEmpty(storeId) || string.IsNullOrEmpty(tableId))  
+                    return Redirect(_configuration["applicationProductUrl:BaseOwnerUrl"] + $"/login");
+
+                return Redirect(_configuration["applicationProductUrl:BaseStoreFrontUrl"] + $"/en/{storeId}/{tableId}/sign-in");
+
             }
             else
             {
@@ -121,6 +125,12 @@ namespace FOCS.Controllers
         public async Task<bool> AddOrUpdateMobileToken(MobileTokenRequest request)
         {
             return await _authService.CreateOrUpdateMobileToken(request);
+        }
+
+        [HttpGet("points")]
+        public async Task<int> GetUserPoints()
+        {
+            return await _authService.GetUserPointAsync(UserId);
         }
     }
 }

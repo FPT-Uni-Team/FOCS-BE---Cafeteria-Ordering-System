@@ -40,6 +40,7 @@ namespace FOCS.UnitTest.OrderServiceTest
         protected readonly Mock<IRealtimeService> _mockRealtimeService;
         protected readonly Mock<ILogger<OrderService>> _mockLogger;
         protected readonly Mock<IMapper> _mockMapper;
+        protected readonly Mock<INotifyService> _mockNotify;
         protected readonly Mock<IPublishEndpoint> _mockPublishEndpoint;
         protected readonly Mock<UserManager<User>> _mockUserManager;
 
@@ -65,9 +66,11 @@ namespace FOCS.UnitTest.OrderServiceTest
             _mockStoreSettingService = new Mock<IStoreSettingService>();
             _mockCouponUsageService = new Mock<ICouponUsageService>();
             _mockRealtimeService = new Mock<IRealtimeService>();
+            _mockNotify = new Mock<INotifyService>();
             _mockLogger = new Mock<ILogger<OrderService>>();
             _mockMapper = new Mock<IMapper>();
             _mockPublishEndpoint = new Mock<IPublishEndpoint>();
+            
 
             // UserManager requires special construction
             var storeMock = new Mock<IUserStore<User>>();
@@ -93,7 +96,8 @@ namespace FOCS.UnitTest.OrderServiceTest
                 _mockSystemConfig.Object,
                 _mockPublishEndpoint.Object,
                 _mockMobileTokenService.Object,
-                _mockCouponUsageService.Object
+                _mockCouponUsageService.Object,
+                null
             );
         }
 

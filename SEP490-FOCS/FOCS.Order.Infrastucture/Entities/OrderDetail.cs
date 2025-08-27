@@ -21,7 +21,7 @@ namespace FOCS.Order.Infrastucture.Entities
         public Guid MenuItemId { get; set; }
         public MenuItem MenuItem { get; set; }
 
-        public ICollection<MenuItemVariant>? Variants {  get; set; }
+        public List<Guid>? Variants {  get; set; }
 
         public Guid? OrderId { get; set; }
         public Order? Order { get; set; }    

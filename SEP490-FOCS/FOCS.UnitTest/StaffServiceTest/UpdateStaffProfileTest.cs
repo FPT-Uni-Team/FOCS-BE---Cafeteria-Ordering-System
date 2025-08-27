@@ -28,7 +28,7 @@ namespace FOCS.UnitTest.StaffServiceTest
                 FirstName = "UpdatedFirstName",
                 LastName = "UpdatedLastName",
                 PhoneNumber = "9876543210",
-                Email = "updated@test.com" // This should be ignored
+                //Email = "updated@test.com" // This should be ignored
             };
 
             var staffUserStore = CreateTestUserStore(Guid.Parse(staffId), storeId);
@@ -71,7 +71,7 @@ namespace FOCS.UnitTest.StaffServiceTest
             _mockMapper.Setup(x => x.Map<StaffProfileDTO>(staff))
                 .Returns(new StaffProfileDTO
                 {
-                    Email = staff.Email,
+                    //Email = staff.Email,
                     FirstName = updateDto.FirstName,
                     LastName = updateDto.LastName,
                     PhoneNumber = updateDto.PhoneNumber
@@ -86,14 +86,14 @@ namespace FOCS.UnitTest.StaffServiceTest
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("original@test.com", result.Email); // Email should remain original
+            //Assert.Equal("original@test.com", result.Email); // Email should remain original
             Assert.Equal("UpdatedFirstName", result.FirstName);
             Assert.Equal("UpdatedLastName", result.LastName);
             Assert.Equal("9876543210", result.PhoneNumber);
             Assert.Equal(expectedRoles, result.Roles);
 
             // Verify email was preserved in DTO before mapping
-            Assert.Equal("original@test.com", updateDto.Email);
+            //Assert.Equal("original@test.com", updateDto.Email);
 
             // Verify all interactions
             _mockUserManager.Verify(x => x.FindByIdAsync(staffId), Times.Once);

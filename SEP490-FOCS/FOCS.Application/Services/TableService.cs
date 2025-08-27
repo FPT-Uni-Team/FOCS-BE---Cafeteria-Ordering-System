@@ -117,9 +117,9 @@ namespace FOCS.Application.Services
             return new PagedResult<TableDTO>(mapped, total, query.Page, query.PageSize);
         }
 
-        public async Task<TableDTO?> GetTableByIdAsync(Guid id, string userId)
+        public async Task<TableDTO?> GetTableByIdAsync(Guid id, string storeId)
         {
-            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), TableConstants.UserIdEmpty);
+            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(storeId), TableConstants.UserIdEmpty);
 
             var table = await _tableRepository.GetByIdAsync(id);
 
@@ -130,27 +130,34 @@ namespace FOCS.Application.Services
 
         public async Task<bool> UpdateTableAsync(Guid id, TableDTO dto, string userId)
         {
-            // Check userId
-            ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), TableConstants.UserIdEmpty);
+            try
+            {
+                // Check userId
+                ConditionCheck.CheckCondition(!string.IsNullOrEmpty(userId), TableConstants.UserIdEmpty);
+                    
+                var table = await _tableRepository.GetByIdAsync(id);
+                if (table == null || table.IsDeleted)
+                    return false;
 
-            var table = await _tableRepository.GetByIdAsync(id);
-            if (table == null || table.IsDeleted)
-                return false;
+                // Unique table number
+                bool isDuplicate = await _tableRepository.AsQueryable()
+                                                         .AnyAsync(t => t.Id != id &&
+                                                                        t.TableNumber == dto.TableNumber &&
+                                                                        t.StoreId == dto.StoreId &&
+                                                                        !t.IsDeleted);
+                ConditionCheck.CheckCondition(!isDuplicate, TableConstants.UniqueTableNumber);
 
-            // Unique table number
-            bool isDuplicate = await _tableRepository.AsQueryable()
-                                                     .AnyAsync(t => t.Id != id &&
-                                                                    t.TableNumber == dto.TableNumber &&
-                                                                    t.StoreId == dto.StoreId &&
-                                                                    !t.IsDeleted);
-            ConditionCheck.CheckCondition(!isDuplicate, TableConstants.UniqueTableNumber);
-
-            _mapper.Map(dto, table);
-            table.UpdatedAt = DateTime.UtcNow;
-            table.UpdatedBy = userId;
+                _mapper.Map(dto, table);
+                table.UpdatedAt = DateTime.UtcNow;
+                table.UpdatedBy = userId;
 
                 await _tableRepository.SaveChangesAsync();
-            return true;
+
+                return true;
+            } catch(Exception ex)
+            {
+                return false;
+            }
         }
 
         public async Task<bool> DeleteTableAsync(Guid id, string userId)

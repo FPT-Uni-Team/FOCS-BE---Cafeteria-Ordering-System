@@ -34,9 +34,12 @@ namespace FOCS.Application.Services
 
         private readonly IMapper _mapper;
 
-        public OrderWrapService(IRepository<OrderWrap> orderWrapRepo, IMapper mapper, IMobileTokenSevice mobileTokenService, IRealtimeService realtimeService, IPublishEndpoint publishEndpoint, IRepository<OrderEntity> orderRepo)
+        private readonly IRepository<MenuItemVariant> _variantRepo;
+
+        public OrderWrapService(IRepository<MenuItemVariant> variantRepo, IRepository<OrderWrap> orderWrapRepo, IMapper mapper, IMobileTokenSevice mobileTokenService, IRealtimeService realtimeService, IPublishEndpoint publishEndpoint, IRepository<OrderEntity> orderRepo)
         {
             _orderWrapRepo = orderWrapRepo;
+            _variantRepo = variantRepo;
             _publishEndpoint = publishEndpoint;
             _realtimeService = realtimeService;
             _orderRepo = orderRepo;
@@ -152,26 +155,39 @@ namespace FOCS.Application.Services
 
         public async Task<List<SendOrderWrapDTO>> GetOrderWrapDetail(string code, string storeId)
         {
-            var orderWrap = await _orderWrapRepo.AsQueryable().FirstOrDefaultAsync(x => x.Code == code && x.StoreId == Guid.Parse(storeId));
-            var orders = await _orderWrapRepo.AsQueryable().Include(x => x.Orders).ThenInclude(x => x.OrderDetails).Where(x => x.Code == code && x.StoreId == Guid.Parse(storeId)).SelectMany(x => x.Orders).ToListAsync();
+            var storeGuid = Guid.Parse(storeId); 
+
+            var orderWrap = await _orderWrapRepo.AsQueryable()
+                .FirstOrDefaultAsync(x => x.Code == code && x.StoreId == storeGuid);
+
+            var orders = await _orderWrapRepo.AsQueryable()
+                .Include(x => x.Orders)
+                    .ThenInclude(x => x.OrderDetails)
+                        .ThenInclude(x => x.MenuItem)
+                .Where(x => x.Code == code && x.StoreId == storeGuid)  
+                .SelectMany(x => x.Orders)
+                .ToListAsync();
 
             var orderDto = _mapper.Map<List<OrderDTO>>(orders);
 
             var orderWrapRes = orderDto
-                    .SelectMany(order => order.OrderDetails)
-                    .GroupBy(detail => detail.MenuItemId)
-                    .Select(group => new SendOrderWrapDTO
-                    {
-                        OrderWrapId = orderWrap.Id,
-                        MenuItemId = group.Key,
-                        MenuItemName = group.First().MenuItemName,
-                        Variants = group.Select(detail => new VariantWrapOrder
+                .SelectMany(order => order.OrderDetails)
+                .GroupBy(detail => detail.MenuItemId)
+                .Select(group => new SendOrderWrapDTO
+                {
+                    OrderWrapId = orderWrap.Id,
+                    MenuItemId = group.Key,
+                    MenuItemName = group.First().MenuItemName,
+                    Variants = group
+                        .SelectMany(detail => detail.Variants.Select(v => new VariantWrapOrder
                         {
-                            VariantId = string.Join(",", detail.Variants.Select(x => x.VariantId)),
-                            VariantName = string.Join(" - ", detail.Variants.Select(x => x.VariantName)),
+                            VariantId = v.VariantId.ToString(),
+                            VariantName = _variantRepo.AsQueryable().FirstOrDefault(x => x.Id == v.VariantId)?.Name,
                             Note = detail.Note
-                        }).ToList()
-                    }).ToList();
+                        }))
+                        .ToList()
+                })
+                .ToList();
 
             return orderWrapRes;
         }

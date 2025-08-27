@@ -79,7 +79,7 @@ namespace FOCS.Controllers
             if (store == null)
                 return NotFound("Store setting not found");
 
-            var payOSService = _payOSServiceFactory.Create(store.PayOSClientId!, store.PayOSApiKey!, store.PayOSChecksumKey!);
+            //var payOSService = _payOSServiceFactory.Create(store.PayOSClientId!, store.PayOSApiKey!, store.PayOSChecksumKey!);
 
             //var verifiedCode = payOSService.VerifyWebhook(webhookData);
             if (request.Status != "00")
