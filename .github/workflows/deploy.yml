@@ -40,6 +40,7 @@ jobs:
           docker build -t sep490-focs_api -f Dockerfile .
           docker run -d -p 8081:5000 \
           --name sep490-focs_api \
+          -v /root/FOCS-BE---Cafeteria-Ordering-System/SEP490-FOCS/FOCS.NotificationService/firebase-adminsdk.json:/app/firebase-adminsdk.json \
           -e ASPNETCORE_URLS=http://+:5000 \
           -e TwilioSettings__AccountSid=${{ secrets.TWILIO_ACCOUNT_SID }} \
           -e TwilioSettings__AuthToken=${{ secrets.TWILIO_AUTH_TOKEN }} \
