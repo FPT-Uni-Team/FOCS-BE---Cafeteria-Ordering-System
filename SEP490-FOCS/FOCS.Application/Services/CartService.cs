@@ -239,7 +239,7 @@ namespace FOCS.Application.Services
 
         public string GetCartKey(Guid tableId, string storeId)
         {
-            return $"cart:{storeId}:{tableId}";
+            return $"cart:{storeId.toLower()}:{tableId}";
         }
 
     }
