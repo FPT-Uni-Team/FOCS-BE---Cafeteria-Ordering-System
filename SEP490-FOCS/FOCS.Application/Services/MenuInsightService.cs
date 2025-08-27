@@ -64,7 +64,7 @@ namespace FOCS.Application.Services
             throw new NotImplementedException();
         }
 
-        public async Task<List<MenuItemInsightResponse>> GetProductOrderNearingWithCurrentOfUser(Guid userId, int topN = 1)
+        public async Task<List<MenuItemInsightResponse>> GetProductOrderNearingWithCurrentOfUser(Guid userId, string storeId, int topN = 1)
         {
             var orders = await _orderRepository.AsQueryable().Include(x => x.OrderDetails)
                                                                 .ThenInclude(x => x.MenuItem)
@@ -73,10 +73,17 @@ namespace FOCS.Application.Services
                                                              .OrderByDescending(x => x.CreatedAt)
                                                              .Take(topN)
                                                              .ToListAsync();
+            var rs = GroupProductInsight(orders.SelectMany(x => x.OrderDetails).ToList(), topN);
 
-            var allOrdersDetail = orders.SelectMany(x => x.OrderDetails).ToList();
+            var orderInStoreInPeriodTime = await _orderRepository.AsQueryable()
+                                                                 .Include(x => x.OrderDetails)
+                                                                    .ThenInclude(x => x.MenuItem)
+                                                                        .ThenInclude(x => x.Images)
+                                                                 .Where(x => x.StoreId == Guid.Parse(storeId) && (DateTime)x.CreatedAt >= DateTime.UtcNow.AddDays(-30))
+                                                                     .ToListAsync();
+            rs.AddRange(GroupProductInsight(orderInStoreInPeriodTime.SelectMany(x => x.OrderDetails).ToList(), topN - rs.Count));
 
-            return GroupProductInsight(allOrdersDetail, topN);
+            return rs.DistinctBy(x => x.MenuItemId).ToList();
         }
 
         #region private method
@@ -95,7 +102,6 @@ namespace FOCS.Application.Services
                         MenuItemId = g.Key,
                         TotalQuantity = g.Sum(x => x.Quantity),
                         MenuItem = first.MenuItem,
-                        Variants = g.SelectMany(x => x.Variants) // gom tất cả variants trong nhóm
                     };
                 })
                 .OrderByDescending(g => g.TotalQuantity)
@@ -107,13 +113,6 @@ namespace FOCS.Application.Services
                 MenuItemId = g.MenuItemId,
                 Name = g.MenuItem?.Name ?? string.Empty,
                 Price = (decimal) g.MenuItem?.BasePrice,
-                Variants = g.Variants
-                    .GroupBy(v => v.Id) // tránh trùng variant
-                    .Select(vg => new VariantInsightResponse
-                    {
-                        Variantid = vg.Key,
-                        VariantName = vg.First().Name
-                    }).ToList(),
                 Image = g.MenuItem?.Images?.FirstOrDefault()?.Url ?? string.Empty
             }).ToList();
         }

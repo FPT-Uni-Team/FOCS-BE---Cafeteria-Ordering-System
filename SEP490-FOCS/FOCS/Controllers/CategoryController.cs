@@ -8,6 +8,7 @@ using Org.BouncyCastle.Bcpg.OpenPgp;
 
 namespace FOCS.Controllers
 {
+    [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
     [Route("api/[controller]")]
     [ApiController]
     public class CategoryController : FocsController
@@ -44,12 +45,14 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("categories")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<PagedResult<MenuCategoryDTO>> ListCategories([FromBody] UrlQueryParameters urlQueryParameters)
         {
             return await _categoryService.ListCategoriesAsync(urlQueryParameters, StoreId);
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetById(Guid id)
         {
             var cate = await _categoryService.GetById(id, Guid.Parse(StoreId));

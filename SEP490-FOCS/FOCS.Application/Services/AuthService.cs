@@ -75,7 +75,7 @@ namespace FOCS.Application.Services
             return result.Succeeded;
         }
 
-        public async Task<bool> ForgotPasswordAsync(string email)
+        public async Task<bool> ForgotPasswordAsync(string email, string storeId, string tableId)
         {
             var user = await _userManager.FindByEmailAsync(email);
 
@@ -83,10 +83,10 @@ namespace FOCS.Application.Services
             // generate reset token
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            return await _emailService.SendPasswordResetLinkAsync(email, resetToken);
+            return await _emailService.SendPasswordResetLinkAsync(email, resetToken, storeId, tableId);
         }
 
-        public async Task<AuthResult> LoginAsync(LoginRequest request, string? storeId = null)
+        public async Task<AuthResult> LoginAsync(LoginRequest request, string? storeId = null, string? tableId = null)
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
 
@@ -112,7 +112,7 @@ namespace FOCS.Application.Services
             {
                 var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-                await _emailService.SendEmailConfirmationAsync(user.Email, token);
+                await _emailService.SendEmailConfirmationAsync(user.Email, token, storeId, tableId);
 
                 return new AuthResult
                 {
@@ -210,7 +210,7 @@ namespace FOCS.Application.Services
             return await GenerateAuthResult(user, storeId);
         }
 
-        public async Task<bool> RegisterAsync(RegisterRequest request, Guid StoreId, string role)
+        public async Task<bool> RegisterAsync(RegisterRequest request, Guid StoreId, string tableId, string role)
         {
             //var existing = await _userManager.Users.AsQueryable().Where(u => u.PhoneNumber == request.Phone).FirstOrDefaultAsync();
             //ConditionCheck.CheckCondition(existing == null, Errors.AuthError.PhoneRegistered, Errors.FieldName.Phone);
@@ -250,7 +250,7 @@ namespace FOCS.Application.Services
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
             // Send confirmation email (external email service assumed)
-            await _emailService.SendEmailConfirmationAsync(user.Email, token);
+            await _emailService.SendEmailConfirmationAsync(user.Email, token, StoreId.ToString(), tableId);
 
             return true;
         }

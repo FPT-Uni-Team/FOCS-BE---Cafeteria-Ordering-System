@@ -16,6 +16,9 @@ COPY FOCS.Realtime.Hub/*.csproj ./FOCS.Realtime.Hub/
 COPY FOCS.NotificationService/*.csproj ./FOCS.NotificationService/
 COPY FOCS/*.csproj ./FOCS/
 
+# copy cả thư mục FOCS.NotificationService vào container
+COPY FOCS.NotificationService /app/FOCS.NotificationService
+
 # Restore dependencies for API project
 RUN dotnet restore ./FOCS/FOCS.csproj
 

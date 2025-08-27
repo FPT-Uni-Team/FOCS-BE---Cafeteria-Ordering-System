@@ -1,5 +1,7 @@
-﻿using FOCS.Common.Interfaces;
+﻿using FOCS.Common.Constants;
+using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -7,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace FOCS.Controllers
 {
+    [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
     [Route("api/[controller]")]
     [ApiController]
     public class WorkshiftController : FocsController
@@ -19,6 +22,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("list")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Staff)]
         public async Task<PagedResult<WorkshiftResponse>> ListWorkshiftStaff([FromBody] UrlQueryParameters urlQueryParameters, [FromHeader(Name = "storeId")] string storeId)
         {
             return await _workshiftScheduleService.ListAll(urlQueryParameters, storeId);
@@ -40,6 +44,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("schedule/{scheduleId}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Staff)]
         public async Task<ActionResult<WorkshiftScheduleDto?>> GetScheduleByIdAsync(Guid scheduleId)
         {
             var result = await _workshiftScheduleService.GetScheduleByIdAsync(scheduleId);
@@ -47,6 +52,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("schedules")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Staff)]
         public async Task<ActionResult<List<WorkshiftScheduleResponse>>> GetSchedulesByStoreAsync([FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
         {
             var result = await _workshiftScheduleService.GetSchedulesByStoreAsync(Guid.Parse(StoreId), fromDate, toDate);
@@ -70,6 +76,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("schedule/{scheduleId}/shifts")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Staff)]
         public async Task<ActionResult<List<WorkShiftDto>>> GetWorkShiftsByScheduleAsync(Guid scheduleId)
         {
             var result = await _workshiftScheduleService.GetWorkShiftsByScheduleAsync(scheduleId);
@@ -84,6 +91,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("shift/{workShiftId}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Staff)]
         public async Task<ActionResult<WorkshiftResponse?>> GetWorkShiftByIdAsync(Guid workShiftId)
         {
             var result = await _workshiftScheduleService.GetWorkShiftByIdAsync(workShiftId, StoreId);
@@ -107,6 +115,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("shift/{workShiftId}/registrations")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Staff)]
         public async Task<ActionResult<List<StaffWorkshiftRegistrationDto>>> GetRegistrationsByWorkShiftAsync(Guid workShiftId)
         {
             var result = await _workshiftScheduleService.GetRegistrationsByWorkShiftAsync(workShiftId);
@@ -114,6 +123,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("staff/{staffId}/registrations")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Staff)]
         public async Task<ActionResult<List<StaffWorkshiftRegistrationResponse>>> GetRegistrationsByStaffAsync(Guid staffId, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
         {
             var result = await _workshiftScheduleService.GetRegistrationsByStaffAsync(staffId, fromDate, toDate);

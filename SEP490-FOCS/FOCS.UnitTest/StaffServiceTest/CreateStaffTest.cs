@@ -31,7 +31,7 @@ namespace FOCS.UnitTest.StaffServiceTest
                 .Returns(Task.CompletedTask);
             _mockUserStoreRepository.Setup(x => x.SaveChangesAsync())
                 .ReturnsAsync(1);
-            _mockEmailService.Setup(x => x.SendEmailConfirmationAsync(It.IsAny<string>(), It.IsAny<string>()))
+            _mockEmailService.Setup(x => x.SendEmailConfirmationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(true);
 
             User capturedUser = null;
@@ -62,7 +62,7 @@ namespace FOCS.UnitTest.StaffServiceTest
             _mockUserManager.Verify(x => x.AddToRoleAsync(It.IsAny<User>(), Roles.Staff), Times.Once);
             _mockUserStoreRepository.Verify(x => x.AddAsync(It.IsAny<UserStore>()), Times.Once);
             _mockUserStoreRepository.Verify(x => x.SaveChangesAsync(), Times.Once);
-            _mockEmailService.Verify(x => x.SendEmailConfirmationAsync(user.Email, "test-token"), Times.Once);
+            _mockEmailService.Verify(x => x.SendEmailConfirmationAsync(user.Email, string.Empty, string.Empty, "test-token"), Times.Once);
         }
 
         [Fact]
@@ -227,7 +227,7 @@ namespace FOCS.UnitTest.StaffServiceTest
                 .Returns(Task.CompletedTask);
             _mockUserStoreRepository.Setup(x => x.SaveChangesAsync())
                 .ReturnsAsync(1);
-            _mockEmailService.Setup(x => x.SendEmailConfirmationAsync(It.IsAny<string>(), It.IsAny<string>()))
+            _mockEmailService.Setup(x => x.SendEmailConfirmationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(true);
 
             User capturedUser = null;
@@ -270,7 +270,7 @@ namespace FOCS.UnitTest.StaffServiceTest
 
             _mockUserStoreRepository.Setup(x => x.SaveChangesAsync())
                 .ReturnsAsync(1);
-            _mockEmailService.Setup(x => x.SendEmailConfirmationAsync(It.IsAny<string>(), It.IsAny<string>()))
+            _mockEmailService.Setup(x => x.SendEmailConfirmationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(true);
 
             UserStore capturedUserStore = null;

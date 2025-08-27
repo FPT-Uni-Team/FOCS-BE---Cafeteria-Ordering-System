@@ -32,6 +32,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("tables")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetAllTables([FromBody] UrlQueryParameters query, Guid storeId)
         {
             var result = await _tableService.GetAllTablesAsync(query, UserId, storeId);
@@ -39,6 +40,7 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("table/{id}")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetTable(Guid id)
         {
             var table = await _tableService.GetTableByIdAsync(id, UserId);
@@ -73,6 +75,7 @@ namespace FOCS.Controllers
         }
 
         [HttpPut("table/status")]
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> SetTableStatus(Guid tableId, [FromBody] TableStatus status, Guid storeId)
         {
             var success = await _tableService.SetTableStatusAsync(tableId, status, UserId, storeId);
