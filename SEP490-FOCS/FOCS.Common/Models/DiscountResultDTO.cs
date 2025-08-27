@@ -12,6 +12,9 @@ namespace FOCS.Common.Models
         [JsonPropertyName("total_discount")]
         public decimal TotalDiscount { get; set; }
 
+        [JsonPropertyName("tax_amount")]
+        public decimal TaxAmount { get; set; }
+
         [JsonPropertyName("total_price")]
         public decimal TotalPrice {  get; set; }
 
