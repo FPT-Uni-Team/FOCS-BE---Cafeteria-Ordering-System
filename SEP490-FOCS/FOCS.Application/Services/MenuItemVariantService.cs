@@ -143,17 +143,20 @@ namespace FOCS.Application.Services
         {
             try
             {
-                var isExist = await _menuItemVariantRepository.GetByIdAsync(Id);
-                ConditionCheck.CheckCondition(isExist != null, Errors.Common.NotFound);
+                var variant = await _menuItemVariantRepository.GetByIdAsync(Id);
+                ConditionCheck.CheckCondition(variant != null, Errors.Common.NotFound);
+
+                var isExist = await _menuItemVariantRepository.AsQueryable().AnyAsync(x => x.Name == request.Name && x.Id != Id);
+                ConditionCheck.CheckCondition(!isExist, Errors.Common.IsExist);
 
                 _mapper.Map(request, isExist);
 
-                isExist!.Id = Id;
-                isExist!.CreatedBy = storeId.ToString();
-                isExist.UpdatedAt = DateTime.UtcNow;
-                isExist.UpdatedBy = storeId.ToString();
+                variant!.Id = Id;
+                variant!.CreatedBy = storeId.ToString();
+                variant.UpdatedAt = DateTime.UtcNow;
+                variant.UpdatedBy = storeId.ToString();
 
-                _menuItemVariantRepository.Update(isExist);
+                _menuItemVariantRepository.Update(variant);
                 await _menuItemVariantRepository.SaveChangesAsync();
             } catch (Exception ex) { return false; }
             return true;

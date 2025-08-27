@@ -75,7 +75,7 @@ namespace FOCS.Application.Services
             var variantGroup = await _variantGroupRepo.AsQueryable().FirstOrDefaultAsync(x => x.Id == variantGroupId);
             ConditionCheck.CheckCondition(variantGroup != null, Errors.Common.NotFound);
 
-            var isExist = await _variantGroupRepo.AsQueryable().AnyAsync(x => x.Name == updateVariantGroupRequest.Name);
+            var isExist = await _variantGroupRepo.AsQueryable().AnyAsync(x => x.Name == updateVariantGroupRequest.Name && x.Id != variantGroupId);
             ConditionCheck.CheckCondition(!isExist, Errors.Common.IsExist);
 
             variantGroup.Name = updateVariantGroupRequest.Name;
