@@ -179,21 +179,66 @@ namespace FOCS.Application.Services
 
         public async Task<PagedResult<OrderDTO>> GetListOrders(UrlQueryParameters queryParameters, string storeId, string userId)
         {
-            var ordersQuery = _orderRepository.AsQueryable().Include(x => x.OrderDetails).Where(x => x.StoreId == Guid.Parse(storeId) && x.UserId == Guid.Parse(userId) && !x.IsDeleted);
-            var test = ordersQuery.ToList();
+            var ordersQuery = _orderRepository.AsQueryable()
+                .Include(x => x.OrderDetails)
+                .Where(x => x.StoreId == Guid.Parse(storeId)
+                         && x.UserId == Guid.Parse(userId)
+                         && !x.IsDeleted);
+
             ordersQuery = ApplyFilters(ordersQuery, queryParameters);
-            ordersQuery = ApplySearch(ordersQuery, queryParameters);
+            ordersQuery = ApplySearch(ordersQuery, queryParameters);    
             ordersQuery = ApplySort(ordersQuery, queryParameters);
 
             var total = await ordersQuery.CountAsync();
+
             var items = await ordersQuery
                 .Skip((queryParameters.Page - 1) * queryParameters.PageSize)
                 .Take(queryParameters.PageSize)
-            .ToListAsync();
+                .ToListAsync();
+
+            var allVariantIds = items
+                .SelectMany(o => o.OrderDetails)
+                .Where(d => d.Variants != null)
+                .SelectMany(d => d.Variants)
+                .Distinct()
+                .ToList();
+
+            var variants = await _variantRepository.AsQueryable()
+                .Where(x => allVariantIds.Contains(x.Id))
+                .ToListAsync();
+
+            var variantDict = variants.ToDictionary(x => x.Id, x => x);
 
             var mapped = _mapper.Map<List<OrderDTO>>(items);
+
+            foreach (var order in mapped)
+            {
+                foreach (var od in order.OrderDetails)
+                {
+                    var itemVariants = new List<OrderDetailVariantDTO>();
+
+                    if (od.Variants != null)
+                    {
+                        foreach (var variantId in od.Variants)
+                        {
+                            if (variantDict.TryGetValue(variantId.VariantId, out var variant))
+                            {
+                                itemVariants.Add(new OrderDetailVariantDTO
+                                {
+                                    VariantId = variant.Id,
+                                    VariantName = variant.Name
+                                });
+                            }
+                        }
+                    }
+
+                    od.Variants= itemVariants;
+                }
+            }
+
             return new PagedResult<OrderDTO>(mapped, total, queryParameters.Page, queryParameters.PageSize);
         }
+
 
         public async Task<OrderDTO> GetOrderByCodeAsync(long orderCode)
         {
@@ -346,12 +391,51 @@ namespace FOCS.Application.Services
 
         public async Task<OrderDTO> GetUserOrderDetailAsync(Guid userId, Guid orderId)
         {
-            var orderByUser = await _orderRepository.AsQueryable().Include(x => x.OrderDetails).FirstOrDefaultAsync(x => x.UserId == userId && x.Id == orderId);
+            var orderByUser = await _orderRepository.AsQueryable()
+                .Include(x => x.OrderDetails)
+                .FirstOrDefaultAsync(x => x.UserId == userId && x.Id == orderId);
 
             ConditionCheck.CheckCondition(orderByUser != null, Errors.Common.NotFound);
 
-            return _mapper.Map<OrderDTO>(orderByUser);
+            var allVariantIds = orderByUser.OrderDetails
+                .Where(d => d.Variants != null)
+                .SelectMany(d => d.Variants)
+                .Distinct()
+                .ToList();
+
+            var variants = await _variantRepository.AsQueryable()
+                .Where(x => allVariantIds.Contains(x.Id))
+                .ToListAsync();
+
+            var variantDict = variants.ToDictionary(x => x.Id, x => x);
+
+            var rs = _mapper.Map<OrderDTO>(orderByUser);
+
+            foreach (var od in rs.OrderDetails)
+            {
+                var itemVariants = new List<OrderDetailVariantDTO>();
+
+                if (od.Variants != null)
+                {
+                    foreach (var variantId in od.Variants)
+                    {
+                        if (variantDict.TryGetValue(variantId.VariantId, out var variant))
+                        {
+                            itemVariants.Add(new OrderDetailVariantDTO
+                            {
+                                VariantId = variant.Id,
+                                VariantName = variant.Name
+                            });
+                        }
+                    }
+                }
+
+                od.Variants = itemVariants;
+            }
+
+            return rs;
         }
+
 
         public async Task MarkAsPaid(long orderCode, string storeId)
         {
