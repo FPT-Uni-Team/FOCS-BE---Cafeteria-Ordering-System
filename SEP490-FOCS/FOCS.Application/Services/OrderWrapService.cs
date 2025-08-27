@@ -34,9 +34,12 @@ namespace FOCS.Application.Services
 
         private readonly IMapper _mapper;
 
-        public OrderWrapService(IRepository<OrderWrap> orderWrapRepo, IMapper mapper, IMobileTokenSevice mobileTokenService, IRealtimeService realtimeService, IPublishEndpoint publishEndpoint, IRepository<OrderEntity> orderRepo)
+        private readonly IRepository<MenuItemVariant> _variantRepo;
+
+        public OrderWrapService(IRepository<MenuItemVariant> variantRepo, IRepository<OrderWrap> orderWrapRepo, IMapper mapper, IMobileTokenSevice mobileTokenService, IRealtimeService realtimeService, IPublishEndpoint publishEndpoint, IRepository<OrderEntity> orderRepo)
         {
             _orderWrapRepo = orderWrapRepo;
+            _variantRepo = variantRepo;
             _publishEndpoint = publishEndpoint;
             _realtimeService = realtimeService;
             _orderRepo = orderRepo;
@@ -179,7 +182,7 @@ namespace FOCS.Application.Services
                         .SelectMany(detail => detail.Variants.Select(v => new VariantWrapOrder
                         {
                             VariantId = v.VariantId.ToString(),
-                            VariantName = v.VariantName,
+                            VariantName = _variantRepo.AsQueryable().FirstOrDefault(x => x.Id == v.VariantId)?.Name,
                             Note = detail.Note
                         }))
                         .ToList()
