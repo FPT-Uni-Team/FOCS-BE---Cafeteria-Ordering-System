@@ -262,7 +262,7 @@ var options = new ConfigurationOptions
 var redis = ConnectionMultiplexer.Connect(options);
 
 builder.Services.AddSignalR()
-    .AddStackExchangeRedis("redis:6379,password=Hxs03122003,allowAdmin=true,abortConnect=false,connectTimeout=15000");
+    .AddStackExchangeRedis("103.185.184.27:6379,password=Hxs03122003,allowAdmin=true,abortConnect=false,connectTimeout=15000");
 
 builder.Services.AddDataProtection()
     .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys")
