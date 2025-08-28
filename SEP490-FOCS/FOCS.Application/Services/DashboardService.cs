@@ -44,7 +44,8 @@ namespace FOCS.Application.Services
             var pendingOrders = await reportOrders.CountAsync(x => x.OrderStatus == Common.Enums.OrderStatus.Pending);
             var canceledOrders = await reportOrders.CountAsync(x => x.OrderStatus == Common.Enums.OrderStatus.Canceled);
             var completedOrders = await reportOrders.CountAsync(x => x.OrderStatus == Common.Enums.OrderStatus.Completed);
-            var inProgressOrders = await reportOrders.CountAsync(x => x.OrderStatus == Common.Enums.OrderStatus.Confirmed);
+            var inProgressOrders = await reportOrders.CountAsync(x => x.OrderStatus == Common.Enums.OrderStatus.Confirmed 
+                                                                        || x.OrderStatus == Common.Enums.OrderStatus.Ready);
 
             var completedOrderTimes = await reportOrders
                 .Where(x => x.OrderStatus == Common.Enums.OrderStatus.Completed && x.RemainingTime.HasValue)
