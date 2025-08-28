@@ -85,7 +85,7 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
             var results = new List<ValidationResult>();
             if (!updateOngoingPromotion)
             {
-                ConditionCheck.CheckCondition(StartDate.Date > DateTime.UtcNow.Date,
+                ConditionCheck.CheckCondition(StartDate > DateTime.UtcNow,
                                                     Errors.PromotionError.StartDateInPast,
                                                     Errors.FieldName.StartDate);
             }
