@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
-    [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
     [Route("api/manager")]
     [ApiController]
     public class TableController : FocsController
@@ -21,6 +20,7 @@ namespace FOCS.Controllers
             _tableService = tableService;
         }
 
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         [HttpPost("table")]
         public async Task<IActionResult> CreateTable([FromBody] TableDTO dto)
         {
@@ -51,6 +51,7 @@ namespace FOCS.Controllers
             return Ok(table);
         }
 
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         [HttpPut("table/{id}")]
         public async Task<IActionResult> UpdateTable(Guid id, [FromBody] TableDTO dto)
         {
@@ -65,6 +66,7 @@ namespace FOCS.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         [HttpDelete("table/{id}")]
         public async Task<IActionResult> DeleteTable(Guid id)
         {
@@ -87,6 +89,7 @@ namespace FOCS.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         [HttpPut("table/qrcode")]
         public async Task<IActionResult> GenerateQrCodeForTable(Guid tableId, Guid storeId)
         {

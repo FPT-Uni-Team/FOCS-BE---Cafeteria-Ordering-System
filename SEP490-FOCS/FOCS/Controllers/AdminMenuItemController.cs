@@ -9,7 +9,7 @@ using Microsoft.Identity.Client;
 
 namespace FOCS.Controllers
 {
-    [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
+    [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
     [Route("api/admin/menu-item")]
     [ApiController]
     public class AdminMenuItemController : FocsController
@@ -31,6 +31,7 @@ namespace FOCS.Controllers
 
         #region CRUD MENU ITEM
 
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         [HttpPost("without-variant")]
         public async Task<IActionResult> Create([FromBody] MenuItemAdminDTO dto)
         {
@@ -40,6 +41,7 @@ namespace FOCS.Controllers
             return Ok(created);
         }
 
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         [HttpPost]
         public async Task<Guid> Create([FromBody] CreateMenuItemWithVariantRequest createMenuItemWithVariantRequest)
         {
@@ -47,7 +49,6 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("list")]
-        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetList([FromBody] UrlQueryParameters query)
         {
             var result = await _menuService.GetAllMenuItemAsync(query, Guid.Parse(StoreId));
@@ -55,7 +56,6 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("{menuItemId}")]
-        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetDetail(Guid menuItemId)
         {
             var item = await _menuService.GetMenuItemDetail(menuItemId, StoreId);
@@ -63,13 +63,13 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("bulk")]
-        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetByIds([FromBody] List<Guid> ids)
         {
             var items = await _menuService.GetListMenuItemDetail(ids, StoreId, UserId);
             return items == null ? NotFound() : Ok(items);
         }
 
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] MenuItemAdminDTO dto)
         {
@@ -103,6 +103,7 @@ namespace FOCS.Controllers
             return await _menuService.DisableMenuItemAsync(menuItemId, UserId);
         }
 
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -111,25 +112,27 @@ namespace FOCS.Controllers
         }
 
         [HttpGet("{id}/variant-groups")]
-        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetVariantGroups(Guid id)
         {
             var result = await _menuItemsVariantGroupService.GetVariantGroupsWithVariants(id, Guid.Parse(StoreId));
             return Ok(result);
         }
 
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         [HttpPost("{id}/variant-group/variants")]
         public async Task<bool> AddVariantGroupAndVariantForProduct([FromBody] AddVariantGroupsAndVariants request, Guid id, [FromHeader(Name = "StoreId")] string storeId)
         {
             return await _menuManagementService.AddVariantGroupAndVariant(request, id, storeId);
         }
 
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         [HttpDelete("{id}/product-variants")]
         public async Task<bool> RemoveProductVariant(RemoveProductVariantFromProduct request, Guid id, [FromHeader(Name = "StoreId")] string storeId)
         {
             return await _menuManagementService.RemoveVariantGroupAndVariantFromProduct(request, id, storeId);
         }
 
+        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
         [HttpDelete("{id}/variant-groups")]
         public async Task<bool> RemoveVariantGroups(RemoveVariantGroupFromProduct request, Guid id, [FromHeader(Name = "StoreId")] string storeId)
         {
@@ -141,7 +144,6 @@ namespace FOCS.Controllers
         #region IMAGE MANAGEMENT
 
         [HttpGet("{menuItemId}/images")]
-        [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
         public async Task<IActionResult> GetImages(Guid menuItemId)
         {
             var images = await _menuManagementService.GetImagesOfProduct(menuItemId, StoreId);

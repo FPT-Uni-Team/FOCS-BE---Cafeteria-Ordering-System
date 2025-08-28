@@ -1,10 +1,13 @@
-﻿using FOCS.Common.Interfaces;
+﻿using FOCS.Common.Constants;
+using FOCS.Common.Interfaces;
 using FOCS.Common.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FOCS.Controllers
 {
+    [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.User + "," + Roles.Staff + "," + Roles.KitchenStaff)]
     [Route("api/cashier")]
     [ApiController]
     public class CashierOrderController : FocsController
