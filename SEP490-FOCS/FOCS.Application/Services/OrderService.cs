@@ -154,6 +154,10 @@ namespace FOCS.Application.Services
                     }
                 }
 
+                var s = await _storeRepository.GetByIdAsync(orderRequest.StoreId);
+                var tr = (decimal)(s?.CustomTaxRate ?? 0);
+                rs.TaxAmount = Math.Round(rs.TotalPrice * tr);
+                rs.TotalPrice += rs.TaxAmount;
                 return rs;
             }
 
