@@ -18,14 +18,15 @@ namespace FOCS.Realtime.Hubs
 
         public class ActionTitle
         {
-            public const string NewOrderd = "Có đơn mới";
+            public const string NewOrderd = "New order created";
 
-            public static string PaymentSuccess(int tableNumber) => $"Bàn {tableNumber} thanh toán thành công";
-            public static string NewOrderAtTable(int tableId) => $"Bàn {tableId} vừa tạo đơn mới";
+            public static string PaymentSuccess(int tableNumber) => $"Table {tableNumber} payment successful!";
+
+            public static string NewOrderAtTable(int tableId) => $"Table {tableId} create new order!";
 
             public const string PushStaff = "Push";
 
-            public static string ReceiveNotify(string tableNumber) => $"Bàn {tableNumber} muốn gặp nhân viên";
+            public static string ReceiveNotify(string tableNumber) => $"Table {tableNumber} need some help.";
         }
     }
 }
