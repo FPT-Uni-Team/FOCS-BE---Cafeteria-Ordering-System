@@ -30,7 +30,7 @@ namespace FOCS.Application.Services.ApplyStrategy
             {
                 ItemDiscountDetails = new(),
                 AppliedPromotions = new(),
-                TotalPrice = 0
+                SubTotal = 0
             };
 
             if (string.IsNullOrEmpty(couponCode))
@@ -63,19 +63,18 @@ namespace FOCS.Application.Services.ApplyStrategy
                 }
 
                 pricingDict[item.MenuItemId] = ((double)basePrice.ProductPrice + totalVariantPrice) * item.Quantity;
-                result.TotalPrice += (decimal)pricingDict[item.MenuItemId];
+                result.SubTotal += (decimal)pricingDict[item.MenuItemId];
                 totalOrderAmount += pricingDict[item.MenuItemId];
             }
 
-            if (coupon.MinimumOrderAmount.HasValue && (double)result.TotalPrice < coupon.MinimumOrderAmount.Value)
+            if (coupon.MinimumOrderAmount.HasValue && (double)result.SubTotal < coupon.MinimumOrderAmount.Value)
                 return result;
 
             HashSet<Guid>? acceptedItems = coupon.AcceptForItems?.Select(Guid.Parse).ToHashSet();
 
             if (acceptedItems == null || acceptedItems?.Count == 0)
             {
-                result.TotalDiscount = (decimal)CalculateDiscount(coupon.DiscountType, coupon.Value, (double)result.TotalPrice);
-                result.TotalPrice -= result.TotalDiscount;
+                result.TotalDiscount = (decimal)CalculateDiscount(coupon.DiscountType, coupon.Value, (double)result.SubTotal);
                 return result;
             }
 
@@ -100,7 +99,6 @@ namespace FOCS.Application.Services.ApplyStrategy
             }
 
             result.TotalDiscount = (decimal)totalDiscount;
-            result.TotalPrice -= result.TotalDiscount;
 
             return result;
         }

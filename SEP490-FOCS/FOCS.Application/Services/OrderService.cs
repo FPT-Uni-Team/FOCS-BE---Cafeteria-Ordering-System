@@ -143,12 +143,12 @@ namespace FOCS.Application.Services
                             pricingDict[(item.MenuItemId, variant.VariantId)] = (double)basePrice.ProductPrice + (double)variantPrice.VariantPrice;
                         }
 
-                        rs.TotalPrice += (decimal)((double)basePrice.ProductPrice + totalVariantPrice) * item.Quantity;
+                        rs.SubTotal += (decimal)((double)basePrice.ProductPrice + totalVariantPrice) * item.Quantity;
                     }
                     else
                     {
                         double itemUnitPrice = (double)basePrice.ProductPrice + (double)(basePrice.VariantPrice ?? 0);
-                        rs.TotalPrice += (decimal)(itemUnitPrice * item.Quantity);
+                        rs.SubTotal += (decimal)(itemUnitPrice * item.Quantity);
 
                         pricingDict[(item.MenuItemId, null)] = itemUnitPrice;
                     }
@@ -156,8 +156,8 @@ namespace FOCS.Application.Services
 
                 var s = await _storeRepository.GetByIdAsync(orderRequest.StoreId);
                 var tr = (decimal)(s?.CustomTaxRate ?? 0);
-                rs.TaxAmount = Math.Round(rs.TotalPrice * tr);
-                rs.TotalPrice += rs.TaxAmount;
+                rs.TaxAmount = Math.Round((rs.SubTotal - rs.TotalDiscount) * tr);
+                rs.TotalPrice = rs.SubTotal - rs.TotalDiscount + rs.TaxAmount;
                 return rs;
             }
 
@@ -167,11 +167,15 @@ namespace FOCS.Application.Services
 
             ConditionCheck.CheckCondition(storeSettings != null, Errors.Common.NotFound);
             ConditionCheck.CheckCondition(!storeSettings!.DiscountStrategy.Equals(null), Errors.StoreSetting.DiscountStrategyNotConfig);
+
             var discountResult = await _discountContext.CalculateDiscountAsync(orderRequest, orderRequest.CouponCode, storeSettings.DiscountStrategy, userId);
+
             var store = await _storeRepository.GetByIdAsync(orderRequest.StoreId);
             var taxRate = (decimal)(store?.CustomTaxRate ?? 0);
-            discountResult.TaxAmount = Math.Round(discountResult.TotalPrice * taxRate);
-            discountResult.TotalPrice += discountResult.TaxAmount;
+
+            discountResult.TaxAmount = Math.Round((discountResult.SubTotal - discountResult.TotalDiscount) * taxRate);
+            discountResult.TotalPrice = discountResult.SubTotal - discountResult.TotalDiscount + discountResult.TaxAmount;
+
             return discountResult;
         }
 
