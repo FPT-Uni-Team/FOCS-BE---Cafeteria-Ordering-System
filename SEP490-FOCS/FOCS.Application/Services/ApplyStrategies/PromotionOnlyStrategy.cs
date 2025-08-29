@@ -50,7 +50,7 @@ namespace FOCS.Application.Services.ApplyStrategy
                     AppliedPromotions = null,
                     Messages = null,
                     TotalDiscount = 0,
-                    TotalPrice = 0,
+                    SubTotal = 0,
                     ItemDiscountDetails = new List<DiscountItemDetail>()
                 };
 
@@ -67,7 +67,7 @@ namespace FOCS.Application.Services.ApplyStrategy
                         totalVariantsPrice += currentPrice * itemVariant.Quantity;
                     }
 
-                    resultNotApply.TotalPrice += (decimal)(basePrice.ProductPrice + totalVariantsPrice) * item.Quantity;
+                    resultNotApply.SubTotal += (decimal)(basePrice.ProductPrice + totalVariantsPrice) * item.Quantity;
 
                     resultNotApply.ItemDiscountDetails.Add(new DiscountItemDetail
                     {
@@ -93,7 +93,7 @@ namespace FOCS.Application.Services.ApplyStrategy
 
             double totalDiscount = 0;
 
-            result.TotalPrice = 0;
+            result.SubTotal = 0;
 
             foreach (var item in order.Items)
             {
@@ -108,12 +108,12 @@ namespace FOCS.Application.Services.ApplyStrategy
                         totalVariantPrice += (decimal)(variantPriceInfo.VariantPrice * variant.Quantity);
                     }
 
-                    result.TotalPrice += ((decimal)currentProductPrice.ProductPrice + totalVariantPrice) * item.Quantity;
+                    result.SubTotal += ((decimal)currentProductPrice.ProductPrice + totalVariantPrice) * item.Quantity;
                 }
                 else
                 {
                     decimal itemPrice = (decimal)(currentProductPrice.ProductPrice + (currentProductPrice.VariantPrice ?? 0));
-                    result.TotalPrice += itemPrice * item.Quantity;
+                    result.SubTotal += itemPrice * item.Quantity;
                 }
 
             }
@@ -177,12 +177,10 @@ namespace FOCS.Application.Services.ApplyStrategy
                 switch (promotion.PromotionType)
                 {
                     case PromotionType.Percentage:
-                        totalDiscount = (double)result.TotalPrice * (double)(promotion.DiscountValue / 100);
-                        result.TotalPrice -= (decimal)totalDiscount;
+                        totalDiscount = (double)result.SubTotal * (double)(promotion.DiscountValue / 100);
                         break;
                     case PromotionType.FixedAmount:
                         totalDiscount = (double)promotion.DiscountValue;
-                        result.TotalPrice -= (decimal)totalDiscount;
                         break;
                     case PromotionType.BuyXGetY:
                         var buyXGetYDiscounts = await ApplyBuyXGetYDiscount(order, promotion);

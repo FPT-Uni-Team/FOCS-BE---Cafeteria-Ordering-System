@@ -9,6 +9,9 @@ namespace FOCS.Common.Models
 {
     public class DiscountResultDTO
     {
+        [JsonPropertyName("sub_total")]
+        public decimal SubTotal { get; set; }
+
         [JsonPropertyName("total_discount")]
         public decimal TotalDiscount { get; set; }
 
