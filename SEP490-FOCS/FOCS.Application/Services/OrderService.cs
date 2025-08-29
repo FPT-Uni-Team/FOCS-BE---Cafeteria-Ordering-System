@@ -543,8 +543,6 @@ namespace FOCS.Application.Services
                         .SumAsync(x => (int?)x.RemainingTime.Value.Minutes ?? 0)) + currnetRemainingTimeOrder;
                 }
 
-                var totalAmount = (double)((double)order.DiscountResult.TotalPrice + (double)order.DiscountResult.TotalPrice * store.CustomTaxRate ?? 0);
-
                 var orderCreate = new Order.Infrastucture.Entities.Order
                 {
                     Id = Guid.NewGuid(),
@@ -552,10 +550,10 @@ namespace FOCS.Application.Services
                     UserId = Guid.Parse(userId),
                     OrderStatus = OrderStatus.Pending,
                     OrderType = order.OrderType,
-                    SubTotalAmout = (double)(order.DiscountResult.TotalPrice + order.DiscountResult.TotalDiscount),
-                    TaxAmount = (double)(store.CustomTaxRate == null ? 0 : (totalAmount * store.CustomTaxRate)),
+                    SubTotalAmout = (double)order.DiscountResult.SubTotal,
+                    TaxAmount = (double)order.DiscountResult.TaxAmount,
                     DiscountAmount = (double)order.DiscountResult.TotalDiscount,
-                    TotalAmount = totalAmount,
+                    TotalAmount = (double)order.DiscountResult.TotalPrice,
                     CustomerNote = order.Note ?? "",
                     StoreId = order.StoreId,
                     CouponId = couponCurrent,
