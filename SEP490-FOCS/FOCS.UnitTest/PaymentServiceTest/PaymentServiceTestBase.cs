@@ -14,6 +14,7 @@ namespace FOCS.UnitTest.PaymentServiceTest
     {
         // Repositories
         protected readonly Mock<IRepository<PaymentAccount>> _paymentAccountRepoMock;
+        protected readonly Mock<IRepository<UserStore>> _userStoreRepoMock;
         protected readonly Mock<IRepository<StoreSetting>> _storeSettingRepoMock;
         protected readonly Mock<IRepository<Store>> _storeRepoMock;
         protected readonly Mock<IRepository<Brand>> _brandRepoMock;
@@ -29,6 +30,7 @@ namespace FOCS.UnitTest.PaymentServiceTest
         {
             _paymentAccountRepoMock = new Mock<IRepository<PaymentAccount>>();
             _storeSettingRepoMock = new Mock<IRepository<StoreSetting>>();
+            _userStoreRepoMock = new Mock<IRepository<UserStore>>();
             _storeRepoMock = new Mock<IRepository<Store>>();
 
             _mapperMock = new Mock<IMapper>();
@@ -41,7 +43,8 @@ namespace FOCS.UnitTest.PaymentServiceTest
                 _storeSettingRepoMock.Object,
                 _mapperMock.Object,
                 _dpProvider,
-                _brandRepoMock.Object
+                _brandRepoMock.Object,
+                _userStoreRepoMock.Object
             );
         }
 

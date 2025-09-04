@@ -21,6 +21,7 @@ namespace FOCS.UnitTest
         private readonly Mock<IDataProtectionProvider> _mockDataProtectionProvider;
         private readonly Mock<IDataProtector> _mockDataProtector;
         private readonly AdminStoreService _adminStoreService;
+        private readonly Mock<IRepository<UserStore>> _mockUserStoreRepository;
         private readonly string _validUserId = Guid.NewGuid().ToString();
 
         public StoreUnitTest()
@@ -32,6 +33,8 @@ namespace FOCS.UnitTest
             _mockMapper = new Mock<IMapper>();
             _mockDataProtectionProvider = new Mock<IDataProtectionProvider>();
             _mockDataProtector = new Mock<IDataProtector>();
+            _mockUserStoreRepository = new Mock<IRepository<UserStore>>();
+
 
             _mockDataProtectionProvider.Setup(x => x.CreateProtector("PayOS.Protection"))
                 .Returns(_mockDataProtector.Object);
@@ -42,7 +45,8 @@ namespace FOCS.UnitTest
                 _mockStoreSettingRepository.Object,
                 _mockMapper.Object,
                 _mockDataProtectionProvider.Object,
-                _mockBrandRepository.Object
+                _mockBrandRepository.Object,
+                _mockUserStoreRepository.Object
             );
         }
 

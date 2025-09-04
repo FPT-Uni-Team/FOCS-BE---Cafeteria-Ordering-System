@@ -23,6 +23,7 @@ namespace FOCS.UnitTest.StoreServiceTest
         protected readonly Mock<IDataProtectionProvider> _mockDataProtectionProvider;
         protected readonly Mock<IDataProtector> _mockDataProtector;
         protected readonly AdminStoreService _adminStoreService;
+        protected readonly Mock<IRepository<UserStore>> _mockUserStoreRepository;
         protected readonly string _validUserId = Guid.NewGuid().ToString();
         protected readonly Guid _testStoreId = Guid.NewGuid();
 
@@ -34,7 +35,7 @@ namespace FOCS.UnitTest.StoreServiceTest
             _mockMapper = new Mock<IMapper>();
             _mockDataProtectionProvider = new Mock<IDataProtectionProvider>();
             _mockDataProtector = new Mock<IDataProtector>();
-
+            _mockUserStoreRepository = new Mock<IRepository<UserStore>>();
             // Setup data protector
             _mockDataProtectionProvider
                 .Setup(p => p.CreateProtector("PayOS.Protection"))
@@ -46,7 +47,9 @@ namespace FOCS.UnitTest.StoreServiceTest
                 _mockStoreSettingRepository.Object,
                 _mockMapper.Object,
                 _mockDataProtectionProvider.Object,
-                _mockBrandRepository.Object);
+                _mockBrandRepository.Object,
+                _mockUserStoreRepository.Object
+                );
         }
 
         protected StoreAdminDTO CreateValidStoreAdminDTO()
