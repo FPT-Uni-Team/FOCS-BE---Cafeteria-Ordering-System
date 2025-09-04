@@ -18,13 +18,21 @@ namespace FOCS.Application.Services
     {
         private readonly IRepository<Store> _storeRepository;
         private readonly IRepository<StoreSetting> _storeSettingRepository;
+        private readonly IRepository<UserStore> _userStoreRepository;
         private readonly IRepository<Brand> _brandRepository;
         private readonly IRepository<PaymentAccount> _paymentAccountRepository;
         private readonly IMapper _mapper;
 
         private readonly IDataProtector _dataProtector;
 
-        public AdminStoreService(IRepository<Store> storeRepository, IRepository<PaymentAccount> paymentAccountRepository, IRepository<StoreSetting> storeSettingRepository, IMapper mapper, IDataProtectionProvider dataProtector, IRepository<Brand> brandRepository)
+        public AdminStoreService(
+            IRepository<Store> storeRepository, 
+            IRepository<PaymentAccount> paymentAccountRepository,
+            IRepository<StoreSetting> storeSettingRepository,
+            IMapper mapper,
+            IDataProtectionProvider dataProtector,
+            IRepository<Brand> brandRepository,
+            IRepository<UserStore> userStoreRepository)
         {
             _paymentAccountRepository = paymentAccountRepository;
             _storeRepository = storeRepository;
@@ -32,6 +40,7 @@ namespace FOCS.Application.Services
             _mapper = mapper;
             _dataProtector = dataProtector.CreateProtector("PayOS.Protection");
             _brandRepository = brandRepository;
+            _userStoreRepository = userStoreRepository;
         }
 
         public async Task<StoreAdminDTO> GetById(Guid id)
@@ -66,6 +75,15 @@ namespace FOCS.Application.Services
 
             await _storeSettingRepository.AddAsync(defaultSetting);
             await _storeSettingRepository.SaveChangesAsync();
+
+            var userStore = new UserStore
+            {
+                UserId = Guid.Parse(userId),
+                StoreId = newStore.Id
+            };
+
+            await _userStoreRepository.AddAsync(userStore);
+            await _userStoreRepository.SaveChangesAsync();
 
             return _mapper.Map<StoreAdminDTO>(newStore);
         }
