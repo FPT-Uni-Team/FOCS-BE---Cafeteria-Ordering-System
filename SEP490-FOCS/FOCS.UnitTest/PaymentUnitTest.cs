@@ -21,6 +21,7 @@ namespace FOCS.UnitTest
     public class PaymentUnitTest
     {
         private readonly Mock<IRepository<Store>> _storeRepoMock = new();
+        private readonly Mock<IRepository<UserStore>> _userStoreRepoMock = new();
         private readonly Mock<IRepository<StoreSetting>> _storeSettingRepoMock = new();
         private readonly Mock<IRepository<Brand>> _brandRepoMock = new();
         private readonly Mock<IRepository<PaymentAccount>> _paymentAccountRepoMock = new();
@@ -37,7 +38,8 @@ namespace FOCS.UnitTest
                 _storeSettingRepoMock.Object,
                 _mapperMock.Object,
                 _dataProtectorMock.Object,
-                _brandRepoMock.Object
+                _brandRepoMock.Object,
+                _userStoreRepoMock.Object
             );
         }
 
