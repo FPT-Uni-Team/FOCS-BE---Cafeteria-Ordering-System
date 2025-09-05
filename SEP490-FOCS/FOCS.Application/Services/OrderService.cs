@@ -439,7 +439,6 @@ namespace FOCS.Application.Services
             return rs;
         }
 
-
         public async Task MarkAsPaid(long orderCode, string storeId)
         {
             var order = await _orderRepository.AsQueryable().Include(x => x.Table).Include(x => x.Coupon).FirstOrDefaultAsync(x => x.OrderCode == orderCode);
@@ -470,12 +469,18 @@ namespace FOCS.Application.Services
             }
             else
             {
-                var currentCoupon = await _couponRepository.AsQueryable().FirstOrDefaultAsync(x => x.Code == order.Coupon.Code.ToString());
-                currentCoupon.CountUsed++;
-                var isAdded = await _couponUsageService.SaveCouponUsage(currentCoupon.Code, order.UserId, order.Id);
+                if(order != null && order.Coupon != null)
+                {
+                    var currentCoupon = await _couponRepository.AsQueryable().FirstOrDefaultAsync(x => x.Code == order.Coupon.Code.ToString());
+                    if (currentCoupon != null)
+                    {
+                        currentCoupon.CountUsed++;
+                        var isAdded = await _couponUsageService.SaveCouponUsage(currentCoupon.Code, order.UserId, order.Id);
 
-                _couponRepository.Update(currentCoupon);
-                await _couponRepository.SaveChangesAsync();
+                        _couponRepository.Update(currentCoupon);
+                        await _couponRepository.SaveChangesAsync();
+                    }
+                }
             }
 
             order.PaymentStatus = PaymentStatus.Paid;
