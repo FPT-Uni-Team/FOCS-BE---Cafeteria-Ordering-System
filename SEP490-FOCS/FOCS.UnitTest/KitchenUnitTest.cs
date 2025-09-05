@@ -32,6 +32,7 @@ namespace FOCS.UnitTest
         public KitchenUnitTest()
         {
             _orderWrapService = new OrderWrapService(
+                null,
                 _menuItemVariantRepoMock.Object,
                 _orderWrapRepoMock.Object,
                 _mapperMock.Object,
