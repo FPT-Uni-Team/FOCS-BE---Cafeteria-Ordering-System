@@ -24,18 +24,33 @@ namespace FOCS.Application.Services
         {
             var baseApiUrl = _configuration["applicationProductUrl:BaseApiUrl"] ?? "http://localhost:5257";
             var confirmationLink = $"{baseApiUrl}/api/me/confirm-email?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(accToken)}&storeId={Uri.EscapeDataString(storeId)}&tableId={Uri.EscapeDataString(tableId)}";
-            var subject = "Confirm your FOCS account";
+            var subject = "Confirm Your FOCS Account";
+
             var body = $@"
-                <p>Hello,</p>
-                <p>Thank you for registering. Please confirm your email by clicking the link below:</p>
-                <p><a href='{confirmationLink}'>Confirm Email</a></p>
-                <p>If you did not request this, please ignore this email.</p>";
+                        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #fafafa;'>
+                            <h2 style='color: #333; text-align: center;'>Welcome to FOCS!</h2>
+                            <p style='font-size: 16px; color: #333;'>Hi there,</p>
+                            <p style='font-size: 16px; color: #333;'>
+                                Thank you for registering with <strong>FOCS</strong>. Please confirm your email address by clicking the button below:
+                            </p>
+                            <div style='text-align: center; margin: 30px 0;'>
+                                <a href='{confirmationLink}' style='background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;'>Confirm Email</a>
+                            </div>
+                            <p style='font-size: 14px; color: #666;'>
+                                If you didn’t request this, you can safely ignore this email.
+                            </p>
+                            <hr style='margin: 30px 0; border: none; border-top: 1px solid #ddd;' />
+                            <p style='font-size: 12px; color: #999; text-align: center;'>
+                                &copy; {DateTime.UtcNow.Year} FOCS. All rights reserved.
+                            </p>
+                        </div>";
 
             _logger.LogInformation("Sending email confirmation to {Email}", email);
             await _emailHelper.SendEmailAsync(email, subject, body);
 
             return true;
         }
+
 
         public async Task<bool> SendPasswordResetAsync(ResetPasswordRequest resetPasswordRequest)
         {

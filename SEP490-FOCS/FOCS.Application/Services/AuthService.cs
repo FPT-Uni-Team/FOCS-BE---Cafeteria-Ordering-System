@@ -33,7 +33,7 @@ namespace FOCS.Application.Services
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IConfiguration _configuration;
-        private readonly OtpService _optService;
+        //private readonly OtpService _optService;
         private readonly IMapper _mapper;
         private readonly IEmailService _emailService;
         private readonly ITokenService _tokenService;
@@ -121,10 +121,10 @@ namespace FOCS.Application.Services
                 };
             }
 
-            if (!user.PhoneNumberConfirmed)
-            {
-                //await _optService.SendOtpAsync(user.PhoneNumber);
-            }
+            //if (!user.PhoneNumberConfirmed)
+            //{
+            //    //await _optService.SendOtpAsync(user.PhoneNumber);
+            //}
 
 
             if (storeId == null || string.IsNullOrEmpty(storeId))
@@ -268,27 +268,28 @@ namespace FOCS.Application.Services
 
         public async Task<bool> VerifyPhoneNumberAsync(string phone, string otp)
         {
-            var isValid = await _optService.VerifyOtpAsync(phone, otp);
+            //var isValid = await _optService.VerifyOtpAsync(phone, otp);
 
-            if (!isValid)
-                return false;
+            //if (!isValid)
+            //    return false;
 
-            try
-            {
-                var user = await _userManager.Users.FirstOrDefaultAsync(x => x.PhoneNumber == phone);
+            //try
+            //{
+            //    var user = await _userManager.Users.FirstOrDefaultAsync(x => x.PhoneNumber == phone);
 
-                ConditionCheck.CheckCondition(user != null, Errors.Common.NotFound);
+            //    ConditionCheck.CheckCondition(user != null, Errors.Common.NotFound);
 
-                user.PhoneNumberConfirmed = true;
+            //    user.PhoneNumberConfirmed = true;
 
-                await _userManager.UpdateAsync(user);
+            //    await _userManager.UpdateAsync(user);
 
-                return true;
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
+            //    return true;
+            //}
+            //catch (Exception ex)
+            //{
+            //    return false;
+            //}
+            return true;
         }
 
         public async Task<bool> ChangePassword(ChangePasswordRequest request, string email)
