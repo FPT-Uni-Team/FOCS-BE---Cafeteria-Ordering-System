@@ -125,7 +125,7 @@ namespace FOCS.Application.Services
                     {
                         foreach (var order in orders)
                         {
-                            order.OrderStatus = Common.Enums.OrderStatus.Completed;
+                            order.OrderStatus = Common.Enums.OrderStatus.Ready;
                         }
 
                         _orderRepo.UpdateRange(orders);
