@@ -255,7 +255,7 @@ var options = new ConfigurationOptions
     Password = "Hxs03122003",
     AbortOnConnectFail = false,
     ConnectRetry = 5,
-    ConnectTimeout = 15000,    // tăng timeout
+    ConnectTimeout = 15000,   
     SyncTimeout = 15000
 };
 
@@ -266,7 +266,8 @@ builder.Services.AddSignalR()
 
 builder.Services.AddDataProtection()
     .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys")
-    .SetApplicationName("SEP490FOCS");
+    .SetApplicationName("SEP490FOCS")
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(3650));
 
 
 builder.Services.Configure<IdentityOptions>(options =>

@@ -9,6 +9,7 @@ using FOCS.Order.Infrastucture.Entities;
 using MassTransit;
 using MassTransit.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Asn1;
 using StackExchange.Redis;
 using System;
@@ -36,7 +37,9 @@ namespace FOCS.Application.Services
 
         private readonly IRepository<MenuItemVariant> _variantRepo;
 
-        public OrderWrapService(IRepository<MenuItemVariant> variantRepo, IRepository<OrderWrap> orderWrapRepo, IMapper mapper, IMobileTokenSevice mobileTokenService, IRealtimeService realtimeService, IPublishEndpoint publishEndpoint, IRepository<OrderEntity> orderRepo)
+        private readonly ILogger<OrderWrapService> _logger;
+
+        public OrderWrapService(ILogger<OrderWrapService> logger, IRepository<MenuItemVariant> variantRepo, IRepository<OrderWrap> orderWrapRepo, IMapper mapper, IMobileTokenSevice mobileTokenService, IRealtimeService realtimeService, IPublishEndpoint publishEndpoint, IRepository<OrderEntity> orderRepo)
         {
             _orderWrapRepo = orderWrapRepo;
             _variantRepo = variantRepo;
@@ -45,6 +48,7 @@ namespace FOCS.Application.Services
             _orderRepo = orderRepo;
             _mobileTokenService = mobileTokenService;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<bool> ChangeStatusProductionOrder(UpdateStatusProductionOrderRequest dto)
@@ -59,18 +63,25 @@ namespace FOCS.Application.Services
                 if (orderWrap == null) return false;
 
                 orderWrap.OrderWrapStatus = dto.Status;
-                await _orderWrapRepo.SaveChangesAsync();
 
                 var orders = orderWrap.Orders.ToList();
 
                 if (dto.Status == Common.Enums.OrderWrapStatus.Completed)
                 {
-                    foreach (var order in orders)
+                    try
                     {
-                        order.OrderStatus = Common.Enums.OrderStatus.Completed;
+                        foreach (var order in orders)
+                        {
+                            order.OrderStatus = Common.Enums.OrderStatus.Completed;
+                        }
+
+                        _orderRepo.UpdateRange(orders);
+                        await _orderRepo.SaveChangesAsync();
+                    } catch(Exception ex)
+                    {
+                        _logger.LogError(ex.Message);
+                        return false;
                     }
-                    _orderRepo.UpdateRange(orders);
-                    await _orderRepo.SaveChangesAsync();
 
                     foreach (var order in orders)
                     {
@@ -110,12 +121,21 @@ namespace FOCS.Application.Services
                 }
                 else if (dto.Status == Common.Enums.OrderWrapStatus.Processing)
                 {
-                    foreach (var order in orders)
+                    try
                     {
-                        order.OrderStatus = Common.Enums.OrderStatus.Confirmed;
+                        foreach (var order in orders)
+                        {
+                            order.OrderStatus = Common.Enums.OrderStatus.Completed;
+                        }
+
+                        _orderRepo.UpdateRange(orders);
+                        await _orderRepo.SaveChangesAsync();
                     }
-                    _orderRepo.UpdateRange(orders);
-                    await _orderRepo.SaveChangesAsync();
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex.Message);
+                        return false;
+                    }
 
                     foreach (var order in orders)
                     {
@@ -144,7 +164,7 @@ namespace FOCS.Application.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ChangeStatusProductionOrder] Error: {ex}");
+                _logger.LogInformation($"[ChangeStatusProductionOrder] Error: {ex}");
                 return false;
             }
         }

@@ -188,6 +188,7 @@ namespace FOCS.Application.Services
             var items = await ordersQuery
                 .Skip((queryParameters.Page - 1) * queryParameters.PageSize)
                 .Take(queryParameters.PageSize)
+                .OrderByDescending(x => x.CreatedAt)
                 .ToListAsync();
 
             var allVariantIds = items
