@@ -443,6 +443,8 @@ namespace FOCS.Application.Services
         {
             var order = await _orderRepository.AsQueryable().Include(x => x.Table).Include(x => x.Coupon).FirstOrDefaultAsync(x => x.OrderCode == orderCode);
 
+            ConditionCheck.CheckCondition(order != null, Errors.OrderError.OrderNotFound);
+
             //update coupon, promotion usage
             var storeSetting = await _storeSettingService.GetStoreSettingAsync(Guid.Parse(storeId));
 
@@ -451,16 +453,19 @@ namespace FOCS.Application.Services
                 try
                 {
                     var currentCoupon = await _couponRepository.AsQueryable().Include(x => x.Promotion).FirstOrDefaultAsync(x => x.Code == orderCode.ToString());
-                    currentCoupon.CountUsed++;
-                    var isAdded = await _couponUsageService.SaveCouponUsage(currentCoupon.Code, order.UserId, order.Id);
-
-                    if (isAdded)
+                    if(currentCoupon != null)
                     {
-                        currentCoupon.Promotion.CountUsed++;
-                    }
+                        currentCoupon.CountUsed++;
+                        var isAdded = await _couponUsageService.SaveCouponUsage(currentCoupon.Code, order.UserId, order.Id);
 
-                    _couponRepository.Update(currentCoupon);
-                    await _couponRepository.SaveChangesAsync();
+                        if (isAdded)
+                        {
+                            currentCoupon.Promotion.CountUsed++;
+                        }
+
+                        _couponRepository.Update(currentCoupon);
+                        await _couponRepository.SaveChangesAsync();
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -491,20 +496,26 @@ namespace FOCS.Application.Services
 
             _logger.LogInformation("SAVE order success - trigger success");
 
-            var notifyEvent = new NotifyEvent
+            if(order.TableId != null)
             {
-                Title = Constants.ActionTitle.PaymentSuccess(order.Table.TableNumber),
-                Message = Constants.ActionTitle.PaymentSuccess(order.Table.TableNumber),
-                TargetGroups = new[] { SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId) },
-                storeId = order.StoreId.ToString(),
-                tableId = order.TableId.ToString()
-            };
+                var notifyEvent = new NotifyEvent
+                {
+                    Title = Constants.ActionTitle.PaymentSuccess(order.Table.TableNumber),
+                    Message = Constants.ActionTitle.PaymentSuccess(order.Table.TableNumber),
+                    TargetGroups = new[] { SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId) },
+                    storeId = order.StoreId.ToString(),
+                    tableId = order.TableId.ToString()
+                };
 
-            await _publishEndpoint.Publish(notifyEvent);
+                await _publishEndpoint.Publish(notifyEvent);
 
-            await _notifyService.AddNotifyAsync(order.StoreId.ToString(), Constants.ActionTitle.PaymentSuccess(order.Table.TableNumber));
+                await _notifyService.AddNotifyAsync(order.StoreId.ToString(), Constants.ActionTitle.PaymentSuccess(order.Table.TableNumber));
 
-            await _realtimeService.SendToGroupAsync<NotifyHub, NotifyEvent>(SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId), Constants.Method.NewNotify, notifyEvent);
+                await _realtimeService.SendToGroupAsync<NotifyHub, NotifyEvent>(SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId), Constants.Method.NewNotify, notifyEvent);
+            } else
+            {
+                _logger.LogInformation("Not found table in Order Handle payment success");
+            }
         }
 
         #region private methods

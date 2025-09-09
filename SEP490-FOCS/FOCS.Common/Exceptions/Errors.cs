@@ -106,6 +106,7 @@ namespace FOCS.Common.Exceptions
             public const string CouponIsNotValid = "Coupon is not valid";
             public const string TableNotFound = "Table is not found in system! Please";
             public const string NotEnoughPoint = "Loyaty point is not enough";
+            public const string OrderNotFound = "Order Not Found";
         }
 
         public static class PromotionError
