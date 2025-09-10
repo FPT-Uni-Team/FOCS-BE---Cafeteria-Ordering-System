@@ -8,6 +8,8 @@ using FOCS.Common.Utils;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.Order.Infrastucture.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.Json;
+using System.Text;
 
 namespace FOCS.Application.Services
 {
@@ -44,11 +46,20 @@ namespace FOCS.Application.Services
             ConditionCheck.CheckCondition(Guid.TryParse(storeId, out Guid storeIdGuid),
                                                     Errors.Common.InvalidGuidFormat,
                                                     Errors.FieldName.StoreId);
-
-            var couponQuery = _couponRepository.AsQueryable().Include(c => c.Promotion)
-                                                                .Where(c => !c.IsDeleted && c.IsActive &&
-                                                                c.StoreId == storeIdGuid && c.CountUsed < c.MaxUsage &&
-                                                                c.StartDate < DateTime.UtcNow && c.EndDate > DateTime.UtcNow);
+            var couponQuery = _couponRepository
+                                .AsQueryable()
+                                .Include(c => c.Promotion)
+                                    .ThenInclude(p => p.PromotionItemConditions)
+                                        .ThenInclude(pic => pic.BuyItem)
+                                .Include(c => c.Promotion)
+                                    .ThenInclude(p => p.PromotionItemConditions)
+                                        .ThenInclude(pic => pic.GetItem)
+                                .Where(c => !c.IsDeleted
+                                            && c.IsActive
+                                            && c.StoreId == storeIdGuid
+                                            && c.CountUsed < c.MaxUsage
+                                            && c.StartDate < DateTime.UtcNow
+                                            && c.EndDate > DateTime.UtcNow);
 
             // Search
             if (!string.IsNullOrEmpty(query.SearchBy) && !string.IsNullOrEmpty(query.SearchValue))
@@ -152,6 +163,35 @@ namespace FOCS.Application.Services
                 .Skip((query.Page - 1) * query.PageSize)
                 .Take(query.PageSize)
                 .ToListAsync();
+
+            foreach (var item in items)
+            {
+                if (item == null)
+                    continue;
+
+                var promotion = item.Promotion;
+                if (promotion == null || promotion.PromotionType != PromotionType.BuyXGetY)
+                    continue;
+
+                var itemConditions = promotion.PromotionItemConditions;
+                if (itemConditions == null || !itemConditions.Any())
+                    continue;
+
+                var descriptions = new List<string>();
+                foreach (var condition in itemConditions)
+                {
+                    if (condition == null)
+                        continue;
+
+                    var buyItem = condition.BuyItem.Name ?? "Sản phẩm";
+                    var getItem = condition.GetItem.Name ?? "Sản phẩm";
+
+                    descriptions.Add($"Mua item {buyItem} để nhận được {getItem} miễn phí");
+                }
+
+                item.Description = string.Join(Environment.NewLine, descriptions);
+            }
+
 
             var mapped = _mapper.Map<List<CouponAdminDTO>>(items);
             return new PagedResult<CouponAdminDTO>(mapped, total, query.Page, query.PageSize);

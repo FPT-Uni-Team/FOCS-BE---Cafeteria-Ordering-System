@@ -72,5 +72,8 @@ namespace FOCS.Application.DTOs.AdminServiceDTO
 
         [JsonPropertyName("promotion_id")]
         public Guid? PromotionId { get; set; }
+
+        [JsonPropertyName("discount_detail")]
+        public string? DiscountDetail { get; set; } = string.Empty;
     }
 }
