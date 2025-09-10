@@ -526,9 +526,11 @@ namespace FOCS.Application.Services
             try
             {
                 Guid? couponCurrent = null;
+                IEnumerable<Coupon> coupon = null;
                 if (!string.IsNullOrEmpty(order.DiscountResult.AppliedCouponCode))
                 {
-                    var coupon = await _couponRepository.FindAsync(x => x.Code == order.DiscountResult.AppliedCouponCode);
+                    //coupon = await _couponRepository.FindAsync(x => x.Code == order.DiscountResult.AppliedCouponCode);
+                    coupon = await _couponRepository.AsQueryable().Include(x => x.Promotion).Where(x => x.Code == order.DiscountResult.AppliedCouponCode).ToListAsync();
                     couponCurrent = coupon.FirstOrDefault()?.Id;
                 }
 
@@ -587,7 +589,7 @@ namespace FOCS.Application.Services
 
                 var ordersDetailCreate = new List<OrderDetail>();
 
-                if (order.DiscountResult?.ItemDiscountDetails != null && order.DiscountResult.ItemDiscountDetails.Any())
+                if (order.DiscountResult?.ItemDiscountDetails != null && order.DiscountResult.ItemDiscountDetails.Any() && coupon.FirstOrDefault()?.Promotion?.PromotionType != PromotionType.BuyXGetY)
                 {
                     foreach (var item in order.DiscountResult.ItemDiscountDetails)
                     {
