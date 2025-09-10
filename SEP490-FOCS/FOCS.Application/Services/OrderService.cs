@@ -589,7 +589,7 @@ namespace FOCS.Application.Services
 
                 var ordersDetailCreate = new List<OrderDetail>();
 
-                if (order.DiscountResult?.ItemDiscountDetails != null && order.DiscountResult.ItemDiscountDetails.Any() && coupon.FirstOrDefault()?.Promotion?.PromotionType != PromotionType.BuyXGetY)
+                if (order.DiscountResult?.ItemDiscountDetails != null && order.DiscountResult.ItemDiscountDetails.Any() && coupon?.FirstOrDefault()?.Promotion?.PromotionType != PromotionType.BuyXGetY)
                 {
                     foreach (var item in order.DiscountResult.ItemDiscountDetails)
                     {
