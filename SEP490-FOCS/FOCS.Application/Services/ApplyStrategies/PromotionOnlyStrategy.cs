@@ -149,7 +149,7 @@ namespace FOCS.Application.Services.ApplyStrategy
                         case PromotionType.BuyXGetY:
                             var buyXGetYDiscounts = await ApplyBuyXGetYDiscount(order, promotion);
                             result.ItemDiscountDetails.AddRange(buyXGetYDiscounts);
-                            itemDiscount = buyXGetYDiscounts.Sum(d => (double)d.DiscountAmount);
+                            //itemDiscount = buyXGetYDiscounts.Sum(d => (double)d.DiscountAmount);
                             break;
                         default:
                             itemDiscount = 0;
@@ -190,7 +190,7 @@ namespace FOCS.Application.Services.ApplyStrategy
                 }
             }
 
-
+            result.AppliedCouponCode = couponCode;
             result.TotalDiscount = (decimal)totalDiscount;
             return result;
         }
