@@ -452,7 +452,7 @@ namespace FOCS.Application.Services
             {
                 try
                 {
-                    var currentCoupon = await _couponRepository.AsQueryable().Include(x => x.Promotion).FirstOrDefaultAsync(x => x.Code == orderCode.ToString());
+                    var currentCoupon = await _couponRepository.AsQueryable().Include(x => x.Promotion).FirstOrDefaultAsync(x => x.Code == orderCode.ToString() && !x.IsDeleted);
                     if(currentCoupon != null)
                     {
                         currentCoupon.CountUsed++;
@@ -476,7 +476,7 @@ namespace FOCS.Application.Services
             {
                 if(order != null && order.Coupon != null)
                 {
-                    var currentCoupon = await _couponRepository.AsQueryable().FirstOrDefaultAsync(x => x.Code == order.Coupon.Code.ToString());
+                    var currentCoupon = await _couponRepository.AsQueryable().FirstOrDefaultAsync(x => x.Code == order.Coupon.Code.ToString() && !x.IsDeleted);
                     if (currentCoupon != null)
                     {
                         currentCoupon.CountUsed++;

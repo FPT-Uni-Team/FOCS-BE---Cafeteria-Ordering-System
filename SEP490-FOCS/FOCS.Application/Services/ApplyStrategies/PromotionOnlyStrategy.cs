@@ -39,7 +39,7 @@ namespace FOCS.Application.Services.ApplyStrategy
         {
             var promotion = await _promotionRepository.AsQueryable()
                 .Include(x => x.Coupons)
-                .FirstOrDefaultAsync(x => x.Coupons.Any(c => c.Code == couponCode));
+                .FirstOrDefaultAsync(x => x.Coupons.Any(c => c.Code == couponCode && !x.IsDeleted));
 
             //ConditionCheck.CheckCondition(promotion != null, Errors.PromotionError.PromotionNotFound);
             if (promotion == null)

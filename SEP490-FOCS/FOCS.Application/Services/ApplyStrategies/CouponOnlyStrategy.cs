@@ -36,7 +36,7 @@ namespace FOCS.Application.Services.ApplyStrategy
             if (string.IsNullOrEmpty(couponCode))
                 return result;
 
-            var coupon = (await _couponRepository.FindAsync(x => x.Code == couponCode && x.StoreId == order.StoreId))?.FirstOrDefault();
+            var coupon = (await _couponRepository.FindAsync(x => x.Code == couponCode && x.StoreId == order.StoreId && !x.IsDeleted))?.FirstOrDefault();
             if (coupon == null)
                 return result;
 
