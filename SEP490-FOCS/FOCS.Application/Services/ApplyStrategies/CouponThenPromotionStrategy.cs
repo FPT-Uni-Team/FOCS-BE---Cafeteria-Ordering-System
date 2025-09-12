@@ -1,10 +1,5 @@
 ﻿using FOCS.Application.Services.Interface;
 using FOCS.Common.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FOCS.Application.Services.ApplyStrategy
 {
@@ -29,16 +24,16 @@ namespace FOCS.Application.Services.ApplyStrategy
             {
                 AppliedCouponCode = couponCode,
                 AppliedPromotions = discountApplyCoupon.AppliedPromotions
-                                    .Concat(discountApplyPromotion.AppliedPromotions)
+                                    .Concat(discountApplyPromotion.AppliedPromotions ?? Enumerable.Empty<string>())
                                     .Distinct()
                                     .ToList(),
                 TotalDiscount = discountApplyCoupon.TotalDiscount + discountApplyPromotion.TotalDiscount,
-                TotalPrice = discountApplyCoupon.TotalPrice - discountApplyPromotion.TotalDiscount,
+                SubTotal = discountApplyCoupon.SubTotal,
                 ItemDiscountDetails = discountApplyCoupon.ItemDiscountDetails
-                                    .Concat(discountApplyPromotion.ItemDiscountDetails)
+                                    .Concat(discountApplyPromotion.ItemDiscountDetails ?? Enumerable.Empty<DiscountItemDetail>())
                                     .ToList(),
                 Messages = discountApplyCoupon.Messages
-                                    .Concat(discountApplyPromotion.Messages)
+                                    .Concat(discountApplyPromotion.Messages ?? Enumerable.Empty<string>())
                                     .ToList()
             };
 
