@@ -206,7 +206,7 @@ namespace FOCS.Application.Services
             //Check coupon eligible
             ConditionCheck.CheckCondition(!string.IsNullOrWhiteSpace(couponCode), Errors.Common.Empty, Errors.FieldName.CouponCode);
 
-            var coupon = await _couponRepository.AsQueryable().FirstOrDefaultAsync(x => x.Code == couponCode && x.StoreId == storeId);
+            var coupon = await _couponRepository.AsQueryable().FirstOrDefaultAsync(x => x.Code == couponCode && x.StoreId == storeId && !x.IsDeleted);
             ConditionCheck.CheckCondition(coupon != null, Errors.PromotionError.CouponNotFound, Errors.FieldName.CouponCode);
 
             ConditionCheck.CheckCondition(coupon.CountUsed < coupon.MaxUsage, Errors.PromotionError.CouponMaxUsed, Errors.FieldName.CouponMaxUsed);
