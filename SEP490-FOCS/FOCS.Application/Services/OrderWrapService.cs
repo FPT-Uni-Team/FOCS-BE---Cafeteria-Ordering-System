@@ -6,6 +6,7 @@ using FOCS.Common.Models;
 using FOCS.Infrastructure.Identity.Common.Repositories;
 using FOCS.NotificationService.Models;
 using FOCS.Order.Infrastucture.Entities;
+using FOCS.Realtime.Hubs;
 using MassTransit;
 using MassTransit.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -30,16 +31,27 @@ namespace FOCS.Application.Services
 
         private readonly IPublishEndpoint _publishEndpoint;
         private readonly IRealtimeService _realtimeService;
-
+        private readonly INotifyService _notifyService;
         private readonly IMobileTokenSevice _mobileTokenService;
 
         private readonly IMapper _mapper;
 
+        private readonly IRepository<WorkshiftSchedule> _workshiftSchedule;
         private readonly IRepository<MenuItemVariant> _variantRepo;
 
         private readonly ILogger<OrderWrapService> _logger;
 
-        public OrderWrapService(ILogger<OrderWrapService> logger, IRepository<MenuItemVariant> variantRepo, IRepository<OrderWrap> orderWrapRepo, IMapper mapper, IMobileTokenSevice mobileTokenService, IRealtimeService realtimeService, IPublishEndpoint publishEndpoint, IRepository<OrderEntity> orderRepo)
+        public OrderWrapService(
+            ILogger<OrderWrapService> logger, 
+            IRepository<MenuItemVariant> variantRepo,
+            IRepository<OrderWrap> orderWrapRepo,
+            IMapper mapper,
+            IMobileTokenSevice mobileTokenService,
+            IRealtimeService realtimeService,
+            IPublishEndpoint publishEndpoint,
+            IRepository<OrderEntity> orderRepo,
+            INotifyService notifyService,
+            IRepository<WorkshiftSchedule> workshiftScheduleRepo)
         {
             _orderWrapRepo = orderWrapRepo;
             _variantRepo = variantRepo;
@@ -49,6 +61,8 @@ namespace FOCS.Application.Services
             _mobileTokenService = mobileTokenService;
             _mapper = mapper;
             _logger = logger;
+            _notifyService = notifyService;
+            _workshiftSchedule = workshiftScheduleRepo;
         }
 
         public async Task<bool> ChangeStatusProductionOrder(UpdateStatusProductionOrderRequest dto)
@@ -100,22 +114,47 @@ namespace FOCS.Application.Services
                                 TargetGroups = new[] { SignalRGroups.User(order.StoreId, (Guid)order.TableId, (Guid)order.UserId) },
                                 MobileTokens = new[] { currentToken.Token }
                             };
+                            _logger.LogInformation($"[Notify Event For Staff] Notify userId {order.UserId} for order {notifyEventForUser}");
 
                             await _publishEndpoint.Publish(notifyEventForUser);
+                            await _notifyService.AddNotifyAsync(order.UserId.ToString(), Constants.ActionTitle.ReceiveNotify(order.TableId?.ToString()).ToString());
                         }
 
                         if (order.Table != null)
                         {
-                            var notifyEventForStaff = new NotifyEvent
-                            {
-                                Title = $"Order in table {order.Table.TableNumber} is complete",
-                                Message = $"Order in table {order.Table.TableNumber} is complete, Please check with user",
-                                storeId = order.StoreId.ToString(),
-                                tableId = order.TableId?.ToString(),
-                                TargetGroups = new[] { SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId) }
-                            };
+                            var now = DateTime.Now.TimeOfDay;
 
-                            await _publishEndpoint.Publish(notifyEventForStaff);
+                            var staffIds = await _workshiftSchedule.AsQueryable()
+                                .Include(x => x.StaffWorkshiftRegistrations)
+                                .Include(z => z.Workshift)
+                                .Where(z => z.Workshift.WorkDate == DateTime.Now)
+                                .Where(x => x.StartTime < now && x.EndTime > now)
+                                .SelectMany(x => x.StaffWorkshiftRegistrations.Select(x => x.StaffId))
+                                .ToListAsync();
+
+                            if (staffIds != null)
+                            {
+                                foreach (var staffId in staffIds)
+                                {
+                                    var currentDeviceToken = await _mobileTokenService.GetMobileToken((Guid)staffId);
+
+                                    if (currentDeviceToken == null) { continue; }
+
+                                    var notifyEventForStaff = new NotifyEvent
+                                    {
+                                        Title = $"Order in table {order.Table.TableNumber} is complete",
+                                        Message = $"Order in table {order.Table.TableNumber} is complete, Please check with user",
+                                        storeId = order.StoreId.ToString(),
+                                        tableId = order.TableId?.ToString(),
+                                        TargetGroups = new[] { SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId) },
+                                        MobileTokens = new[] { currentDeviceToken.Token }
+                                    };
+                                    _logger.LogInformation($"[Notify Event For Staff] Notify staff {staffId} for order {notifyEventForStaff}");
+
+                                    await _publishEndpoint.Publish(notifyEventForStaff);
+                                    await _notifyService.AddNotifyAsync(staffId.ToString(), Constants.ActionTitle.ReceiveNotify(order.TableId?.ToString()).ToString());
+                                }
+                            }
                         }
                     }
                 }
