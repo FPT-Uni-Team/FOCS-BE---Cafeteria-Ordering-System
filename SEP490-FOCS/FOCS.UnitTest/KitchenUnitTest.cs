@@ -39,7 +39,9 @@ namespace FOCS.UnitTest
                 _mobileTokenServiceMock.Object,
                 _realtimeServiceMock.Object,
                 _publishEndpointMock.Object,
-                _orderRepoMock.Object
+                _orderRepoMock.Object,
+                null,
+                null
             );
         }
 
