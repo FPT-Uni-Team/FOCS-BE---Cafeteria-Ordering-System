@@ -145,6 +145,8 @@ builder.Services.AddSingleton<OtpService>();
 builder.Services.Configure<TwilioSettings>(builder.Configuration.GetSection("TwilioSettings"));
 builder.Services.AddSingleton<SmsService>();
 
+builder.Services.AddSingleton<FirebaseService>();
+
 builder.Services.AddHostedService<OrderBatchingService>();
 builder.Services.AddHostedService<ScanToDeleteCartItem>();
 //builder.Services.AddHostedService<CartFlushBackgroundService>();
