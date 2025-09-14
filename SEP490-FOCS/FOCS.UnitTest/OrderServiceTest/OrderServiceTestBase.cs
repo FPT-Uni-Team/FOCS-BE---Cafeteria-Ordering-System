@@ -97,7 +97,6 @@ namespace FOCS.UnitTest.OrderServiceTest
                 _mockPublishEndpoint.Object,
                 _mockMobileTokenService.Object,
                 _mockCouponUsageService.Object,
-                null,
                 null
             );
         }
