@@ -114,7 +114,7 @@ namespace FOCS.Application.Services
                                 TargetGroups = new[] { SignalRGroups.User(order.StoreId, (Guid)order.TableId, (Guid)order.UserId) },
                                 MobileTokens = new[] { currentToken.Token }
                             };
-                            _logger.LogInformation($"[Notify Event For Staff] Notify userId {order.UserId} for order {notifyEventForUser}");
+                            _logger.LogInformation($"[Notify Event For User] Notify userId {order.UserId} for order {notifyEventForUser.ToString()}");
 
                             await _publishEndpoint.Publish(notifyEventForUser);
                             await _notifyService.AddNotifyAsync(order.UserId.ToString(), Constants.ActionTitle.ReceiveNotify(order.TableId?.ToString()).ToString());
@@ -122,6 +122,8 @@ namespace FOCS.Application.Services
 
                         if (order.Table != null)
                         {
+                            _logger.LogInformation($"table of order:  {order.TableId}");
+
                             var now = DateTime.Now.TimeOfDay;
 
                             var staffIds = await _workshiftSchedule.AsQueryable()
@@ -131,6 +133,8 @@ namespace FOCS.Application.Services
                                 .Where(x => x.StartTime < now && x.EndTime > now)
                                 .SelectMany(x => x.StaffWorkshiftRegistrations.Select(x => x.StaffId))
                                 .ToListAsync();
+
+                            _logger.LogInformation($"staffids:  {staffIds}");
 
                             if (staffIds != null)
                             {
@@ -149,7 +153,7 @@ namespace FOCS.Application.Services
                                         TargetGroups = new[] { SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId) },
                                         MobileTokens = new[] { currentDeviceToken.Token }
                                     };
-                                    _logger.LogInformation($"[Notify Event For Staff] Notify staff {staffId} for order {notifyEventForStaff}");
+                                    _logger.LogInformation($"[Notify Event For Staff] Notify staff {staffId} for order {notifyEventForStaff.ToString()}");
 
                                     await _publishEndpoint.Publish(notifyEventForStaff);
                                     await _notifyService.AddNotifyAsync(staffId.ToString(), Constants.ActionTitle.ReceiveNotify(order.TableId?.ToString()).ToString());
