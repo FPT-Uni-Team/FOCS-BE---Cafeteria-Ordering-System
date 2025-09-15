@@ -131,6 +131,7 @@ namespace FOCS.Application.Services
                                 .Include(z => z.Workshift)
                                 .Where(z => z.Workshift.WorkDate.Date == DateTime.Now.Date)
                                 .Where(x => x.StartTime < now && x.EndTime > now)
+                                .Where(x => x.StoreId == order.StoreId)
                                 .SelectMany(x => x.StaffWorkshiftRegistrations.Select(x => x.StaffId))
                                 .ToListAsync();
 
