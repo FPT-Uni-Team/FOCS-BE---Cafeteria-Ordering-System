@@ -64,6 +64,8 @@ namespace FOCS.Common.Models
         [JsonIgnore]
         public string CouponCode {  get; set; }
 
+        [JsonPropertyName("is_feedback")]
+        public bool IsFeedback { get; set; } = false;
 
         [JsonPropertyName("order_details")]
         //Order details

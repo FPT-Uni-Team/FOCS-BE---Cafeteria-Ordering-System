@@ -27,6 +27,7 @@ namespace FOCS.Application.Services
         private readonly IRepository<MenuItemVariant> _variantRepository;
         private readonly IRepository<Table> _tableRepository;
         private readonly IRepository<FOCS.Order.Infrastucture.Entities.Order> _orderRepository;
+        private readonly IRepository<Feedback> _feedbackRepository;
         private readonly IRepository<Coupon> _couponRepository;
         private readonly IRepository<OrderDetail> _orderDetailRepository;
 
@@ -70,7 +71,8 @@ namespace FOCS.Application.Services
                             IPublishEndpoint publishEndpoint,
                             IMobileTokenSevice mobileTokenService,
                             ICouponUsageService couponUsageService,
-                            INotifyService notifyService)
+                            INotifyService notifyService,
+                            IRepository<Feedback> feedbackRepository)
         {
             _notifyService = notifyService;
             _orderRepository = orderRepository;
@@ -92,6 +94,7 @@ namespace FOCS.Application.Services
             _systemConfig = systemConfig;
             _couponUsageService = couponUsageService;
             _mobileTokenService = mobileTokenService;
+            _feedbackRepository = feedbackRepository;
         }
 
         public async Task<DiscountResultDTO> CreateOrderAsync(CreateOrderRequest order, string userId)
@@ -212,9 +215,11 @@ namespace FOCS.Application.Services
 
             var variantDict = variants.ToDictionary(x => x.Id, x => x);
 
-            var mapped = _mapper.Map<List<OrderDTO>>(items);
+            var orderList = _mapper.Map<List<OrderDTO>>(items);
 
-            foreach (var order in mapped)
+            orderList.ForEach(x => x.IsFeedback = (_feedbackRepository.AsQueryable().Any(f => f.OrderId == x.Id)));
+
+            foreach (var order in orderList)
             {
                 foreach (var od in order.OrderDetails)
                 {
@@ -239,7 +244,7 @@ namespace FOCS.Application.Services
                 }
             }
 
-            return new PagedResult<OrderDTO>(mapped, total, queryParameters.Page, queryParameters.PageSize);
+            return new PagedResult<OrderDTO>(orderList, total, queryParameters.Page, queryParameters.PageSize);
         }
 
 
