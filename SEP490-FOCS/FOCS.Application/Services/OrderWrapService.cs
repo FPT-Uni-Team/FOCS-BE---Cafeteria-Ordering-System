@@ -134,7 +134,7 @@ namespace FOCS.Application.Services
                                 .SelectMany(x => x.StaffWorkshiftRegistrations.Select(x => x.StaffId))
                                 .ToListAsync();
 
-                            _logger.LogInformation($"staffids:  {staffIds}");
+                            _logger.LogInformation($"staffids:  {staffIds.Count()}: {staffIds.FirstOrDefault()}");
 
                             if (staffIds != null)
                             {

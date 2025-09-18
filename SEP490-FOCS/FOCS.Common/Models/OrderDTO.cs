@@ -64,6 +64,9 @@ namespace FOCS.Common.Models
         [JsonIgnore]
         public string CouponCode {  get; set; }
 
+        [JsonPropertyName("discount_note")]
+        public List<string>? SourceDiscount { get; set; } = new List<string>();
+
 
         [JsonPropertyName("order_details")]
         //Order details

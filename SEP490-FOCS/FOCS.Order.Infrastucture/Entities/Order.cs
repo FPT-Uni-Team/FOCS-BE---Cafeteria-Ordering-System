@@ -36,6 +36,8 @@ namespace FOCS.Order.Infrastucture.Entities
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
         public string? UpdatedBy { get; set; }
 
+        public List<string>? SourceDiscount { get; set; } = new List<string>();
+
         public TimeSpan? RemainingTime {get ;set;} = TimeSpan.Zero;
 
         //Store

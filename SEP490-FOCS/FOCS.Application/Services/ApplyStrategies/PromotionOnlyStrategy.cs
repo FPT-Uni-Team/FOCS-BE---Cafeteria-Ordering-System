@@ -149,6 +149,7 @@ namespace FOCS.Application.Services.ApplyStrategy
                         case PromotionType.BuyXGetY:
                             var buyXGetYDiscounts = await ApplyBuyXGetYDiscount(order, promotion);
                             result.ItemDiscountDetails.AddRange(buyXGetYDiscounts);
+                            result.Messages?.Add(string.Join(" # ", buyXGetYDiscounts.Select(x => x.Source)));
                             //itemDiscount = buyXGetYDiscounts.Sum(d => (double)d.DiscountAmount);
                             break;
                         default:
@@ -168,6 +169,8 @@ namespace FOCS.Application.Services.ApplyStrategy
                             Quantity = itemOrder.Quantity,
                             Source = $"Promotion_{promotion.PromotionType}_{promotion.Title}"
                         });
+
+                        result.Messages?.Add(string.Join(" # ", result.ItemDiscountDetails.Select(x => x.Source)));
                     }
                 }
             } 
@@ -185,6 +188,7 @@ namespace FOCS.Application.Services.ApplyStrategy
                     case PromotionType.BuyXGetY:
                         var buyXGetYDiscounts = await ApplyBuyXGetYDiscount(order, promotion);
                         result.ItemDiscountDetails.AddRange(buyXGetYDiscounts);
+                        result.Messages?.Add(string.Join(" # ", buyXGetYDiscounts.Select(x => x.Source)));
                         //totalDiscount = buyXGetYDiscounts.Sum(d => (double)d.DiscountAmount);
                         break;
                 }
@@ -236,15 +240,17 @@ namespace FOCS.Application.Services.ApplyStrategy
 
             double totalDiscount = (double)freeItemPrice * getQuantity * applicableSets;
 
+            var sourceDiscount = $"Khuyến mại mua {buyQuantity} {productsFree.Where(x => x.Id == buyItemId).FirstOrDefault()?.Name} miễn phí {getQuantity} {productsFree.Where(x => x.Id == getItemId).FirstOrDefault()?.Name} - {promotion.Title} trị giá {totalDiscount}";
+
             discountDetails.Add(new DiscountItemDetail
             {
                 DiscountAmount = (decimal)totalDiscount,
                 BuyItemCode = getItemId.ToString(),
-                BuyItemName = productsFree.Where(x => x.Id == buyItemId).FirstOrDefault().Name,
+                BuyItemName = productsFree?.Where(x => x.Id == buyItemId)?.FirstOrDefault()?.Name ?? "Item",
                 GetItemCode = getItemId.ToString(),
-                getItemName = productsFree.Where(x => x.Id == getItemId).FirstOrDefault().Name,
+                getItemName = productsFree?.Where(x => x.Id == getItemId)?.FirstOrDefault()?.Name,
                 Quantity = getQuantity * applicableSets,
-                Source = $"Khuyến mại mua {buyQuantity} {productsFree.Where(x => x.Id == buyItemId).FirstOrDefault().Name} miễn phí {getQuantity} {productsFree.Where(x => x.Id == getItemId).FirstOrDefault().Name} - {promotion.Title} trị giá {totalDiscount}"
+                Source = sourceDiscount
             });
 
             return discountDetails;
