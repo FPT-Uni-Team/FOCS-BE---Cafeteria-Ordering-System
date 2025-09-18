@@ -236,7 +236,8 @@ namespace FOCS.Application.Services
                 Orders = x.Orders.Select(z => new OrderKithcenResponse
                 {
                     Code = z.OrderCode.ToString(),
-                    Amount = z.TotalAmount
+                    Amount = z.TotalAmount,
+                    DiscountNote = z.SourceDiscount
                 }).ToList()
             }).ToList();
 
