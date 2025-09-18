@@ -62,8 +62,9 @@ namespace FOCS.Controllers
             var staffIds = await _workshiftSchedule.AsQueryable()
                 .Include(x => x.StaffWorkshiftRegistrations)
                 .Include(z => z.Workshift)
-                .Where(z => z.Workshift.WorkDate == DateTime.Now)
+                .Where(z => z.Workshift.WorkDate.Date == DateTime.Now.Date)
                 .Where(x => x.StartTime < now && x.EndTime > now)
+                .Where(x => x.StoreId.ToString() == storeId)
                 .SelectMany(x => x.StaffWorkshiftRegistrations.Select(x => x.StaffId))
                 .ToListAsync();
 
@@ -75,7 +76,7 @@ namespace FOCS.Controllers
 
                     if(currentDeviceToken == null) { continue; }
 
-                    var notifyEventModelStaff = staffIds.Select(x => new NotifyEvent
+                    var notifyEventModelStaff = new NotifyEvent
                     {
                         Title = Constants.ActionTitle.ReceiveNotify(table.TableNumber.ToString()),
                         Message = Constants.ActionTitle.ReceiveNotify(table.TableNumber.ToString()),
@@ -83,7 +84,7 @@ namespace FOCS.Controllers
                         MobileTokens = new[] { currentDeviceToken.Token },
                         storeId = storeId,
                         tableId = null
-                    });
+                    };
 
                     await _publishEndpoint.Publish(notifyEventModelStaff);
                     //var test = "7B098C79-819C-47C4-96BE-D1630F667FFA";

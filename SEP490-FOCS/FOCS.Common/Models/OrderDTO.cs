@@ -67,6 +67,8 @@ namespace FOCS.Common.Models
         [JsonPropertyName("discount_note")]
         public List<string>? SourceDiscount { get; set; } = new List<string>();
 
+        [JsonPropertyName("is_feedback")]
+        public bool IsFeedback { get; set; } = false;
 
         [JsonPropertyName("order_details")]
         //Order details

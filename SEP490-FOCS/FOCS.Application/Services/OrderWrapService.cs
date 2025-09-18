@@ -129,8 +129,9 @@ namespace FOCS.Application.Services
                             var staffIds = await _workshiftSchedule.AsQueryable()
                                 .Include(x => x.StaffWorkshiftRegistrations)
                                 .Include(z => z.Workshift)
-                                .Where(z => z.Workshift.WorkDate == DateTime.Now)
+                                .Where(z => z.Workshift.WorkDate.Date == DateTime.Now.Date)
                                 .Where(x => x.StartTime < now && x.EndTime > now)
+                                .Where(x => x.StoreId == order.StoreId)
                                 .SelectMany(x => x.StaffWorkshiftRegistrations.Select(x => x.StaffId))
                                 .ToListAsync();
 
