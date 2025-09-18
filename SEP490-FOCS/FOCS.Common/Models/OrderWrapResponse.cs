@@ -27,5 +27,8 @@ namespace FOCS.Common.Models
 
         [JsonPropertyName("amount")]
         public double Amount { get; set; }
+
+        [JsonPropertyName("discount_note")]
+        public List<string>? DiscountNote { get; set; } = new List<string>();
     }
 }
