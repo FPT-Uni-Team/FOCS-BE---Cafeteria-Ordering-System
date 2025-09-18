@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using System.Linq;
 
 namespace FOCS.Application.Services
 {
@@ -589,7 +590,8 @@ namespace FOCS.Application.Services
                     },
                     CreatedBy = userId,
                     TableId = order.OrderType == OrderType.DineIn ? order.TableId : null,
-                    RemainingTime = TimeSpan.FromMinutes(remainingTimeOrder)
+                    RemainingTime = TimeSpan.FromMinutes(remainingTimeOrder),
+                    SourceDiscount = order.DiscountResult.Messages ?? new List<string>()
                 };
 
                 var ordersDetailCreate = new List<OrderDetail>();
