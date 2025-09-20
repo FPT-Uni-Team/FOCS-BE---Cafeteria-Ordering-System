@@ -28,7 +28,7 @@ namespace FOCS.Application.Services
             try
             {
                 var menuItemsQuery = _menuItemRepository.AsQueryable()
-                                                        .Where(x => x.StoreId == storeId && !x.IsDeleted && x.IsAvailable)
+                                                        .Where(x => x.StoreId == storeId && !x.IsDeleted && x.IsAvailable && x.IsActive)
                                                         .Include(mi => mi.Images)
                                                         .Include(mi => mi.MenuItemCategories).ThenInclude(mic => mic.Category)
                                                         .Include(mi => mi.MenuItemVariantGroups).ThenInclude(mivg => mivg.VariantGroup)
