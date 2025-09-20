@@ -99,25 +99,35 @@ namespace FOCS.Application.Services
 
                     foreach (var order in orders)
                     {
-                        if (order.UserId == null) continue;
+                        var userGroups = orders .Where(o => o.UserId != null)
+                                                .GroupBy(o => new { o.UserId, o.TableId, o.StoreId })
+                                                .Select(g => g.Key);
 
-                        var currentToken = await _mobileTokenService.GetMobileToken((Guid)order.UserId);
-
-                        if (currentToken != null)
+                        foreach (var userGroup in userGroups)
                         {
+                            var currentToken = await _mobileTokenService.GetMobileToken(userGroup.UserId);
+                            if (currentToken == null) continue;
+
                             var notifyEventForUser = new NotifyEvent
                             {
                                 Title = "Your order is complete",
                                 Message = "Your order is complete, Please check with staff",
-                                storeId = order.StoreId.ToString(),
-                                tableId = order.TableId?.ToString(),
-                                TargetGroups = new[] { SignalRGroups.User(order.StoreId, (Guid)order.TableId, (Guid)order.UserId) },
+                                storeId = userGroup.StoreId.ToString(),
+                                tableId = userGroup.TableId?.ToString(),
+                                TargetGroups = new[]
+                                {
+                                    SignalRGroups.User(userGroup.StoreId, userGroup.TableId ?? Guid.Empty, userGroup.UserId)
+                                },
                                 MobileTokens = new[] { currentToken.Token }
                             };
-                            _logger.LogInformation($"[Notify Event For User] Notify userId {order.UserId} for order {notifyEventForUser.ToString()}");
+
+                            _logger.LogInformation($"[Notify Event For User] Notify userId {userGroup.UserId} for table {userGroup.TableId}");
 
                             await _publishEndpoint.Publish(notifyEventForUser);
-                            await _notifyService.AddNotifyAsync(order.UserId.ToString(), Constants.ActionTitle.ReceiveNotify(order.TableId?.ToString()).ToString());
+                            await _notifyService.AddNotifyAsync(
+                                userGroup.UserId.ToString(),
+                                Constants.ActionTitle.ReceiveNotify(userGroup.TableId?.ToString()).ToString()
+                            );
                         }
 
                         if (order.Table != null)
@@ -127,13 +137,14 @@ namespace FOCS.Application.Services
                             var now = DateTime.Now.TimeOfDay;
 
                             var staffIds = await _workshiftSchedule.AsQueryable()
-                                .Include(x => x.StaffWorkshiftRegistrations)
-                                .Include(z => z.Workshift)
-                                .Where(z => z.Workshift.WorkDate.Date == DateTime.Now.Date)
-                                .Where(x => x.StartTime < now && x.EndTime > now)
-                                .Where(x => x.StoreId == order.StoreId)
-                                .SelectMany(x => x.StaffWorkshiftRegistrations.Select(x => x.StaffId))
-                                .ToListAsync();
+                                                                    .Include(x => x.StaffWorkshiftRegistrations)
+                                                                    .Include(z => z.Workshift)
+                                                                    .Where(z => z.Workshift.WorkDate.Date == DateTime.Now.Date)
+                                                                    .Where(x => x.StartTime < now && x.EndTime > now)
+                                                                    .Where(x => x.StoreId == order.StoreId)
+                                                                    .SelectMany(x => x.StaffWorkshiftRegistrations.Select(x => x.StaffId))
+                                                                    .Distinct()
+                                                                    .ToListAsync();
 
                             _logger.LogInformation($"staffids:  {staffIds.Count()}: {staffIds.FirstOrDefault()}");
 
