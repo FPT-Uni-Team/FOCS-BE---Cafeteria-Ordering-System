@@ -42,7 +42,7 @@ namespace FOCS.NotificationService.Consumers
             }
 
             // Send notify to Firebase
-            foreach (var token in payload.MobileTokens)
+            foreach (var token in payload.MobileTokens.Distinct())
             {
                 var message = new Message()
                 {
