@@ -55,6 +55,7 @@ namespace FOCS.Application.Services
             newItem.IsDeleted = false;
             newItem.CreatedAt = DateTime.UtcNow;
             newItem.CreatedBy = storeId;
+            newItem.IsActive = true;
 
             await _menuRepository.AddAsync(newItem);
 
