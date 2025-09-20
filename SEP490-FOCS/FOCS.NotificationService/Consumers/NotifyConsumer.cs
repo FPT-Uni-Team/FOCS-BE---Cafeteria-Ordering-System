@@ -47,15 +47,10 @@ namespace FOCS.NotificationService.Consumers
                 var message = new Message()
                 {
                     Token = token,
-                    //Notification = new Notification
-                    //{
-                    //    Title = payload.Title,
-                    //    Body = payload.Message,
-                    //},
-                    Data = new Dictionary<string, string>
+                    Notification = new Notification
                     {
-                        { "title", payload.Title },
-                        { "body", payload.Message }
+                        Title = payload.Title,
+                        Body = payload.Message,
                     }
                 };
         
