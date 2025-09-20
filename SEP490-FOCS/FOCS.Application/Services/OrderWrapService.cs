@@ -42,7 +42,7 @@ namespace FOCS.Application.Services
         private readonly ILogger<OrderWrapService> _logger;
 
         public OrderWrapService(
-            ILogger<OrderWrapService> logger,
+            ILogger<OrderWrapService> logger, 
             IRepository<MenuItemVariant> variantRepo,
             IRepository<OrderWrap> orderWrapRepo,
             IMapper mapper,
@@ -91,46 +91,45 @@ namespace FOCS.Application.Services
 
                         _orderRepo.UpdateRange(orders);
                         await _orderRepo.SaveChangesAsync();
-                    }
-                    catch (Exception ex)
+                    } catch(Exception ex)
                     {
                         _logger.LogError(ex.Message);
                         return false;
                     }
 
-                    foreach (var order in orders)
-                    {
-                        var userGroups = orders .Where(o => o.UserId != null)
+                    var userGroups = orders.Where(o => o.UserId != null)
                                                 .GroupBy(o => new { o.UserId, o.TableId, o.StoreId })
                                                 .Select(g => g.Key);
 
-                        foreach (var userGroup in userGroups)
-                        {
-                            var currentToken = await _mobileTokenService.GetMobileToken(userGroup.UserId);
-                            if (currentToken == null) continue;
+                    foreach (var userGroup in userGroups)
+                    {
+                        var currentToken = await _mobileTokenService.GetMobileToken(userGroup.UserId);
+                        if (currentToken == null) continue;
 
-                            var notifyEventForUser = new NotifyEvent
+                        var notifyEventForUser = new NotifyEvent
+                        {
+                            Title = "Your order is complete",
+                            Message = "Your order is complete, Please check with staff",
+                            storeId = userGroup.StoreId.ToString(),
+                            tableId = userGroup.TableId?.ToString(),
+                            TargetGroups = new[]
                             {
-                                Title = "Your order is complete",
-                                Message = "Your order is complete, Please check with staff",
-                                storeId = userGroup.StoreId.ToString(),
-                                tableId = userGroup.TableId?.ToString(),
-                                TargetGroups = new[]
-                                {
                                     SignalRGroups.User(userGroup.StoreId, userGroup.TableId ?? Guid.Empty, userGroup.UserId)
                                 },
-                                MobileTokens = new[] { currentToken.Token }
-                            };
+                            MobileTokens = new[] { currentToken.Token }
+                        };
 
-                            _logger.LogInformation($"[Notify Event For User] Notify userId {userGroup.UserId} for table {userGroup.TableId}");
+                        _logger.LogInformation($"[Notify Event For User] Notify userId {userGroup.UserId} for table {userGroup.TableId}");
 
-                            await _publishEndpoint.Publish(notifyEventForUser);
-                            await _notifyService.AddNotifyAsync(
-                                userGroup.UserId.ToString(),
-                                Constants.ActionTitle.ReceiveNotify(userGroup.TableId?.ToString()).ToString()
-                            );
-                        }
+                        await _publishEndpoint.Publish(notifyEventForUser);
+                        await _notifyService.AddNotifyAsync(
+                            userGroup.UserId.ToString(),
+                            Constants.ActionTitle.ReceiveNotify(userGroup.TableId?.ToString()).ToString()
+                        );
+                    }
 
+                    foreach (var order in orders)
+                    {
                         if (order.Table != null)
                         {
                             _logger.LogInformation($"table of order:  {order.TableId}");
@@ -258,7 +257,7 @@ namespace FOCS.Application.Services
 
         public async Task<List<SendOrderWrapDTO>> GetOrderWrapDetail(string code, string storeId)
         {
-            var storeGuid = Guid.Parse(storeId);
+            var storeGuid = Guid.Parse(storeId); 
 
             var orderWrap = await _orderWrapRepo.AsQueryable()
                 .FirstOrDefaultAsync(x => x.Code == code && x.StoreId == storeGuid);
@@ -267,7 +266,7 @@ namespace FOCS.Application.Services
                 .Include(x => x.Orders)
                     .ThenInclude(x => x.OrderDetails)
                         .ThenInclude(x => x.MenuItem)
-                .Where(x => x.Code == code && x.StoreId == storeGuid)
+                .Where(x => x.Code == code && x.StoreId == storeGuid)  
                 .SelectMany(x => x.Orders)
                 .ToListAsync();
 
@@ -282,15 +281,12 @@ namespace FOCS.Application.Services
                     MenuItemId = group.Key,
                     MenuItemName = group.First().MenuItemName,
                     Variants = group
-                        .SelectMany(detail =>
-                            Enumerable.Range(0, detail.Quantity)
-                                .SelectMany(_ => detail.Variants.Select(v => new VariantWrapOrder
-                                {
-                                    VariantId = v.VariantId.ToString(),
-                                    VariantName = _variantRepo.AsQueryable().FirstOrDefault(x => x.Id == v.VariantId)?.Name,
-                                    Note = detail.Note
-                                }))
-                        )
+                        .SelectMany(detail => detail.Variants.Select(v => new VariantWrapOrder
+                        {
+                            VariantId = v.VariantId.ToString(),
+                            VariantName = _variantRepo.AsQueryable().FirstOrDefault(x => x.Id == v.VariantId)?.Name,
+                            Note = detail.Note
+                        }))
                         .ToList()
                 })
                 .ToList();
