@@ -32,28 +32,35 @@ namespace FOCS.NotificationService.Consumers
         public async Task Consume(ConsumeContext<NotifyEvent> context)
         {
             var payload = context.Message;
-
+        
             var storeId = payload.storeId;
             var tableId = payload.tableId;
-
+        
             foreach (var group in payload.TargetGroups)
             {
                 await _notifyHub.Clients.Group(group).SendAsync(ActionHub.NewNotification, payload);
             }
-
+        
             // Send notify to Firebase
-            foreach (var token in payload.MobileTokens.Distinct())
+            foreach (var token in payload.MobileTokens)
             {
                 var message = new Message()
                 {
                     Token = token,
-                    Notification = new Notification
+                    //Notification = new Notification
+                    //{
+                    //    Title = payload.Title,
+                    //    Body = payload.Message,
+                    //},
+                    Data = new Dictionary<string, string>
                     {
-                        Title = payload.Title,
-                        Body = payload.Message
+                        { "title", payload.Title },
+                        { "body", payload.Message }
                     }
                 };
-
+        
+                _notifyLogger.LogInformation("✅ Push sent to device {Token}, msg: {message}", token, message);
+        
                 try
                 {
                     var result = await _firebaseService.Messaging.SendAsync(message);
