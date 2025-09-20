@@ -57,6 +57,13 @@ namespace FOCS.Application.Services
 
         public async Task AddOrUpdateItemAsync(Guid tableId, string actorId, CartItemRedisModel item, string storeId)
         {
+            var itemAvailable = await _menuItemRepository.AsQueryable().FirstOrDefaultAsync(x => x.Id == item.MenuItemId);
+            
+            if(itemAvailable != null && (itemAvailable.IsDeleted == true || itemAvailable.IsActive == false))
+            {
+                return;
+            }
+        
             var key = GetCartKey(tableId, storeId);
 
             var cart = await _redisCacheService.GetAsync<List<CartItemRedisModel>>(key) ?? new List<CartItemRedisModel>();
