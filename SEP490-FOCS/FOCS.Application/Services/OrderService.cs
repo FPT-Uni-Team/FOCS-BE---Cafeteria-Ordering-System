@@ -181,6 +181,9 @@ namespace FOCS.Application.Services
 
                             rs.IsUsePoint = true;
                             rs.Point = rs.Point;
+
+                            user.FOCSPoint += ((int)rs.TotalPrice * (int)spendingRate);
+                            await _userManager.UpdateAsync(user);
                         }
                         else
                         {
@@ -493,6 +496,9 @@ namespace FOCS.Application.Services
 
                     user!.FOCSPoint -= order.PointUsed;
                     user!.FOCSPoint += (int)order.TotalAmount * (int)systemConfigEarningRate;
+
+                    //user.FOCSPoint += (int)(order.TotalAmount * spendingRate);
+
 
                     await _userManager.UpdateAsync(user);
                 }
