@@ -38,6 +38,8 @@ namespace FOCS.Order.Infrastucture.Entities
 
         public List<string>? SourceDiscount { get; set; } = new List<string>();
 
+        public int? PointUsed { get; set; }
+
         public TimeSpan? RemainingTime {get ;set;} = TimeSpan.Zero;
 
         //Store
