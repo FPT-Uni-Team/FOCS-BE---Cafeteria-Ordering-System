@@ -134,7 +134,10 @@ namespace FOCS.Application.Services
                         {
                             _logger.LogInformation($"table of order:  {order.TableId}");
 
-                            var now = DateTime.Now.TimeOfDay;
+                            var now = DateTime.UtcNow.AddHours(7).TimeOfDay;
+
+                            _logger.LogInformation($"DateTime.UtcNow.AddHours(7).TimeOfDay: {now}" +
+                                                    $"DateTime.Now.TimeOfDay: {DateTime.Now.TimeOfDay}");
 
                             var staffIds = await _workshiftSchedule.AsQueryable()
                                                                     .Include(x => x.StaffWorkshiftRegistrations)

@@ -57,7 +57,7 @@ namespace FOCS.Controllers
             //    tableId = null
             //};
 
-            var now = DateTime.Now.TimeOfDay;
+            var now = DateTime.UtcNow.AddHours(7).TimeOfDay;
 
             var staffIds = await _workshiftSchedule.AsQueryable()
                 .Include(x => x.StaffWorkshiftRegistrations)
