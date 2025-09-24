@@ -22,7 +22,7 @@ namespace FOCS.Application.Services
 
         public async Task<MobileTokenRequest> GetMobileToken(Guid userId)
         {
-            var tokenDevice = await _mobileTokenDevice.AsQueryable().FirstOrDefaultAsync(x => x.UserId == userId);
+            var tokenDevice = await _mobileTokenDevice.AsQueryable().OrderByDescending(x => x.CreatedAt).FirstOrDefaultAsync(x => x.UserId == userId);
 
             if (tokenDevice == null) return new MobileTokenRequest();
 
