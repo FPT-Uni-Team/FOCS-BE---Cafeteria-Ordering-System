@@ -160,6 +160,36 @@ namespace FOCS.Application.Services
 
                 var s = await _storeRepository.GetByIdAsync(orderRequest.StoreId);
                 var tr = (decimal)(s?.CustomTaxRate ?? 0);
+
+                if (orderRequest.IsUseLoyatyPoint.HasValue && orderRequest.IsUseLoyatyPoint == true)
+                {
+                    if (orderRequest.Point.HasValue && orderRequest.Point > 0)
+                    {
+                        var user = await _userManager.FindByIdAsync(userId);
+
+                        //if guest
+                        if (user != null)
+                        {
+                            ConditionCheck.CheckCondition(user!.FOCSPoint < orderRequest.Point, Errors.OrderError.NotEnoughPoint);
+
+                            var spendingRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.SpendingRate;
+
+                            var discountAmountBasedOnPoint = (decimal)orderRequest.Point * (decimal)spendingRate;
+
+                            rs.TotalDiscount += discountAmountBasedOnPoint;
+                            rs.TotalPrice = rs.TotalPrice -= discountAmountBasedOnPoint < 0 ? 0 : rs.TotalPrice -= discountAmountBasedOnPoint;
+
+                            rs.IsUsePoint = true;
+                            rs.Point = rs.Point;
+                        }
+                        else
+                        {
+                            rs.IsUsePoint = false;
+                            rs.Point = 0;
+                        }
+                    }
+                }
+
                 rs.TaxAmount = Math.Round((rs.SubTotal - rs.TotalDiscount) * tr);
                 rs.TotalPrice = rs.SubTotal - rs.TotalDiscount + rs.TaxAmount;
                 return rs;
