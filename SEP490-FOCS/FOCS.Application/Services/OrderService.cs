@@ -170,9 +170,9 @@ namespace FOCS.Application.Services
                         //if guest
                         if (user != null)
                         {
-                            ConditionCheck.CheckCondition(user!.FOCSPoint < orderRequest.Point, Errors.OrderError.NotEnoughPoint);
+                            ConditionCheck.CheckCondition(user!.FOCSPoint <= orderRequest.Point, Errors.OrderError.NotEnoughPoint);
 
-                            var spendingRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.SpendingRate;
+                            var spendingRate = (await _storeSettingService.GetStoreSettingAsync(Guid.Parse(storeId)))!.SpendingRate ?? 0;
 
                             var discountAmountBasedOnPoint = (decimal)orderRequest.Point * (decimal)spendingRate;
 
@@ -489,7 +489,10 @@ namespace FOCS.Application.Services
                 if(user != null)
                 {
                     var spendingRate = storeSetting.SpendingRate ?? 0;
-                    user.FOCSPoint += (int)(order.TotalAmount * spendingRate);
+                    var systemConfigEarningRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.EarningRate;
+
+                    user!.FOCSPoint -= order.PointUsed;
+                    user!.FOCSPoint += (int)order.TotalAmount * (int)systemConfigEarningRate;
 
                     await _userManager.UpdateAsync(user);
                 }
@@ -627,6 +630,7 @@ namespace FOCS.Application.Services
                     TotalAmount = (double)order.DiscountResult.TotalPrice,
                     CustomerNote = order.Note ?? "",
                     StoreId = order.StoreId,
+                    PointUsed = order.DiscountResult.Point,
                     CouponId = couponCurrent,
                     PaymentStatus = order.PaymentType switch
                     {
@@ -736,18 +740,18 @@ namespace FOCS.Application.Services
                 }
 
 
-                if (order.DiscountResult.IsUsePoint.HasValue && order.DiscountResult.IsUsePoint == true)
-                {
-                    var user = await _userManager.FindByIdAsync(userId);
-                    ConditionCheck.CheckCondition(user != null, Errors.Common.NotFound);
+                //if (order.DiscountResult.IsUsePoint.HasValue && order.DiscountResult.IsUsePoint == true)
+                //{
+                //    var user = await _userManager.FindByIdAsync(userId);
+                //    ConditionCheck.CheckCondition(user != null, Errors.Common.NotFound);
 
-                    var systemConfigEarningRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.EarningRate;
+                //    var systemConfigEarningRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.EarningRate;
 
-                    user!.FOCSPoint -= order.DiscountResult.Point;
-                    user!.FOCSPoint += (int)order.DiscountResult.TotalPrice / (int)systemConfigEarningRate;
+                //    user!.FOCSPoint -= order.DiscountResult.Point;
+                //    user!.FOCSPoint += (int)order.DiscountResult.TotalPrice / (int)systemConfigEarningRate;
 
-                    await _userManager.UpdateAsync(user);
-                }
+                //    await _userManager.UpdateAsync(user);
+                //}
 
                 table.Status = TableStatus.Occupied;
                 _tableRepository.Update(table);
