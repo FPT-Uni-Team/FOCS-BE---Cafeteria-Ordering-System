@@ -543,10 +543,13 @@ namespace FOCS.Application.Services
                 //remaining time for order
                 int remainingTimeOrder = 0;
                 {
-                    var dictProduct = order.Items.ToDictionary(
-                            item => item.MenuItemId,
-                            item => item.Variants.Select(x => x.VariantId) ?? new List<Guid>()
-                        );
+                    var dictProduct = order.Items
+                         .GroupBy(item => item.MenuItemId)
+                         .ToDictionary(
+                             g => g.Key,
+                             g => g.SelectMany(x => x.Variants).Select(v => v.VariantId).ToList()
+                         );
+
 
                     var variantGroupItems = await _menuItemRepository.AsQueryable()
                                                                     .Where(x => dictProduct.Keys.Contains(x.Id))

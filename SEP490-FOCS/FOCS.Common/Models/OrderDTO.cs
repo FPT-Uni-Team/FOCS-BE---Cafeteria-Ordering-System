@@ -1,4 +1,5 @@
 ﻿using FOCS.Common.Enums;
+using FOCS.Common.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,6 +47,7 @@ namespace FOCS.Common.Models
         [JsonPropertyName("customer_note")]
         public string CustomerNote { get; set; }
 
+        [JsonConverter(typeof(UtcToVietNamTimeConverter))]
         [JsonPropertyName("created_at")]
         public DateTime? CreatedAt { get; set; }
 
