@@ -494,8 +494,14 @@ namespace FOCS.Application.Services
                     var spendingRate = storeSetting.SpendingRate ?? 0;
                     var systemConfigEarningRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.EarningRate;
 
-                    user!.FOCSPoint -= order.PointUsed;
-                    user!.FOCSPoint += (int)order.TotalAmount * (int)systemConfigEarningRate;
+                   if (user!.FOCSPoint != null &&  user!.FOCSPoint <= 0)
+                    {
+                        user!.FOCSPoint += (int)order.TotalAmount * (int)systemConfigEarningRate;
+                    } else
+                    {
+                        user!.FOCSPoint -= order.PointUsed;
+                        user!.FOCSPoint += (int)order.TotalAmount * (int)systemConfigEarningRate;
+                    }
 
                     //user.FOCSPoint += (int)(order.TotalAmount * spendingRate);
 
