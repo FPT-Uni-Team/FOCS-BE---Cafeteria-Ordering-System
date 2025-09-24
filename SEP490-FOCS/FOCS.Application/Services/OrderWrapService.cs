@@ -227,7 +227,8 @@ namespace FOCS.Application.Services
 
         public async Task<PagedResult<OrderWrapResponse>> GetListOrderWraps(UrlQueryParameters query, string storeId)
         {
-            var ordersWrapQuery = _orderWrapRepo.AsQueryable().Include(x => x.Orders).Where(x => x.StoreId == Guid.Parse(storeId));
+            var ordersWrapQuery = _orderWrapRepo.AsQueryable().Include(x => x.Orders).Where(x => x.StoreId == Guid.Parse(storeId))
+                .Where(x => x.OrderWrapStatus == Common.Enums.OrderWrapStatus.Created || x.OrderWrapStatus == Common.Enums.OrderWrapStatus.Processing);
 
             //promotionQuery = ApplyFilters(promotionQuery, query);
             //promotionQuery = ApplySearch(promotionQuery, query);
