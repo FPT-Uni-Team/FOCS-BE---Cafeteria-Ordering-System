@@ -43,17 +43,21 @@ namespace FOCS.Application.Services
                                                                        us.Status == Common.Enums.UserStoreStatus.Active);
             var userIds = userStores.Select(us => us.UserId.ToString()).ToList();
 
-            var allUsers = _userManager.Users.Where(u => u.IsActive && !u.IsDeleted && userIds.Contains(u.Id)).ToList();
+            var allUsers = _userManager.Users.Where(u => !u.IsDeleted && userIds.Contains(u.Id)).ToList();
 
             var Customer = new List<UserProfileDTO>();
 
             foreach (var user in allUsers)
             {
-                if (await _userManager.IsInRoleAsync(user, Roles.User))
+                if (await _userManager.IsInRoleAsync(user, Roles.Staff) ||
+                    await _userManager.IsInRoleAsync(user, Roles.KitchenStaff) ||
+                    await _userManager.IsInRoleAsync(user, Roles.Manager) ||
+                    await _userManager.IsInRoleAsync(user, Roles.Admin))
                 {
-                    var dto = _mapper.Map<UserProfileDTO>(user);
-                    Customer.Add(dto);
+                    continue;
                 }
+                var dto = _mapper.Map<UserProfileDTO>(user);
+                Customer.Add(dto);
             }
 
             var CustomerQuery = Customer.AsQueryable();
