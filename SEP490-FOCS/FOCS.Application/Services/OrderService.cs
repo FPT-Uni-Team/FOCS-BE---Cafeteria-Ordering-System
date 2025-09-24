@@ -174,16 +174,13 @@ namespace FOCS.Application.Services
 
                             var spendingRate = (await _storeSettingService.GetStoreSettingAsync(Guid.Parse(storeId)))!.SpendingRate ?? 0;
 
-                            var discountAmountBasedOnPoint = (decimal)orderRequest.Point * (decimal)spendingRate;
+                            var discountAmountBasedOnPoint = ((decimal)orderRequest.Point * (decimal)spendingRate) * 1000;
 
                             rs.TotalDiscount += discountAmountBasedOnPoint;
                             rs.TotalPrice = rs.TotalPrice -= discountAmountBasedOnPoint < 0 ? 0 : rs.TotalPrice -= discountAmountBasedOnPoint;
 
                             rs.IsUsePoint = true;
                             rs.Point = rs.Point;
-
-                            user.FOCSPoint += ((int)rs.TotalPrice * (int)spendingRate);
-                            await _userManager.UpdateAsync(user);
                         }
                         else
                         {
@@ -496,11 +493,11 @@ namespace FOCS.Application.Services
 
                   if (user!.FOCSPoint != null &&  user!.FOCSPoint <= 0)
                     {
-                        user!.FOCSPoint += (int)(order.TotalAmount * systemConfigEarningRate);
+                        user!.FOCSPoint += (int)(order.TotalAmount * systemConfigEarningRate) / 1000;
                     } else
                     {
                         user!.FOCSPoint -= order.PointUsed;
-                        user!.FOCSPoint += (int)(order.TotalAmount * systemConfigEarningRate);
+                        user!.FOCSPoint += (int)(order.TotalAmount * systemConfigEarningRate) / 1000;
                     }
 
                     //user.FOCSPoint += (int)(order.TotalAmount * spendingRate);
