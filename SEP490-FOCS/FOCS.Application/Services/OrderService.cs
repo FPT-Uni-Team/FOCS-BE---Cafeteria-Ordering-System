@@ -170,7 +170,7 @@ namespace FOCS.Application.Services
                         //if guest
                         if (user != null)
                         {
-                            ConditionCheck.CheckCondition(user!.FOCSPoint < orderRequest.Point, Errors.OrderError.NotEnoughPoint);
+                            ConditionCheck.CheckCondition(user!.FOCSPoint <= orderRequest.Point, Errors.OrderError.NotEnoughPoint);
 
                             var spendingRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.SpendingRate;
 
