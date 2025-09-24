@@ -500,6 +500,9 @@ namespace FOCS.Application.Services
                     } else
                     {
                         user!.FOCSPoint -= order.PointUsed;
+
+                        user!.FOCSPoint = user!.FOCSPoint ?? 0;
+
                         user!.FOCSPoint += (int)(order.TotalAmount * systemConfigEarningRate) / 1000;
                     }
 
