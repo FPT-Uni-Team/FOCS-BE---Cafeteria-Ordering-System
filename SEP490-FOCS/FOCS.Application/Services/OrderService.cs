@@ -18,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System.Linq;
+using static FOCS.Common.Exceptions.Errors;
 
 namespace FOCS.Application.Services
 {
@@ -342,6 +343,8 @@ namespace FOCS.Application.Services
                 if (order.OrderStatus == OrderStatus.Confirmed)
                 {
                     order.PaymentStatus = PaymentStatus.Paid;
+
+                    await MarkAsPaid(order.OrderCode, storeId);
                 }
 
                 order.UpdatedAt = DateTime.UtcNow;
