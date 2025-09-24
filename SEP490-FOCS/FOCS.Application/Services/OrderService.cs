@@ -181,9 +181,6 @@ namespace FOCS.Application.Services
 
                             rs.IsUsePoint = true;
                             rs.Point = rs.Point;
-
-                            user.FOCSPoint += ((int)rs.TotalPrice * (int)spendingRate);
-                            await _userManager.UpdateAsync(user);
                         }
                         else
                         {
@@ -482,10 +479,23 @@ namespace FOCS.Application.Services
         {
             var order = await _orderRepository.AsQueryable().Include(x => x.Table).Include(x => x.Coupon).FirstOrDefaultAsync(x => x.OrderCode == orderCode);
 
-            ConditionCheck.CheckCondition(order != null, Errors.OrderError.OrderNotFound);
-
             //update coupon, promotion usage
             var storeSetting = await _storeSettingService.GetStoreSettingAsync(Guid.Parse(storeId));
+
+            if (order != null)
+            {
+                var user = await _userManager.FindByIdAsync(order.UserId.ToString());
+                
+                if(user != null)
+                {
+                    var spendingRate = storeSetting.SpendingRate ?? 0;
+                    user.FOCSPoint += (int)(order.TotalAmount * spendingRate);
+
+                    await _userManager.UpdateAsync(user);
+                }
+            }
+
+            ConditionCheck.CheckCondition(order != null, Errors.OrderError.OrderNotFound);
 
             if (storeSetting.DiscountStrategy == DiscountStrategy.CouponThenPromotion)
             {
