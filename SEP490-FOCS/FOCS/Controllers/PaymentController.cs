@@ -75,9 +75,9 @@ namespace FOCS.Controllers
             if (order == null)
                 return NotFound("Order not found");
 
-            var store = await _storeService.GetStoreSetting(order.StoreId);
-            if (store == null)
-                return NotFound("Store setting not found");
+            //var store = await _storeService.GetStoreSetting(order.StoreId);
+            //if (store == null)
+            //    return NotFound("Store setting not found");
 
             //var payOSService = _payOSServiceFactory.Create(store.PayOSClientId!, store.PayOSApiKey!, store.PayOSChecksumKey!);
 
