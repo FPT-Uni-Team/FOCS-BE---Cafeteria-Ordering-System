@@ -182,7 +182,7 @@ namespace FOCS.Application.Services
                             rs.TotalPrice = rs.TotalPrice -= discountAmountBasedOnPoint < 0 ? 0 : rs.TotalPrice -= discountAmountBasedOnPoint;
 
                             rs.IsUsePoint = true;
-                            rs.Point = rs.Point;
+                            rs.Point = orderRequest.Point;
                         }
                         else
                         {
