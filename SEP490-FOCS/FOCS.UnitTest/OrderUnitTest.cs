@@ -334,13 +334,15 @@ namespace FOCS.UnitTest
                 _orderRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>()))
                     .ReturnsAsync((OrderEntity)null);
             }
+            Random random = new Random();
+
 
             // Act & Assert
             if (shouldSucceed)
             {
                 var exception = await Record.ExceptionAsync(async () =>
                 {
-                    var res = await _orderService.DeleteOrderAsync(orderId ?? Guid.Empty, userId, storeId);
+                    var res = await _orderService.DeleteOrderAsync(random.Next().ToString(), userId, storeId);
                 });
                 Assert.Null(exception);
             }
@@ -348,7 +350,7 @@ namespace FOCS.UnitTest
             {
                 await Assert.ThrowsAsync<Exception>(async () =>
                 {
-                    var res = await _orderService.DeleteOrderAsync(orderId ?? Guid.Empty, userId, storeId);
+                    var res = await _orderService.DeleteOrderAsync(random.Next().ToString(), userId, storeId);
                 });
             }
         }
