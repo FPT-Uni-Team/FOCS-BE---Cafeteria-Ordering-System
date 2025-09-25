@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using System.CodeDom;
 using System.Linq;
 using static FOCS.Common.Exceptions.Errors;
 
@@ -820,11 +821,11 @@ namespace FOCS.Application.Services
             }
         }
 
-        public async Task<bool> DeleteOrderAsync(Guid orderId, string userId, string storeId)
+        public async Task<bool> DeleteOrderAsync(string code, string userId, string storeId)
         {
             try
             {
-                var order = await _orderRepository.GetByIdAsync(orderId);
+                var order = await _orderRepository.AsQueryable().FirstOrDefaultAsync(x => x.OrderCode == long.Parse(code));
 
                 ConditionCheck.CheckCondition(order != null, Errors.Common.NotFound);
 
