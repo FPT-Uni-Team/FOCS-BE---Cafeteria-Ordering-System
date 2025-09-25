@@ -792,6 +792,11 @@ namespace FOCS.Application.Services
                 await _orderDetailRepository.AddRangeAsync(ordersDetailCreate);
                 await _tableRepository.SaveChangesAsync();
 
+                if (orderCreate.TotalAmount == 0)
+                {
+                    await MarkAsPaid(orderCreate.OrderCode, orderCreate.StoreId.ToString());
+                }
+
                 //code order for payment hook
                 order.DiscountResult.OrderCode = orderCreate.OrderCode;
 
