@@ -81,9 +81,9 @@ namespace FOCS.Application.Services
 
                         var discountAmountBasedOnPoint = ((decimal)applyDiscountOrderRequest.Point * (decimal)spendingRate) * 1000;
 
-                        if (discountAmountBasedOnPoint > finalDiscountResult.SubTotal)
+                        if (discountAmountBasedOnPoint > finalDiscountResult.SubTotal - finalDiscountResult.TotalDiscount)
                         {
-                            discountAmountBasedOnPoint = finalDiscountResult.SubTotal;
+                            discountAmountBasedOnPoint = finalDiscountResult.SubTotal - finalDiscountResult.TotalDiscount;
                             finalDiscountResult.Point = (int)(discountAmountBasedOnPoint / (spendingRate * 1000));
                         }
 

@@ -219,8 +219,8 @@ namespace FOCS.Application.Services
             var store = await _storeRepository.GetByIdAsync(orderRequest.StoreId);
             var taxRate = (decimal)(store?.CustomTaxRate ?? 0);
 
-            discountResult.TaxAmount = Math.Round((discountResult.SubTotal - discountResult.TotalDiscount) * taxRate);
-            discountResult.TotalPrice = discountResult.SubTotal - discountResult.TotalDiscount + discountResult.TaxAmount;
+            discountResult.TaxAmount = Math.Max(Math.Round((discountResult.SubTotal - discountResult.TotalDiscount) * taxRate), 0);
+            discountResult.TotalPrice = Math.Max(discountResult.SubTotal - discountResult.TotalDiscount + discountResult.TaxAmount, 0);
 
             return discountResult;
         }
