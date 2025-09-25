@@ -1,6 +1,8 @@
 ﻿using FOCS.Order.Infrastucture.Entities;
 using MockQueryable;
 using Moq;
+using System;
+using static Org.BouncyCastle.Asn1.Cmp.Challenge;
 using OrderEntity = FOCS.Order.Infrastucture.Entities.Order;
 
 namespace FOCS.UnitTest.OrderServiceTest
@@ -32,7 +34,8 @@ namespace FOCS.UnitTest.OrderServiceTest
                 .ReturnsAsync(1);
 
             // Act
-            var result = await _orderService.DeleteOrderAsync(orderId, userId, storeId);
+            Random random = new Random();
+            var result = await _orderService.DeleteOrderAsync(random.NextDouble().ToString(), userId, storeId);
 
             // Assert
             Assert.True(result);
@@ -51,9 +54,10 @@ namespace FOCS.UnitTest.OrderServiceTest
 
             _mockOrderRepository.Setup(r => r.GetByIdAsync(orderId))
                 .ThrowsAsync(new Exception("Database error"));
+            Random random = new Random();
 
             // Act
-            var result = await _orderService.DeleteOrderAsync(orderId, userId, storeId);
+            var result = await _orderService.DeleteOrderAsync(random.NextDouble().ToString(), userId, storeId);
 
             // Assert
             Assert.False(result);
@@ -79,7 +83,9 @@ namespace FOCS.UnitTest.OrderServiceTest
                 .ReturnsAsync(1);
 
             // Act
-            var result = await _orderService.DeleteOrderAsync(orderId, userId, storeId);
+            Random random = new Random();
+
+            var result = await _orderService.DeleteOrderAsync(random.NextDouble().ToString(), userId, storeId);
 
             // Assert
             Assert.True(result);
@@ -99,7 +105,9 @@ namespace FOCS.UnitTest.OrderServiceTest
                 .ReturnsAsync((OrderEntity)null);
 
             // Act
-            var result = await _orderService.DeleteOrderAsync(orderId, userId, storeId);
+            Random random = new Random();
+
+            var result = await _orderService.DeleteOrderAsync(random.NextDouble().ToString(), userId, storeId);
 
             // Assert
             Assert.False(result);
