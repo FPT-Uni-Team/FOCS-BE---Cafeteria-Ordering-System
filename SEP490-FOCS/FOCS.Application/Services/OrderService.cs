@@ -172,7 +172,10 @@ namespace FOCS.Application.Services
                         //if guest
                         if (user != null)
                         {
-                            ConditionCheck.CheckCondition(user!.FOCSPoint < orderRequest.Point, Errors.OrderError.NotEnoughPoint);
+                            if (user!.FOCSPoint < orderRequest.Point)
+                            {
+                                orderRequest.Point = user!.FOCSPoint;
+                            }
 
                             rs.IsUsePoint = true;
                             rs.Point = orderRequest.Point;
