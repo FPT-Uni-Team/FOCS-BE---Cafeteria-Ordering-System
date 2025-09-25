@@ -73,11 +73,11 @@ namespace FOCS.Controllers
             return await _orderService.CancelOrderAsync(orderId, UserId, StoreId);
         }
 
-        [HttpDelete("{id}")]
-        [Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
-        public async Task<bool> DeleteOrderAsync(Guid orderId)
+        [HttpDelete("{code}")]
+        //[Authorize(Roles = Roles.Admin + "," + Roles.Manager)]
+        public async Task<bool> DeleteOrderAsync(string code)
         {
-            return await _orderService.DeleteOrderAsync(orderId, UserId, StoreId);
+            return await _orderService.DeleteOrderAsync(code, UserId, StoreId);
         }
 
         [HttpPost("pending-in-day")]

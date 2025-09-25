@@ -29,7 +29,7 @@ namespace FOCS.Common.Interfaces
         Task<OrderDTO> GetUserOrderDetailAsync(Guid userId, Guid orderId);
         Task<PagedResult<OrderDTO>> GetListOrders(UrlQueryParameters queryParameters, string storeId, string userId);
         Task<bool> CancelOrderAsync(Guid orderId, string userId, string storeId);
-        Task<bool> DeleteOrderAsync(Guid orderId, string userId, string storeId);
+        Task<bool> DeleteOrderAsync(string code, string userId, string storeId);
         Task MarkAsPaid(long orderCode, string storeId);
         Task<bool> ChangeStatusOrder(string code, ChangeOrderStatusRequest request, string storeId);
 
