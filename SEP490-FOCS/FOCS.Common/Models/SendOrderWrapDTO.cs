@@ -19,6 +19,9 @@ namespace FOCS.Common.Models
         [JsonPropertyName("menu_item_name")]
         public string MenuItemName { get; set; }
 
+        [JsonPropertyName("quantity")]
+        public int? Quantity { get; set; }
+
         [JsonPropertyName("variants")]
         public List<VariantWrapOrder> Variants { get; set; }
     }

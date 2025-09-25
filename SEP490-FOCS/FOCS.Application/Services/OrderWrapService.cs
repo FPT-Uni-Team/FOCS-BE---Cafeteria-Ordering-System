@@ -291,7 +291,8 @@ namespace FOCS.Application.Services
                             VariantName = _variantRepo.AsQueryable().FirstOrDefault(x => x.Id == v.VariantId)?.Name,
                             Note = detail.Note
                         }))
-                        .ToList()
+                        .ToList(),
+                    Quantity = group.First().Quantity
                 })
                 .ToList();
 
