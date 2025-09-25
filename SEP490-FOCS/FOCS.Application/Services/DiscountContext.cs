@@ -69,17 +69,26 @@ namespace FOCS.Application.Services
                     //if guest
                     if (user != null)
                     {
-                        ConditionCheck.CheckCondition(user!.FOCSPoint < applyDiscountOrderRequest.Point, Errors.OrderError.NotEnoughPoint);
-
-                        var spendingRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.SpendingRate;
-
-                        var discountAmountBasedOnPoint = (decimal)applyDiscountOrderRequest.Point * (decimal)spendingRate;
-
-                        finalDiscountResult.TotalDiscount += discountAmountBasedOnPoint;
-                        finalDiscountResult.TotalPrice = finalDiscountResult.TotalPrice -= discountAmountBasedOnPoint < 0 ? 0 : finalDiscountResult.TotalPrice -= discountAmountBasedOnPoint;
+                        if (user!.FOCSPoint < applyDiscountOrderRequest.Point)
+                        {
+                            applyDiscountOrderRequest.Point = user!.FOCSPoint;
+                        }
 
                         finalDiscountResult.IsUsePoint = true;
                         finalDiscountResult.Point = applyDiscountOrderRequest.Point;
+
+                        var spendingRate = (await _storeSettingService.GetStoreSettingAsync(applyDiscountOrderRequest.StoreId))!.SpendingRate ?? 0;
+
+                        var discountAmountBasedOnPoint = ((decimal)applyDiscountOrderRequest.Point * (decimal)spendingRate) * 1000;
+
+                        if (discountAmountBasedOnPoint > finalDiscountResult.SubTotal)
+                        {
+                            discountAmountBasedOnPoint = finalDiscountResult.SubTotal;
+                            finalDiscountResult.Point = (int)(discountAmountBasedOnPoint / (spendingRate * 1000));
+                        }
+
+                        finalDiscountResult.TotalDiscount += discountAmountBasedOnPoint;
+                        finalDiscountResult.TotalPrice = finalDiscountResult.TotalPrice -= discountAmountBasedOnPoint < 0 ? 0 : finalDiscountResult.TotalPrice -= discountAmountBasedOnPoint;
                     } else
                     {
                         finalDiscountResult.IsUsePoint = false;
