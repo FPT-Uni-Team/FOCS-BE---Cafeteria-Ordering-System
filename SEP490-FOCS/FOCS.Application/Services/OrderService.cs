@@ -495,13 +495,13 @@ namespace FOCS.Application.Services
                     var spendingRate = storeSetting.SpendingRate ?? 0;
                     var systemConfigEarningRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.EarningRate;
 
-                  if (user!.FOCSPoint != null &&  user!.FOCSPoint <= 0)
+                  if (user!.FOCSPoint <= 0)
                     {
                         user!.FOCSPoint += (int)(order.TotalAmount * systemConfigEarningRate) / 1000;
                     } else
                     {
 
-                        user!.FOCSPoint -= order.PointUsed.Value;
+                        user!.FOCSPoint -= order.PointUsed ?? 0;
 
                         user!.FOCSPoint += (int)(order.TotalAmount * systemConfigEarningRate) / 1000;
                     }
@@ -527,7 +527,10 @@ namespace FOCS.Application.Services
 
                         if (isAdded)
                         {
-                            currentCoupon.Promotion.CountUsed++;
+                            if(currentCoupon.Promotion != null)
+                            {
+                                currentCoupon.Promotion.CountUsed++;
+                            }
                         }
 
                         _couponRepository.Update(currentCoupon);
