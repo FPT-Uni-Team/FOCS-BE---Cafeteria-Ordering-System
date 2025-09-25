@@ -109,8 +109,8 @@ namespace FOCS.Application.Services
 
             //if (order.OrderType == OrderType.DineIn)
             //{
-                table = await _tableRepository.AsQueryable().FirstOrDefaultAsync(x => x.Id == order.TableId && x.StoreId == order.StoreId);
-                ConditionCheck.CheckCondition(table != null, Errors.OrderError.TableNotFound);
+            table = await _tableRepository.AsQueryable().FirstOrDefaultAsync(x => x.Id == order.TableId && x.StoreId == order.StoreId);
+            ConditionCheck.CheckCondition(table != null, Errors.OrderError.TableNotFound);
             //}
 
             // Validate menu items
@@ -172,17 +172,24 @@ namespace FOCS.Application.Services
                         //if guest
                         if (user != null)
                         {
-                            ConditionCheck.CheckCondition(user!.FOCSPoint <= orderRequest.Point, Errors.OrderError.NotEnoughPoint);
+                            ConditionCheck.CheckCondition(user!.FOCSPoint < orderRequest.Point, Errors.OrderError.NotEnoughPoint);
+
+                            rs.IsUsePoint = true;
+                            rs.Point = orderRequest.Point;
 
                             var spendingRate = (await _storeSettingService.GetStoreSettingAsync(Guid.Parse(storeId)))!.SpendingRate ?? 0;
 
                             var discountAmountBasedOnPoint = ((decimal)orderRequest.Point * (decimal)spendingRate) * 1000;
 
+                            if (discountAmountBasedOnPoint > rs.TotalPrice)
+                            {
+                                discountAmountBasedOnPoint = rs.TotalPrice;
+                                rs.Point = (int)(discountAmountBasedOnPoint / (spendingRate * 1000));
+                            }
+
                             rs.TotalDiscount += discountAmountBasedOnPoint;
                             rs.TotalPrice = rs.TotalPrice -= discountAmountBasedOnPoint < 0 ? 0 : rs.TotalPrice -= discountAmountBasedOnPoint;
 
-                            rs.IsUsePoint = true;
-                            rs.Point = orderRequest.Point;
                         }
                         else
                         {
@@ -192,8 +199,8 @@ namespace FOCS.Application.Services
                     }
                 }
 
-                rs.TaxAmount = Math.Round((rs.SubTotal - rs.TotalDiscount) * tr);
-                rs.TotalPrice = rs.SubTotal - rs.TotalDiscount + rs.TaxAmount;
+                rs.TaxAmount = Math.Max(Math.Round((rs.SubTotal - rs.TotalDiscount) * tr), 0);
+                rs.TotalPrice = Math.Max(rs.SubTotal - rs.TotalDiscount + rs.TaxAmount, 0);
                 return rs;
             }
 
@@ -224,7 +231,7 @@ namespace FOCS.Application.Services
                          && !x.IsDeleted);
 
             ordersQuery = ApplyFilters(ordersQuery, queryParameters);
-            ordersQuery = ApplySearch(ordersQuery, queryParameters);    
+            ordersQuery = ApplySearch(ordersQuery, queryParameters);
             ordersQuery = ApplySort(ordersQuery, queryParameters);
 
             var total = await ordersQuery.CountAsync();
@@ -273,7 +280,7 @@ namespace FOCS.Application.Services
                         }
                     }
 
-                    od.Variants= itemVariants;
+                    od.Variants = itemVariants;
                 }
             }
 
@@ -489,25 +496,26 @@ namespace FOCS.Application.Services
             if (order != null)
             {
                 var user = await _userManager.FindByIdAsync(order.UserId.ToString());
-                
-                if(user != null)
+
+                if (user != null)
                 {
                     var spendingRate = storeSetting.SpendingRate ?? 0;
                     var systemConfigEarningRate = (await _systemConfig.AsQueryable().FirstOrDefaultAsync())!.EarningRate;
 
-                  if (user!.FOCSPoint <= 0)
+                    if (user!.FOCSPoint <= 0)
                     {
                         user!.FOCSPoint += (int)(order.TotalAmount * systemConfigEarningRate) / 1000;
-                    } else
+                    }
+                    else
                     {
-
                         user!.FOCSPoint -= order.PointUsed ?? 0;
+                        if (user!.FOCSPoint < 0)
+                            user!.FOCSPoint = 0;
 
                         user!.FOCSPoint += (int)(order.TotalAmount * systemConfigEarningRate) / 1000;
                     }
 
                     //user.FOCSPoint += (int)(order.TotalAmount * spendingRate);
-
 
                     await _userManager.UpdateAsync(user);
                 }
@@ -520,14 +528,14 @@ namespace FOCS.Application.Services
                 try
                 {
                     var currentCoupon = await _couponRepository.AsQueryable().Include(x => x.Promotion).FirstOrDefaultAsync(x => x.Code == orderCode.ToString() && !x.IsDeleted);
-                    if(currentCoupon != null)
+                    if (currentCoupon != null)
                     {
                         currentCoupon.CountUsed++;
                         var isAdded = await _couponUsageService.SaveCouponUsage(currentCoupon.Code, order.UserId, order.Id);
 
                         if (isAdded)
                         {
-                            if(currentCoupon.Promotion != null)
+                            if (currentCoupon.Promotion != null)
                             {
                                 currentCoupon.Promotion.CountUsed++;
                             }
@@ -544,7 +552,7 @@ namespace FOCS.Application.Services
             }
             else
             {
-                if(order != null && order.Coupon != null)
+                if (order != null && order.Coupon != null)
                 {
                     var currentCoupon = await _couponRepository.AsQueryable().FirstOrDefaultAsync(x => x.Code == order.Coupon.Code.ToString() && !x.IsDeleted);
                     if (currentCoupon != null)
@@ -566,7 +574,7 @@ namespace FOCS.Application.Services
 
             _logger.LogInformation("SAVE order success - trigger success");
 
-            if(order.TableId != null)
+            if (order.TableId != null)
             {
                 var notifyEvent = new NotifyEvent
                 {
@@ -582,7 +590,8 @@ namespace FOCS.Application.Services
                 await _notifyService.AddNotifyAsync(order.StoreId.ToString(), Constants.ActionTitle.PaymentSuccess(order.Table.TableNumber));
 
                 await _realtimeService.SendToGroupAsync<NotifyHub, NotifyEvent>(SignalRGroups.Cashier(order.StoreId, (Guid)order.TableId), Constants.Method.NewNotify, notifyEvent);
-            } else
+            }
+            else
             {
                 _logger.LogInformation("Not found table in Order Handle payment success");
             }
@@ -704,7 +713,7 @@ namespace FOCS.Application.Services
                             Id = Guid.NewGuid(),
                             Quantity = item.Quantity,
                             UnitPrice = unitPrice,
-                            TotalPrice = unitPrice - (double)item.DiscountAmount, 
+                            TotalPrice = unitPrice - (double)item.DiscountAmount,
                             Note = order.Note ?? "",
                             MenuItemId = productId,
                             Variants = variants.Select(x => x.Id).Distinct().ToList(),
@@ -719,7 +728,7 @@ namespace FOCS.Application.Services
                         double price = 0;
                         var currentProductPrice = await _pricingService.GetPriceByProduct(item.MenuItemId, null, order.StoreId);
                         double unitPrice = currentProductPrice.ProductPrice;
-                        if(item.Variants != null)
+                        if (item.Variants != null)
                         {
                             foreach (var itemVariant in item.Variants)
                             {
@@ -740,7 +749,8 @@ namespace FOCS.Application.Services
                                 Variants = variants.Select(x => x.Id).Distinct().ToList(),
                                 OrderId = orderCreate.Id
                             });
-                        } else
+                        }
+                        else
                         {
                             ordersDetailCreate.Add(new OrderDetail
                             {
@@ -784,7 +794,7 @@ namespace FOCS.Application.Services
 
                 var tokenDeviceMobile = await _mobileTokenService.GetMobileToken(Guid.Parse(userId));
 
-                if(tokenDeviceMobile.Token != null)
+                if (tokenDeviceMobile.Token != null)
                 {
                     //send notify to casher
                     var notifyEventModel = new NotifyEvent
