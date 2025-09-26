@@ -27,7 +27,7 @@ namespace FOCS.Common.Interfaces
             /// <summary>
             /// Lấy feedback theo OrderId (để hiển thị lại hoặc check đã gửi chưa).
             /// </summary>
-            Task<FeedbackDTO> GetFeedbackByOrderIdAsync(Guid orderId, string storeId);
+            Task<FeedbackDTO> GetFeedbackByOrderIdAsync(string orderCode, string storeId);
 
 
             Task<List<FeedbackDTO>> GetFeedbackByMenuItemAsync(Guid menuItem, string storeId);

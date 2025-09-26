@@ -166,7 +166,7 @@ namespace FOCS.UnitTest
             // Act
             var exception = await Record.ExceptionAsync(async () =>
             {
-                await _feedbackService.GetFeedbackByOrderIdAsync(orderId ?? Guid.Empty, storeId.ToString());
+                await _feedbackService.GetFeedbackByOrderIdAsync(orderId.ToString() ?? string.Empty, storeId.ToString());
             });
             if (shouldSucceed) 
             {

@@ -53,8 +53,11 @@ namespace FOCS.UnitTest.FeedbackServiceTest
             var mockQueryable = new[] { _testFeedback }.AsQueryable().BuildMockDbSet();
             _feedbackRepoMock.Setup(r => r.AsQueryable()).Returns(mockQueryable.Object);
 
+            Random Random = new Random();
+            long _testOrderCode = Random.Next(1000, 9999);
+
             // Act
-            var result = await _feedbackService.GetFeedbackByOrderIdAsync(_testOrderId, _testStoreIdString);
+            var result = await _feedbackService.GetFeedbackByOrderIdAsync(_testOrderCode.ToString(), _testStoreIdString);
 
             // Assert
             Assert.NotNull(result);
@@ -71,9 +74,12 @@ namespace FOCS.UnitTest.FeedbackServiceTest
             var mockQueryable = Array.Empty<Feedback>().AsQueryable().BuildMockDbSet();
             _feedbackRepoMock.Setup(r => r.AsQueryable()).Returns(mockQueryable.Object);
 
+            Random Random = new Random();
+            long _testOrderCode = Random.Next(1000, 9999);
+
             // Act & Assert
             var ex = await Assert.ThrowsAsync<Exception>(() =>
-                _feedbackService.GetFeedbackByOrderIdAsync(_testOrderId, _testStoreIdString));
+                _feedbackService.GetFeedbackByOrderIdAsync(_testOrderCode.ToString(), _testStoreIdString));
 
             Assert.Contains(Errors.Common.NotFound, ex.Message);
         }
@@ -86,9 +92,12 @@ namespace FOCS.UnitTest.FeedbackServiceTest
             var mockQueryable = new[] { _testFeedback }.AsQueryable().BuildMockDbSet();
             _feedbackRepoMock.Setup(r => r.AsQueryable()).Returns(mockQueryable.Object);
 
+            Random Random = new Random();
+            long _testOrderCode = Random.Next(1000, 9999);
+
             // Act & Assert
             var ex = await Assert.ThrowsAsync<Exception>(() =>
-                _feedbackService.GetFeedbackByOrderIdAsync(_testOrderId, wrongStoreId));
+                _feedbackService.GetFeedbackByOrderIdAsync(_testOrderCode.ToString(), wrongStoreId));
 
             Assert.Contains(Errors.Common.NotFound, ex.Message);
         }
@@ -113,8 +122,11 @@ namespace FOCS.UnitTest.FeedbackServiceTest
                     CreatedAt = _testFeedback.CreatedAt ?? DateTime.MinValue
                 });
 
+            Random Random = new Random();
+            long _testOrderCode = Random.Next(1000, 9999);
+
             // Act
-            var result = await _feedbackService.GetFeedbackByOrderIdAsync(_testOrderId, _testStoreIdString);
+            var result = await _feedbackService.GetFeedbackByOrderIdAsync(_testOrderCode.ToString(), _testStoreIdString);
 
             // Assert
             _mapperMock.Verify(m => m.Map<FeedbackDTO>(_testFeedback), Times.Once);
@@ -133,9 +145,12 @@ namespace FOCS.UnitTest.FeedbackServiceTest
             _feedbackRepoMock.Setup(r => r.AsQueryable())
                 .Returns(Array.Empty<Feedback>().AsQueryable());
 
+            Random Random = new Random();
+            long _testOrderCode = Random.Next(1000, 9999);
+
             // Act
             var ex = await Record.ExceptionAsync(() =>
-                _feedbackService.GetFeedbackByOrderIdAsync(_testOrderId, _testStoreIdString));
+                _feedbackService.GetFeedbackByOrderIdAsync(_testOrderCode.ToString(), _testStoreIdString));
 
             // Assert
             Assert.NotNull(ex);
