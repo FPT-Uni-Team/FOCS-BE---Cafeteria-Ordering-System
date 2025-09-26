@@ -304,6 +304,7 @@ namespace FOCS.Application.Services
             var orderByCode = await _orderRepository.AsQueryable()
                                                     .Include(x => x.OrderDetails)
                                                         .ThenInclude(od => od.MenuItem)
+                                                            .ThenInclude(x => x.Images)
                                                     .FirstOrDefaultAsync(x => x.OrderCode == orderCode);
 
             if (orderByCode == null)
@@ -341,6 +342,14 @@ namespace FOCS.Application.Services
                         }
                     }
                 }
+
+                var currentItem = await _menuItemRepository.AsQueryable().Include(x => x.Images).FirstOrDefaultAsync(x => x.Id == od.MenuItemId);
+                var currentImage = currentItem?.Images.ToList() ?? new List<MenuItemImage>();
+                od.Images = currentImage?.Select(x => new ImageDto
+                {
+                    IsMain = x.IsMain,
+                    Url = x.Url
+                })?.ToList();
 
                 od.Variants = itemVariants;
             }
