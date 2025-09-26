@@ -218,7 +218,7 @@ namespace FOCS.Application.Services
         public async Task<PagedResult<OrderDTO>> GetListOrders(UrlQueryParameters queryParameters, string storeId, string userId)
         {
             var ordersQuery = _orderRepository.AsQueryable()
-                .Include(x => x.OrderDetails).ThenInclude(x => x.MenuItem)
+                .Include(x => x.OrderDetails).ThenInclude(x => x.MenuItem).ThenInclude(x => x.Images)
                 .Where(x => x.StoreId == Guid.Parse(storeId)
                          && x.UserId == Guid.Parse(userId)
                          && !x.IsDeleted);
@@ -273,6 +273,14 @@ namespace FOCS.Application.Services
                         }
                     }
 
+                    var currentItem = await _menuItemRepository.AsQueryable().Include(x => x.Images).FirstOrDefaultAsync(x => x.Id == od.MenuItemId);
+                    var currentImage = currentItem?.Images.ToList() ?? new List<MenuItemImage>();
+                    od.Images = currentImage?.Select(x => new ImageDto
+                    {
+                        IsMain = x.IsMain,
+                        Url = x.Url
+                    })?.ToList();
+                    //od.Images =
                     od.Variants= itemVariants;
                 }
             }
