@@ -26,6 +26,9 @@ namespace FOCS.Common.Models
         [JsonPropertyName("quantity")]
         public int Quantity { get; set; }
 
+        [JsonPropertyName("images")]
+        public List<ImageDto>? Images { get; set; } = null;
+
         [JsonPropertyName("unit_price")]
         public double UnitPrice { get; set; } // base price
 
