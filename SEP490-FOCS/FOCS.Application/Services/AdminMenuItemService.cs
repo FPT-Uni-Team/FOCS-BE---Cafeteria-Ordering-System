@@ -141,6 +141,7 @@ namespace FOCS.Application.Services
 
             item.UpdatedAt = DateTime.UtcNow;
             item.UpdatedBy = userId;
+            item.IsActive = true;
 
             await _menuRepository.SaveChangesAsync();
             return true;
