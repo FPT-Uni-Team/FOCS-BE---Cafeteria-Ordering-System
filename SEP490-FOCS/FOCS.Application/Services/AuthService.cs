@@ -313,9 +313,9 @@ namespace FOCS.Application.Services
         {
             try
             {
-                var existing = await _mobileTokenDevice.AsQueryable().FirstOrDefaultAsync(x => x.DeviceId == request.DeviceId);
+                var existing = await _mobileTokenDevice.AsQueryable().Where(x => x.DeviceId == request.DeviceId).ToListAsync();
 
-                if (existing == null)
+                if(existing.Count == 0)
                 {
                     await _mobileTokenDevice.AddAsync(new MobileTokenDevice
                     {
@@ -327,14 +327,31 @@ namespace FOCS.Application.Services
                         Token = request.Token,
                         UserId = request.ActorId
                     });
-
                 }
-                else
-                {
-                    existing.Token = request.Token;
-                    existing.LastUsedAt = request.LastUsedAt;
 
-                    _mobileTokenDevice.Update(existing);
+                foreach (var device in existing)
+                {
+                    if (device.UserId != request.ActorId)
+                    {
+                        await _mobileTokenDevice.AddAsync(new MobileTokenDevice
+                        {
+                            Id = Guid.NewGuid(),
+                            DeviceId = request.DeviceId,
+                            CreatedAt = DateTime.UtcNow,
+                            LastUsedAt = DateTime.UtcNow,
+                            Platform = request.Platform,
+                            Token = request.Token,
+                            UserId = request.ActorId
+                        });
+
+                    }
+                    else
+                    {
+                        device.Token = request.Token;
+                        device.LastUsedAt = request.LastUsedAt;
+
+                        _mobileTokenDevice.Update(device);
+                    }
                 }
 
                 await _mobileTokenDevice.SaveChangesAsync();

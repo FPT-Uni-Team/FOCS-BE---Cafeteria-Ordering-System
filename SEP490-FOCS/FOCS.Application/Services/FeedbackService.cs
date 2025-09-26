@@ -106,9 +106,9 @@ namespace FOCS.Application.Services
             return _mapper.Map<FeedbackDTO>(feedback);
         }
 
-        public async Task<FeedbackDTO> GetFeedbackByOrderIdAsync(Guid orderId, string storeId)
+        public async Task<FeedbackDTO> GetFeedbackByOrderIdAsync(string orderCode, string storeId)
         {
-            var feedback = await _feedbackRepository.AsQueryable().FirstOrDefaultAsync(x => x.OrderId == orderId && x.StoreId == Guid.Parse(storeId));
+            var feedback = await _feedbackRepository.AsQueryable().Include(x => x.Order).FirstOrDefaultAsync(x => x.Order.OrderCode == long.Parse(orderCode) && x.StoreId == Guid.Parse(storeId));
 
             ConditionCheck.CheckCondition(feedback != null, Errors.Common.NotFound);
 

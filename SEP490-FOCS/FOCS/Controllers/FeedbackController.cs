@@ -48,9 +48,9 @@ namespace FOCS.Controllers
         }
 
         [HttpPost("order/{orderId}")]
-        public async Task<IActionResult> GetOnOrder(Guid orderId, [FromHeader(Name = "storeId")] string storeId)
+        public async Task<IActionResult> GetOnOrder(string orderCode, [FromHeader(Name = "storeId")] string storeId)
         {
-            var rs = await _feedbackService.GetFeedbackByOrderIdAsync(orderId, storeId);
+            var rs = await _feedbackService.GetFeedbackByOrderIdAsync(orderCode, storeId);
             return Ok(rs);
         }
 
