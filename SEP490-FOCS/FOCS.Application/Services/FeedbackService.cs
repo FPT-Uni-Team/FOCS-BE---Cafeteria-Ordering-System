@@ -50,6 +50,7 @@ namespace FOCS.Application.Services
                 mappingFeedbackModel.CreatedAt = DateTime.UtcNow;
                 mappingFeedbackModel.CreatedBy = request.ActorId.ToString();
                 mappingFeedbackModel.StoreId = Guid.Parse(storeId);
+                mappingFeedbackModel.IsPublic = true;
 
                 await _feedbackRepository.AddAsync(mappingFeedbackModel);
                 await _feedbackRepository.SaveChangesAsync();
