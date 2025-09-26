@@ -41,6 +41,10 @@ namespace FOCS.Application.Services
         {
             try
             {
+                var order = await _orderRepo.AsQueryable().FirstOrDefaultAsync(x => x.Id == request.OrderId && x.StoreId == Guid.Parse(storeId));
+                ConditionCheck.CheckCondition(order != null, Errors.OrderError.OrderNotFound);
+                ConditionCheck.CheckCondition(order.PaymentStatus == PaymentStatus.Unpaid, Errors.OrderError.FeedbackOrderUnpaid);
+
                 var images = await _cloudImageService.UploadImageFeedbackAsync(request.Files, storeId, request.OrderId.ToString());
 
                 var mappingFeedbackModel = _mapper.Map<Feedback>(request);

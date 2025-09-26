@@ -107,6 +107,7 @@ namespace FOCS.Common.Exceptions
             public const string TableNotFound = "Table is not found in system! Please";
             public const string NotEnoughPoint = "Loyaty point is not enough";
             public const string OrderNotFound = "Order Not Found";
+            public const string FeedbackOrderUnpaid = "You cannot feedback order unpaid";
         }
 
         public static class PromotionError
